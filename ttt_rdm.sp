@@ -287,23 +287,21 @@ public Action Timer_60(Handle timer) {
 }
 
 public Action Command_RDM(int client, int args) {
+	
 	if (GetTime() - rdm_cooldown[client] < 15) {
 		CPrintToChat(client, "{purple}[RDM] {darkred}Please do not spam this command...")
-		return Plugin_Handled; // 5 seconds hasn't passed yet, don't allow
+		return Plugin_Handled; // 15 seconds hasn't passed yet, don't allow
 	}
-	
+		
 	char client_auth[100];
 	GetClientAuthId(client, AuthId_Steam2, client_auth, sizeof(client_auth), true);
 
-	char error[255];
-	DBStatement rdm_statement = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? ORDER BY `death_time` DESC LIMIT 20;", error, sizeof(error))
-	if (rdm_statement == null) {
-		PrintToServer(error);
-		return Plugin_Continue;
-	}
-	SQL_BindParamString(rdm_statement, 0, client_auth, false);
+	DBStatement rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? ORDER BY `death_time` DESC LIMIT 20;");
+
 	char time[100];
 	IntToString(GetTime() - 24 * 60 * 60, time, sizeof(time));
+
+	SQL_BindParamString(rdm_statement, 0, client_auth, false);
 	SQL_BindParamString(rdm_statement, 1, time, false);
 	
 	if (!SQL_Execute(rdm_statement)) { PrintToServer("SQL Execute Failed..."); return Plugin_Continue; }
@@ -313,13 +311,14 @@ public Action Command_RDM(int client, int args) {
 	
 	while (SQL_FetchRow(rdm_statement)) {
 		ran = true;
+		
+		char killer_name[100], death_index_string[100], print_string[200];
+		
 		int death_index = SQL_FetchInt(rdm_statement, 0);
 		int death_time = SQL_FetchInt(rdm_statement, 1);
-		char death_index_string[100];
+		SQL_FetchString(rdm_statement, 6, killer_name, sizeof(killer_name))		
+
 		IntToString(death_index, death_index_string, sizeof(death_index_string));
-		char killer_name[100];
-		SQL_FetchString(rdm_statement, 6, killer_name, sizeof(killer_name))
-		char print_string[200];
 		Format(print_string, sizeof(print_string), "%d secs ago by %s", GetTime() - death_time, killer_name);
 		menu.AddItem(death_index_string, print_string);
 	}
@@ -336,15 +335,8 @@ public Action Command_RDM(int client, int args) {
 
 public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 {
-	if (action == MenuAction_Select)
-	{
+	if (action == MenuAction_Select) {
 		char info[32];
- 
-		/* Get item info */
-		bool found = menu.GetItem(item, info, sizeof(info));
- 
-		/* Tell the client */
-		PrintToConsole(client, "You selected item: %d (found? %d info: %s)", item, found, info);
 		
 		rdm_cooldown[client] = GetTime();
 		
