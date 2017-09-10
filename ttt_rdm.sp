@@ -756,19 +756,19 @@ public Action Display_Information(int client, int death_index) {
 	else if (killer_percentage > 60) { killer_percentage_colour = "{yellow}"; }
 	else { killer_percentage_colour = "{red}"; }
 	
-	CPrintToChat(client, "â”â”â”â”â”â”â”â”â”â”â”ï¿½ï¿½ï¿½â”â” %s â”â”â”â”â”â”â”â”â”â”â”â”â”â”", victim_name);
-	CPrintToChat(client, "â”£â” Player: %s%s (%s)", victim_colour, victim_name, victim_id);
-	CPrintToChat(client, "â”ƒ  â”£â” Karma: %d ({lime}+%d{default}, {red}-%d{default}, %s%d%s{default})", victim_karma, victim_actions[0], victim_actions[1], victim_percentage_colour, victim_percentage, "%%");
+	CPrintToChat(client, "┏━━━━━━━━━━━━━ %s ━━━━━━━━━━━━━━", victim_name);
+	CPrintToChat(client, "┣━ Player: %s%s (%s)", victim_colour, victim_name, victim_id);
+	CPrintToChat(client, "┃  ┣━ Karma: %d ({lime}+%d{default}, {red}-%d{default}, %s%d%s{default})", victim_karma, victim_actions[0], victim_actions[1], victim_percentage_colour, victim_percentage, "%%");
 	if (last_gun_fire_time == -1) {
-		CPrintToChat(client, "â”ƒ  â”£â” Last Shot: Never");
+		CPrintToChat(client, "┃  ┣━ Last Shot: Never");
 	} else {
-		CPrintToChat(client, "â”ƒ  â”£â” Last Shot: %d secs before death", death_time - last_gun_fire_time);
+		CPrintToChat(client, "┃  ┣━ Last Shot: %d secs before death", death_time - last_gun_fire_time);
 	}
-	CPrintToChat(client, "â”£â” Killed By: %s%s (%s)", killer_colour, killer_name, killer_id);
-	CPrintToChat(client, "â”ƒ  â”£â” Karma: %d ({lime}+%d{default}, {red}-%d{default}, %s%d%s{default})", killer_karma, killer_actions[0], killer_actions[1], killer_percentage_colour, killer_percentage, "%%");
-	CPrintToChat(client, "â”ƒ  â”£â” Killed with: %s (%d round(s) ago)", weapon, max_round - round_no);
-	CPrintToChat(client, "â”£â” Bad Action: %s", bad_action_string);
-	CPrintToChat(client, "â”—â”â”â”â”â”â”â”â”â”â”â”â”â” %s â”â”â”â”â”â”â”â”â”â”â”â”â”â”", victim_name);
+	CPrintToChat(client, "┣━ Killed By: %s%s (%s)", killer_colour, killer_name, killer_id);
+	CPrintToChat(client, "┃  ┣━ Karma: %d ({lime}+%d{default}, {red}-%d{default}, %s%d%s{default})", killer_karma, killer_actions[0], killer_actions[1], killer_percentage_colour, killer_percentage, "%%");
+	CPrintToChat(client, "┃  ┣━ Killed with: %s (%d round(s) ago)", weapon, max_round - round_no);
+	CPrintToChat(client, "┣━ Bad Action: %s", bad_action_string);
+	CPrintToChat(client, "┗━━━━━━━━━━━━━ %s ━━━━━━━━━━━━━━", victim_name);
 	
 	return Plugin_Continue;
 }
