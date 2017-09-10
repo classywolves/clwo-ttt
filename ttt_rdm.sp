@@ -24,6 +24,7 @@ TODO:
  - Add a command to search recents deaths per player.
  - Allow people to target by death number, instead of just shortid.
  - Profile: Karma, good actions, bad actions, percentage, playtime, innocent times, traitor times, longest traitorless streak
+ - Upgrade to remembers tased people
 */
 
 public Plugin myinfo = {
@@ -49,9 +50,6 @@ char slay_admins[MAXPLAYERS + 1][255];
 
 // Prevent spamming of rdm command
 int rdm_cooldown[MAXPLAYERS + 1];
-
-// Array of last player death indexes
-int player_death_index[MAXPLAYERS + 1];
 
 // Array of last time players fired guns
 int last_gun_fire[MAXPLAYERS + 1];
@@ -97,6 +95,7 @@ public ResetShorts() {
 public SetCommands() {
 	RegConsoleCmd("sm_rdm", Command_RDM, "Requests help with an RDM");
 	RegAdminCmd("sm_handle", Command_Handle, ADMFLAG_GENERIC, "Handle an RDM");
+	RegAdminCmd("sm_handlenext", Command_HandleNext, ADMFLAG_GENERIC, "Handle the next RDM");
 	RegAdminCmd("sm_damage", Command_Damage, ADMFLAG_GENERIC, "Check damage on an RDM");
 	RegAdminCmd("sm_slaynr", Command_SlayNR, ADMFLAG_GENERIC, "Slay a player next round");
 	RegAdminCmd("sm_unslaynr", Command_UnSlayNR, ADMFLAG_GENERIC, "Unslay a player next round");
@@ -173,9 +172,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker", victim));
 	
 	// Prepare a SQL statement for the insertion
-	char error[255];
-	DBStatement insert_death = SQL_PrepareQuery(db, "INSERT INTO deaths (death_index, death_time, victim_name, victim_id, victim_role, victim_karma, killer_name, killer_id, killer_role, killer_karma, weapon, bad_action, last_gun_fire, round_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
-	if (insert_death == null) { PrintToServer("Error templating death in the database"); PrintToServer(error); return Plugin_Continue; }
+	DBStatement insert_death = PrepareStatement(db, "INSERT INTO deaths (death_index, death_time, victim_name, victim_id, victim_role, victim_karma, killer_name, killer_id, killer_role, killer_karma, weapon, bad_action, last_gun_fire, round_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 	
 	// Determine whether RDM
 	int victim_role = TTT_GetClientRole(victim);
@@ -189,11 +186,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	int bad_action = BadAction(victim_role, attacker_role);
 	
 	// Identify permanent names for victim & attacker, plus grab weapon used to kill
-	char weapon[100];
-	char victim_id[100];
-	char attacker_id[100];
-	char victim_name[100];
-	char attacker_name[100];
+	char weapon[100], victim_name[100], victim_id[100], attacker_name[100], attacker_id[100];
 	
 	GetClientAuthId(victim, AuthId_Steam2, victim_id, sizeof(victim_id), true);
 	GetClientAuthId(attacker, AuthId_Steam2, attacker_id, sizeof(attacker_id), true);
@@ -243,9 +236,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	int attacker_role = TTT_GetClientRole(attacker);
 
 	// Prepare a SQL statement for the insertion
-	char error[255];
-	DBStatement insert_damage = SQL_PrepareQuery(db, "INSERT INTO damage (round_no, victim_name, victim_auth, victim_role, attacker_name, attacker_auth, attacker_role, damage_done, health_left, round_time, weapon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
-	if (insert_damage == null) { PrintToServer("Error templating damage in the database"); PrintToServer(error); return Plugin_Continue; }
+	DBStatement insert_damage = PrepareStatement(db, "INSERT INTO damage (round_no, victim_name, victim_auth, victim_role, attacker_name, attacker_auth, attacker_role, damage_done, health_left, round_time, weapon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 	
 	SQL_BindParamInt(insert_damage, 0, max_round, false);
 	SQL_BindParamString(insert_damage, 1, victim_name, false);
@@ -267,8 +258,8 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 
 public Action OnPlayerSpawned(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (TTT_IsRoundActive()) {
-		if (IsValidClient(client) && IsPlayerAlive(client)) {
+	if (TTT_IsRoundActive() && IsValidClient(client)) {
+		if (IsPlayerAlive(client)) {
 			CPrintToChat(client, "{purple}[Slay] {orchid}You joined the game too late and was automatically slain.");
 			ForcePlayerSuicide(client);
 			TTT_SetFoundStatus(client, true);
@@ -296,7 +287,7 @@ public Action Timer_60(Handle timer) {
 }
 
 public Action Command_RDM(int client, int args) {
-	if (GetTime() - rdm_cooldown[client] < 5) {
+	if (GetTime() - rdm_cooldown[client] < 15) {
 		CPrintToChat(client, "{purple}[RDM] {darkred}Please do not spam this command...")
 		return Plugin_Handled; // 5 seconds hasn't passed yet, don't allow
 	}
@@ -463,18 +454,17 @@ public Action Command_Handle(int client, int args) {
 
 public Action Command_HandleNext(int client, int args) {
 	if (args == 0) {
-		bool run = true;
-		int first_unhandled = 0;
+		int first_unhandled = -1;
 		for (int i = 0; i < 500; i++) {
-			if (short_ids[i] && run) {
-				if (handled_by[i] == 0 && run) {
-					run = false;
+			if (short_ids[i]) {
+				if (handled_by[i] == 0) {
 					first_unhandled = i;
+					break;
 				}
 			}
 		}
 		
-		if (run) {
+		if (first_unhandled != -1) {
 			HandleCase(client, first_unhandled);
 		} else {
 			CPrintToChat(client, "{purple}[RDM] {orchid}No cases have been found at this time.");
