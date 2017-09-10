@@ -18,11 +18,15 @@ Database db;
 
 /*
 TODO:
- - Add a command to list unhandled cases.
  - Add a command to list deaths.
  - Add a command to search recents deaths per player.
  - Allow people to target by death number, instead of just shortid.
  - Profile: Karma, good actions, bad actions, percentage, playtime, innocent times, traitor times, longest traitorless streak
+    
+ - Create sm_verdict <case> - Menu with guilty or innocent.
+ -  Add menu after /rdm, whether the rdmer slain or not. (If found guilty).
+ - Only store non-traitor kills.
+ - Add "handled" column to the kills db, only show unhandled cases.
 */
 
 public Plugin myinfo = {
