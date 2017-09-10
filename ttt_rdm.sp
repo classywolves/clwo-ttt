@@ -14,7 +14,6 @@
 #define PLUGIN_DESCRIPTION		"Handles TTT RDMs."
 #define PLUGIN_URL				"https://sinisterheavens.com"
 
-ConVar rdm_version = null;
 Database db;
 
 /*
@@ -24,7 +23,6 @@ TODO:
  - Add a command to search recents deaths per player.
  - Allow people to target by death number, instead of just shortid.
  - Profile: Karma, good actions, bad actions, percentage, playtime, innocent times, traitor times, longest traitorless streak
- - Upgrade to remembers tased people
 */
 
 public Plugin myinfo = {
@@ -46,15 +44,20 @@ int handled_by[500];
 
 // Lists clients to slay (1 = slay, 0 = don't slay)
 int to_slay[MAXPLAYERS + 1];
+int last_handled[MAXPLAYERS + 1];
 char slay_admins[MAXPLAYERS + 1][255];
 
 // Prevent spamming of rdm command
 int rdm_cooldown[MAXPLAYERS + 1];
 
+
+
+// Array of last player death indexes
+// int player_death_index[MAXPLAYERS + 1];
+
 // Array of last time players fired guns
 int last_gun_fire[MAXPLAYERS + 1];
 
-int round_start_time = 0; 
 
 public StartTimers() {
 	CreateTimer(1.0, Timer_1, _, TIMER_REPEAT);
@@ -62,7 +65,6 @@ public StartTimers() {
 }
 
 public InitialiseVariables() {
-	round_start_time = GetTime();
 	db = ConnectDatabase("ttt", "TTT");
 	
 	// Highest previous death
@@ -81,7 +83,7 @@ public InitialiseVariables() {
 }
 
 public SetCVARS() {
-	rdm_version = CreateConVar("rdm_version", PLUGIN_VERSION_M, "RDM Plugin Version");
+	CreateConVar("rdm_version", PLUGIN_VERSION_M, "RDM Plugin Version");
 }
 
 public ResetShorts() {
@@ -92,10 +94,18 @@ public ResetShorts() {
 	}
 }
 
+public ResetLastHandled()
+{
+	for (int i = 0; i < MAXPLAYERS + 1; i++) {
+		short_ids[i] = -1;
+	}
+}
+
 public SetCommands() {
 	RegConsoleCmd("sm_rdm", Command_RDM, "Requests help with an RDM");
 	RegAdminCmd("sm_handle", Command_Handle, ADMFLAG_GENERIC, "Handle an RDM");
-	RegAdminCmd("sm_handlenext", Command_HandleNext, ADMFLAG_GENERIC, "Handle the next RDM");
+	RegAdminCmd("sm_handlenext", Command_HandleNext, ADMFLAG_GENERIC, "Handle next unhandled RDM");
+	RegAdminCmd("sm_verdict", Command_Verdict, ADMFLAG_GENERIC, "Give a verdict");
 	RegAdminCmd("sm_damage", Command_Damage, ADMFLAG_GENERIC, "Check damage on an RDM");
 	RegAdminCmd("sm_slaynr", Command_SlayNR, ADMFLAG_GENERIC, "Slay a player next round");
 	RegAdminCmd("sm_unslaynr", Command_UnSlayNR, ADMFLAG_GENERIC, "Unslay a player next round");
@@ -119,6 +129,7 @@ public OnPluginStart() {
 	SetCommands();
 	HookEvents();
 	ResetShorts();
+	ResetLastHandled();
 	PrintToServer("[RDM] Has Loaded Succcessfully!");
 }
 
@@ -134,7 +145,6 @@ public OnMapStart() {
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
 	max_round++;
 	round_time = 0;
-	round_start_time = GetTime();
 	return Plugin_Continue;
 }
 
@@ -144,8 +154,6 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
 
 public Action OnPlayerDisconnect(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	char name[256];
-	GetEventString(event, "name", name, sizeof(name));
 	
 	if (to_slay[client] == 1) {
 		char message[256];
@@ -154,6 +162,12 @@ public Action OnPlayerDisconnect(Event event, const char[] name, bool dontBroadc
 		to_slay[client] = 0;
 		slay_admins[client] = "";
 	}
+	
+	if (last_handled[client] > 0)
+	{
+		last_handled[client] = -1;
+	}
+	
 	
 	return Plugin_Continue;
 }
@@ -172,7 +186,9 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker", victim));
 	
 	// Prepare a SQL statement for the insertion
-	DBStatement insert_death = PrepareStatement(db, "INSERT INTO deaths (death_index, death_time, victim_name, victim_id, victim_role, victim_karma, killer_name, killer_id, killer_role, killer_karma, weapon, bad_action, last_gun_fire, round_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+	char error[255];
+	DBStatement insert_death = SQL_PrepareQuery(db, "INSERT INTO deaths (death_index, death_time, victim_name, victim_id, victim_role, victim_karma, killer_name, killer_id, killer_role, killer_karma, weapon, bad_action, last_gun_fire, round_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
+	if (insert_death == null) { PrintToServer("Error templating death in the database"); PrintToServer(error); return Plugin_Continue; }
 	
 	// Determine whether RDM
 	int victim_role = TTT_GetClientRole(victim);
@@ -186,7 +202,11 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	int bad_action = BadAction(victim_role, attacker_role);
 	
 	// Identify permanent names for victim & attacker, plus grab weapon used to kill
-	char weapon[100], victim_name[100], victim_id[100], attacker_name[100], attacker_id[100];
+	char weapon[100];
+	char victim_id[100];
+	char attacker_id[100];
+	char victim_name[100];
+	char attacker_name[100];
 	
 	GetClientAuthId(victim, AuthId_Steam2, victim_id, sizeof(victim_id), true);
 	GetClientAuthId(attacker, AuthId_Steam2, attacker_id, sizeof(attacker_id), true);
@@ -236,7 +256,9 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	int attacker_role = TTT_GetClientRole(attacker);
 
 	// Prepare a SQL statement for the insertion
-	DBStatement insert_damage = PrepareStatement(db, "INSERT INTO damage (round_no, victim_name, victim_auth, victim_role, attacker_name, attacker_auth, attacker_role, damage_done, health_left, round_time, weapon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
+	char error[255];
+	DBStatement insert_damage = SQL_PrepareQuery(db, "INSERT INTO damage (round_no, victim_name, victim_auth, victim_role, attacker_name, attacker_auth, attacker_role, damage_done, health_left, round_time, weapon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
+	if (insert_damage == null) { PrintToServer("Error templating damage in the database"); PrintToServer(error); return Plugin_Continue; }
 	
 	SQL_BindParamInt(insert_damage, 0, max_round, false);
 	SQL_BindParamString(insert_damage, 1, victim_name, false);
@@ -258,8 +280,8 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 
 public Action OnPlayerSpawned(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (TTT_IsRoundActive() && IsValidClient(client)) {
-		if (IsPlayerAlive(client)) {
+	if (TTT_IsRoundActive()) {
+		if (IsValidClient(client) && IsPlayerAlive(client)) {
 			CPrintToChat(client, "{purple}[Slay] {orchid}You joined the game too late and was automatically slain.");
 			ForcePlayerSuicide(client);
 			TTT_SetFoundStatus(client, true);
@@ -287,7 +309,6 @@ public Action Timer_60(Handle timer) {
 }
 
 public Action Command_RDM(int client, int args) {
-	
 	if (GetTime() - rdm_cooldown[client] < 15) {
 		CPrintToChat(client, "{purple}[RDM] {darkred}Please do not spam this command...")
 		return Plugin_Handled; // 15 seconds hasn't passed yet, don't allow
@@ -446,17 +467,18 @@ public Action Command_Handle(int client, int args) {
 
 public Action Command_HandleNext(int client, int args) {
 	if (args == 0) {
-		int first_unhandled = -1;
+		bool run = true;
+		int first_unhandled = 0;
 		for (int i = 0; i < 500; i++) {
-			if (short_ids[i]) {
-				if (handled_by[i] == 0) {
+			if (short_ids[i] && run) {
+				if (handled_by[i] == 0 && run) {
+					run = false;
 					first_unhandled = i;
-					break;
 				}
 			}
 		}
 		
-		if (first_unhandled != -1) {
+		if (!run) {
 			HandleCase(client, first_unhandled);
 		} else {
 			CPrintToChat(client, "{purple}[RDM] {orchid}No cases have been found at this time.");
@@ -487,6 +509,7 @@ public HandleCase(int client, int case_id)
 	
 	int death_index = short_ids[case_id];
 	handled_by[case_id] = client;
+	last_handled[client] = case_id;
 
 	// Prepare a SQL statement for the insertion
 	char error[255];
@@ -548,6 +571,30 @@ L 09/05/2017 - 04:59:24: [00:03] -> [King of ping (Traitor) damaged Harry / csgo
 L 09/05/2017 - 04:59:24: [00:03] -> [Harry / csgoboss /  (Innocent) damaged King of ping (Traitor) for 115 damage with p250] L 09/05/2017 - 04:59:24: [00:03] -> [Harry / csgoboss /  (Innocent) killed King of ping (Traitor) with p250]
 L 09/05/2017 - 04:59:24: --------------------------------------
 */
+
+public Action Command_Verdict(int client, int args) {
+	if (args == 0) {
+		CPrintToChat(client, "{purple}[RDM] {orchid}Expected an argument, but got none.)");
+		return Plugin_Handled;
+	}
+	
+	char verdict[32];
+	GetCmdArg(1, verdict, sizeof(verdict));
+	if (StrCompare(verdict, "guilty", false))
+	{
+		// guilty
+	}
+	else if (StrCompare(verdict, "innocent", false))
+	{
+		// innocent
+	}
+	else
+	{
+		// ???
+	}
+
+	return Plugin_Handled;
+}
 
 public Action Command_Damage(int client, int args) {
 	if (args == 0) {
@@ -709,19 +756,19 @@ public Action Display_Information(int client, int death_index) {
 	else if (killer_percentage > 60) { killer_percentage_colour = "{yellow}"; }
 	else { killer_percentage_colour = "{red}"; }
 	
-	CPrintToChat(client, "┏━━━━━━━━━━━━━ %s ━━━━━━━━━━━━━━", victim_name);
-	CPrintToChat(client, "┣━ Player: %s%s (%s)", victim_colour, victim_name, victim_id);
-	CPrintToChat(client, "┃  ┣━ Karma: %d ({lime}+%d{default}, {red}-%d{default}, %s%d%s{default})", victim_karma, victim_actions[0], victim_actions[1], victim_percentage_colour, victim_percentage, "%%");
+	CPrintToChat(client, "â”â”â”â”â”â”â”â”â”â”â”ï¿½ï¿½ï¿½â”â” %s â”â”â”â”â”â”â”â”â”â”â”â”â”â”", victim_name);
+	CPrintToChat(client, "â”£â” Player: %s%s (%s)", victim_colour, victim_name, victim_id);
+	CPrintToChat(client, "â”ƒ  â”£â” Karma: %d ({lime}+%d{default}, {red}-%d{default}, %s%d%s{default})", victim_karma, victim_actions[0], victim_actions[1], victim_percentage_colour, victim_percentage, "%%");
 	if (last_gun_fire_time == -1) {
-		CPrintToChat(client, "┃  ┣━ Last Shot: Never");
+		CPrintToChat(client, "â”ƒ  â”£â” Last Shot: Never");
 	} else {
-		CPrintToChat(client, "┃  ┣━ Last Shot: %d secs before death", death_time - last_gun_fire_time);
+		CPrintToChat(client, "â”ƒ  â”£â” Last Shot: %d secs before death", death_time - last_gun_fire_time);
 	}
-	CPrintToChat(client, "┣━ Killed By: %s%s (%s)", killer_colour, killer_name, killer_id);
-	CPrintToChat(client, "┃  ┣━ Karma: %d ({lime}+%d{default}, {red}-%d{default}, %s%d%s{default})", killer_karma, killer_actions[0], killer_actions[1], killer_percentage_colour, killer_percentage, "%%");
-	CPrintToChat(client, "┃  ┣━ Killed with: %s (%d round(s) ago)", weapon, max_round - round_no);
-	CPrintToChat(client, "┣━ Bad Action: %s", bad_action_string);
-	CPrintToChat(client, "┗━━━━━━━━━━━━━ %s ━━━━━━━━━━━━━━", victim_name);
+	CPrintToChat(client, "â”£â” Killed By: %s%s (%s)", killer_colour, killer_name, killer_id);
+	CPrintToChat(client, "â”ƒ  â”£â” Karma: %d ({lime}+%d{default}, {red}-%d{default}, %s%d%s{default})", killer_karma, killer_actions[0], killer_actions[1], killer_percentage_colour, killer_percentage, "%%");
+	CPrintToChat(client, "â”ƒ  â”£â” Killed with: %s (%d round(s) ago)", weapon, max_round - round_no);
+	CPrintToChat(client, "â”£â” Bad Action: %s", bad_action_string);
+	CPrintToChat(client, "â”—â”â”â”â”â”â”â”â”â”â”â”â”â” %s â”â”â”â”â”â”â”â”â”â”â”â”â”â”", victim_name);
 	
 	return Plugin_Continue;
 }
