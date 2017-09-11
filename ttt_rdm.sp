@@ -626,7 +626,7 @@ public Action Command_Verdict(int client, int args) {
 	
 	char verdict[32];
 	GetCmdArg(1, verdict, sizeof(verdict));
-	if (strcmp(verdict, "guilty", false))
+	if (strcmp(verdict, "guilty", false) == 0)
 	{
 		if (last_handled[client] == -1) { return Plugin_Handled; }
 		
@@ -644,7 +644,7 @@ public Action Command_Verdict(int client, int args) {
 		
 		CPrintToChat(client, "{Red} (name)'s case is closed.");
 	}
-	else if (strcmp(verdict, "innocent", false))
+	else if (strcmp(verdict, "innocent", false) == 0)
 	{
 		CPrintToChat(client, "{Green} (name)'s case is closed.");
 	}
