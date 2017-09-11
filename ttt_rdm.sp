@@ -28,6 +28,7 @@ TODO:
  - Only store non-traitor kills.
  - Add "handled" column to the kills db, only show unhandled cases.
  - Add how many times a person has rdmed in a time period.
+ - Merge a couple if int arrays together to make the code neater.
 */
 
 public Plugin myinfo = {
