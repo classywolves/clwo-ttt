@@ -628,12 +628,25 @@ public Action Command_Verdict(int client, int args) {
 	GetCmdArg(1, verdict, sizeof(verdict));
 	if (strcmp(verdict, "guilty", false) == 0)
 	{
-		if (last_handled[client] == -1) { return Plugin_Handled; }
+		if (last_handled[client] == -1)
+		{
+			CPrintToChat(client, "You do not have any handled RDM's");
+			return Plugin_Handled;
+		}
+		
 		
 		int case_id = last_handled[client];
 		
-		if (case_slay[case_id] == 0) { return Plugin_Handled; }
-		if (case_accused[case_id] != 0) { return Plugin_Handled; }
+		if (case_slay[case_id] == 0)
+		{
+			CPrintToChat(client, "User did not choose slay or warn.");
+			return Plugin_Handled;
+		}
+		if (case_accused[case_id] != 0) 
+		{
+			CPrintToChat(client, "I do not have the accused' client id.");
+			return Plugin_Handled;
+		}
 		
 		int attacker_id = case_accused[case_id];
 		
