@@ -27,6 +27,7 @@ TODO:
  - Add menu after /rdm, whether the rdmer slain or not. (If found guilty).
  - Only store non-traitor kills.
  - Add "handled" column to the kills db, only show unhandled cases.
+ - Add how many times a person has rdmed in a time period.
 */
 
 public Plugin myinfo = {
@@ -48,7 +49,8 @@ int handled_by[500];
 
 // Lists clients to slay (1 = slay, 0 = don't slay)
 int to_slay[MAXPLAYERS + 1];
-int last_handled[MAXPLAYERS + 1];
+int last_handled[MAXPLAYERS + 1];	// Store a staff's last handled case id.
+int case_slay[MAXPLAYERS + 1];		// Store a 1 if case wants the other person slain, 2 if not slain.
 char slay_admins[MAXPLAYERS + 1][255];
 
 // Prevent spamming of rdm command
@@ -379,7 +381,52 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 		
 		if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return; }
 		
-		while (SQL_FetchRow(rdm_instance)) {
+		// Only Expecting 1 row, changed while to if.
+		if (SQL_FetchRow(rdm_instance)) {
+			char victim_name[100];
+			char killer_name[100];
+
+			SQL_FetchString(rdm_instance, 2, victim_name, sizeof(victim_name));
+			SQL_FetchString(rdm_instance, 6, killer_name, sizeof(killer_name));
+
+			if (Count_Staff() != 0) {
+				char message[256];
+				Format(message, sizeof(message), "{purple}[RDM] {orchid}%s may have been RDM'd by %s. Handle with `/handle %i`", victim_name, killer_name, current_short_id);
+				CPrintToStaff(message);
+				CPrintToChat(client, "{purple}[RDM] {orchid}Thanks for the report.  Awaiting staff response..."); 
+				
+				short_ids[current_short_id] = death_index;
+				current_short_id++;
+				
+			} else {
+				CPrintToChat(client, "{purple}[RDM] {darkred}There are no staff online, you can do /calladmin to request one join.");
+			}
+			
+		}
+	}
+}
+
+public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
+{
+	if (action == MenuAction_Select) {
+		char info[32];
+		
+		rdm_cooldown[client] = GetTime();
+		
+		int death_index = StringToInt(info);
+		
+		char error[255];
+		DBStatement rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error))
+		if (rdm_instance == null) {
+			PrintToServer(error);
+			return;
+		}
+		SQL_BindParamInt(rdm_instance, 0, death_index, false);
+		
+		if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return; }
+		
+		// Only Expecting 1 row, changed while to if.
+		if (SQL_FetchRow(rdm_instance)) {
 			char victim_name[100];
 			char killer_name[100];
 
@@ -588,15 +635,15 @@ public Action Command_Verdict(int client, int args) {
 	GetCmdArg(1, verdict, sizeof(verdict));
 	if (StrCompare(verdict, "guilty", false))
 	{
-		// guilty
+		CPrintToChat(client, "{Red} (name)'s case is closed.");
 	}
 	else if (StrCompare(verdict, "innocent", false))
 	{
-		// innocent
+		CPrintToChat(client, "{Green} (name)'s case is closed.");
 	}
 	else
 	{
-		// ???
+		CPrintToChat(client, "Unrecognized verdict, please try again.");
 	}
 
 	return Plugin_Handled;
