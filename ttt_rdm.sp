@@ -24,7 +24,7 @@ TODO:
  - Profile: Karma, good actions, bad actions, percentage, playtime, innocent times, traitor times, longest traitorless streak
     
  - Create sm_verdict <case> - Menu with guilty or innocent.
- -  Add menu after /rdm, whether the rdmer slain or not. (If found guilty).
+ - Add menu after /rdm, whether the rdmer slain or not. (If found guilty).
  - Only store non-traitor kills.
  - Add "handled" column to the kills db, only show unhandled cases.
 */
