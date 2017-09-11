@@ -216,12 +216,12 @@ public Action Command_Playtime(int client, int args) {
 }
 
 public Action Command_BanTimes(int client, int args) {
-	CPrintToChatAll("{purple}[BanTimes] {yellow}The following are some common ban times:");
-	CPrintToChatAll("{purple}[BanTimes] {yellow} - 1 hour  --> 60    minutes");
-	CPrintToChatAll("{purple}[BanTimes] {yellow} - 1 day   --> 1440  minutes");
-	CPrintToChatAll("{purple}[BanTimes] {yellow} - 2 days  --> 2880  minutes");
-	CPrintToChatAll("{purple}[BanTimes] {yellow} - 1 week  --> 10080 minutes");
-	CPrintToChatAll("{purple}[BanTimes] {yellow} - 1 month --> 40320 minutes");
+	CPrintToChat(client, "{purple}[BanTimes] {yellow}The following are some common ban times:");
+	CPrintToChat(client, "{purple}[BanTimes] {yellow} - 1 hour  --> 60    minutes");
+	CPrintToChat(client, "{purple}[BanTimes] {yellow} - 1 day   --> 1440  minutes");
+	CPrintToChat(client, "{purple}[BanTimes] {yellow} - 2 days  --> 2880  minutes");
+	CPrintToChat(client, "{purple}[BanTimes] {yellow} - 1 week  --> 10080 minutes");
+	CPrintToChat(client, "{purple}[BanTimes] {yellow} - 1 month --> 40320 minutes");
 }
 
 public Action Command_Rank(int client, int args) {
