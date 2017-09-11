@@ -363,6 +363,8 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 	if (action == MenuAction_Select) {
 		char info[32];
 		
+		menu.GetItem(item, info, sizeof(info));
+		
 		rdm_cooldown[client] = GetTime();
 		
 		int death_index = StringToInt(info);
