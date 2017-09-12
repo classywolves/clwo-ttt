@@ -27,8 +27,6 @@ TODO:
  - Add menu after /rdm, whether the rdmer slain or not. (If found guilty).
  - Only store non-traitor kills.
  - Add "handled" column to the kills db, only show unhandled cases.
- - Add how many times a person has rdmed in a time period.
- - Merge a couple if int arrays together to make the code neater.
 */
 
 public Plugin myinfo = {
@@ -47,12 +45,10 @@ int current_short_id = 0;
 // Lists short_ids for RDMs
 int short_ids[500];
 int handled_by[500];
-int case_accused[500];
 
 // Lists clients to slay (1 = slay, 0 = don't slay)
 int to_slay[MAXPLAYERS + 1];
-int last_handled[MAXPLAYERS + 1];	// Store a staff's last handled case id.
-int case_slay[500];		// Store a 1 if case wants the other person slain, 2 if to warn.
+int last_handled[MAXPLAYERS + 1];
 char slay_admins[MAXPLAYERS + 1][255];
 
 // Prevent spamming of rdm command
@@ -66,8 +62,6 @@ int rdm_cooldown[MAXPLAYERS + 1];
 // Array of last time players fired guns
 int last_gun_fire[MAXPLAYERS + 1];
 
-#define should_slay		1
-#define should_warn		2
 
 public StartTimers() {
 	CreateTimer(1.0, Timer_1, _, TIMER_REPEAT);
@@ -76,6 +70,8 @@ public StartTimers() {
 
 public InitialiseVariables() {
 	db = ConnectDatabase("ttt", "TTT");
+	SQL_FastQuery(db, "SET NAMES utf8");
+	SQL_SetCharset(db, "utf8");
 	
 	// Highest previous death
 	DBResultSet max_index_query = SQL_Query(db, "SELECT Max(death_index) FROM deaths;");
@@ -101,11 +97,13 @@ public ResetShorts() {
 	for (int i = 0; i < 500; i++) {
 		short_ids[i] = 0;
 		handled_by[i] = 0;
-		case_slay[i] = 0;
-		case_accused[i] = 0;
 	}
+}
+
+public ResetLastHandled()
+{
 	for (int i = 0; i < MAXPLAYERS + 1; i++) {
-		last_handled[i] = -1;
+		short_ids[i] = -1;
 	}
 }
 
@@ -137,6 +135,7 @@ public OnPluginStart() {
 	SetCommands();
 	HookEvents();
 	ResetShorts();
+	ResetLastHandled();
 	PrintToServer("[RDM] Has Loaded Succcessfully!");
 }
 
@@ -289,7 +288,7 @@ public Action OnPlayerSpawned(Event event, const char[] name, bool dontBroadcast
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (TTT_IsRoundActive()) {
 		if (IsValidClient(client) && IsPlayerAlive(client)) {
-			CPrintToChat(client, "{purple}[Slay] {orchid}You joined the game too late and was automatically slain.");
+			CPrintToChat(client, "{purple}[Slay] {orchid}You joined the game too late and were automatically slain.");
 			ForcePlayerSuicide(client);
 			TTT_SetFoundStatus(client, true);
 		}
@@ -365,37 +364,12 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 {
 	if (action == MenuAction_Select) {
 		char info[32];
-		char message_slain[32];
-		char message_warned[32];
 		
 		menu.GetItem(item, info, sizeof(info));
 		
-		Menu menu_slay = new Menu(RDM_SlayMenu_Callback);
-		menu_slay.SetTitle("Slain or Warned?");
-		
-		FormatEx(message_slain, sizeof(message_slain), "slain,%s", info);
-		menu_slay.AddItem(message_slain, "Slain");
-		
-		FormatEx(message_warned, sizeof(message_warned), "warned,%s", info);
-		menu_slay.AddItem(message_warned, "Warned");
-		
-		menu_slay.Display(client, MENU_TIME_FOREVER);
-	}
-}
-
-public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
-{
-	if (action == MenuAction_Select) {
-		char to_explode[32];
-		menu.GetItem(item, to_explode, sizeof(to_explode));
-		
-		char buffers[2][32];
-		ExplodeString(to_explode, ",", buffers, 2, 32);
-		
-		
 		rdm_cooldown[client] = GetTime();
 		
-		int death_index = StringToInt(buffers[1]);
+		int death_index = StringToInt(info);
 		
 		char error[255];
 		DBStatement rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error))
@@ -407,8 +381,7 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 		
 		if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return; }
 		
-		// Only Expecting 1 row, changed while to if.
-		if (SQL_FetchRow(rdm_instance)) {
+		while (SQL_FetchRow(rdm_instance)) {
 			char victim_name[100];
 			char killer_name[100];
 
@@ -421,17 +394,7 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 				CPrintToStaff(message);
 				CPrintToChat(client, "{purple}[RDM] {orchid}Thanks for the report.  Awaiting staff response..."); 
 				
-				if (strcmp(buffers[0], "slain", false))
-				{
-					case_slay[current_short_id] = 1;
-				}
-				else if (strcmp(buffers[0], "warned", false))
-				{
-					case_slay[current_short_id] = 2;
-				}
-				
 				short_ids[current_short_id] = death_index;
-				case_accused[current_short_id] = FindTarget(client, killer_name, false);
 				current_short_id++;
 				
 			} else {
@@ -439,7 +402,6 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 			}
 			
 		}
-		// This will act as the final step before submitting the report, replacing the RDM menu callback.
 	}
 }
 
@@ -626,44 +588,17 @@ public Action Command_Verdict(int client, int args) {
 	
 	char verdict[32];
 	GetCmdArg(1, verdict, sizeof(verdict));
-	if (strcmp(verdict, "guilty", false) == 0)
+	if (StrCompare(verdict, "guilty", false))
 	{
-		if (last_handled[client] == -1)
-		{
-			CPrintToChat(client, "You do not have any handled RDM's");
-			return Plugin_Handled;
-		}
-		
-		
-		int case_id = last_handled[client];
-		
-		if (case_slay[case_id] == 0)
-		{
-			CPrintToChat(client, "User did not choose slay or warn.");
-			return Plugin_Handled;
-		}
-		if (case_accused[case_id] != 0) 
-		{
-			CPrintToChat(client, "I do not have the accused' client id.");
-			return Plugin_Handled;
-		}
-		
-		int attacker_id = case_accused[case_id];
-		
-		if (case_slay[case_id] == should_slay)
-		{
-			ClientCommand(client, "sm_slaynr #%d", attacker_id);
-		}
-		
-		CPrintToChat(client, "{Red} (name)'s case is closed.");
+		// guilty
 	}
-	else if (strcmp(verdict, "innocent", false) == 0)
+	else if (StrCompare(verdict, "innocent", false))
 	{
-		CPrintToChat(client, "{Green} (name)'s case is closed.");
+		// innocent
 	}
 	else
 	{
-		CPrintToChat(client, "Unrecognized verdict, please try again.");
+		// ???
 	}
 
 	return Plugin_Handled;
@@ -748,13 +683,13 @@ public Action Command_Damage(int client, int args) {
 	return Plugin_Handled;
 }
 
-public Display_Information(int client, int death_index) {
+public Action Display_Information(int client, int death_index) {
 	char error[255];
 	DBStatement rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error))
-	if (rdm_instance == null) { PrintToServer(error); return; }
+	if (rdm_instance == null) { PrintToServer(error); return Plugin_Handled; }
 	SQL_BindParamInt(rdm_instance, 0, death_index, false);
 	
-	if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return; }
+	if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
 	
 	int death_time;
 
@@ -843,6 +778,7 @@ public Display_Information(int client, int death_index) {
 	CPrintToChat(client, "┣━ Bad Action: %s", bad_action_string);
 	CPrintToChat(client, "┗━━━━━━━━━━━━━ %s ━━━━━━━━━━━━━━", victim_name);
 	
+	return Plugin_Continue;
 }
 
 public Action Command_SlayNR(int client, int args) {
@@ -912,7 +848,7 @@ public Action Command_UnSlayNR(int client, int args) {
 }
 
 public void TTT_OnRoundStart() {
-	for (new i = 0; i < MAXPLAYERS; i++) {
+	for (new i = 0; i <= MAXPLAYERS; i++) {
 		last_gun_fire[i] = -1;
 		if (to_slay[i] == 1) {
 			if (IsValidClient(i) && IsPlayerAlive(i)) {
