@@ -8,6 +8,7 @@
 //#include <ttt>
 #include <cstrike>
 #include <general>
+#include <smlib>
 
 /* Plugin Info */
 #define PLUGIN_NAME 			"TTT URLs"
@@ -43,9 +44,21 @@ public OnPluginStart()
 	PrintToServer("[URL] Has Loaded Succcessfully!");
 }
 
-public Display_Page(int client, char[] url) {
-	AdvMOTD_ShowMOTDPanel(client, "Displaying...", url, MOTDPANEL_TYPE_URL);
+public void Display_Page(int client, char[] url) {
+	char web_url[512];
+	strcopy(web_url, sizeof(web_url), url);
+	CraftMOTDUrl(web_url);
+	AdvMOTD_ShowMOTDPanel(client, "Displaying...", web_url, MOTDPANEL_TYPE_URL);
 	CPrintToChat(client, "{purple}[URL] {yellow}Loading {green}%s", url);
+}
+
+stock void CraftMOTDUrl(char WebUrl[512]) {
+	char encodedWebUrl[512];
+	Crypt_Base64Encode(WebUrl, encodedWebUrl, sizeof(encodedWebUrl));
+
+	char buffer[512];
+	Format(buffer, sizeof(buffer), "http://clwo.inilo.net/webredirect/payload/direct.php?website=%s", encodedWebUrl);
+	strcopy(WebUrl, 512, buffer);
 }
 
 public Action Command_Rules(int client, int args) {
