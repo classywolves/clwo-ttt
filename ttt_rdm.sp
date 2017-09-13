@@ -14,6 +14,9 @@
 #define PLUGIN_DESCRIPTION		"Handles TTT RDMs."
 #define PLUGIN_URL				"https://sinisterheavens.com"
 
+#define should_slay				1
+#define should_warn				2
+
 Database db;
 
 /*
@@ -67,9 +70,6 @@ int rdm_cooldown[MAXPLAYERS + 1];
 
 // Array of last time players fired guns
 int last_gun_fire[MAXPLAYERS + 1];
-
-#define should_slay		1
-#define should_warn		2
 
 public StartTimers() {
 	CreateTimer(1.0, Timer_1, _, TIMER_REPEAT);
