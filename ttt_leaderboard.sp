@@ -55,6 +55,7 @@ public Plugin myinfo =
 
 public OnPluginStart()
 {
+
 	// Connect to Database
 	char error[255];
 	db_ttt = SQL_Connect("ttt", true, error, sizeof(error));

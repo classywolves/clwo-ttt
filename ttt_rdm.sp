@@ -55,6 +55,9 @@ int last_handled[MAXPLAYERS + 1];	// Store a staff's last handled case id.
 int case_slay[500];		// Store a 1 if case wants the other person slain, 2 if to warn.
 char slay_admins[MAXPLAYERS + 1][255];
 
+// Number of times a person has been slain this map.
+int slay_count[MAXPLAYERS + 1];
+
 // Prevent spamming of rdm command
 int rdm_cooldown[MAXPLAYERS + 1];
 
@@ -634,7 +637,6 @@ public Action Command_Verdict(int client, int args) {
 			return Plugin_Handled;
 		}
 		
-		
 		int case_id = last_handled[client];
 		
 		if (case_slay[case_id] == 0)
@@ -916,6 +918,14 @@ public void TTT_OnRoundStart() {
 		last_gun_fire[i] = -1;
 		if (to_slay[i] == 1) {
 			if (IsValidClient(i) && IsPlayerAlive(i)) {
+				slay_count[i]++;
+				char message[255];
+				if (slay_count[i] > 2) {
+					Format(message, sizeof(message), "{purple}[RDM] {red}%N has been slain %d times this map.  Consider a specban.", i, slay_count[i]);
+				} else {
+					Format(message, sizeof(message), "{purple}[RDM] {yellow}%N has been slain (no. %d).", i, slay_count[i]);
+				}
+				CPrintToStaff(message);
 				CPrintToChat(i, "{purple}[Slay] {orchid}You were slain by %s.  Please read /rules.", slay_admins[i]);
 				ForcePlayerSuicide(i);
 				TTT_SetFoundStatus(i, true);
