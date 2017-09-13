@@ -642,7 +642,7 @@ public Action Command_Verdict(int client, int args) {
 			CPrintToChat(client, "User did not choose slay or warn.");
 			return Plugin_Handled;
 		}
-		if (case_accused[case_id] != 0) 
+		if (case_accused[case_id] == 0) 
 		{
 			CPrintToChat(client, "I do not have the accused' client id.");
 			return Plugin_Handled;
@@ -653,6 +653,11 @@ public Action Command_Verdict(int client, int args) {
 		if (case_slay[case_id] == should_slay)
 		{
 			ClientCommand(client, "sm_slaynr #%d", attacker_id);
+			CPrintToChat(client, "Slaying RDM\'er next round");
+		}
+		else
+		{
+			CPrintToChat(client, "Please warn the RDMer");
 		}
 		
 		CPrintToChat(client, "{Red} (name)'s case is closed.");
