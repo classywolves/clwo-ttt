@@ -431,7 +431,7 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 				}
 				
 				short_ids[current_short_id] = death_index;
-				case_accused[current_short_id] = FindTarget(client, killer_name, false);
+				case_accused[current_short_id] = GetClientUserId(FindTarget(client, killer_name, false));
 				current_short_id++;
 				
 			} else {
