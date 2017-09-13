@@ -29,6 +29,7 @@ TODO:
  - Add "handled" column to the kills db, only show unhandled cases.
  - Add how many times a person has rdmed in a time period.
  - Merge a couple if int arrays together to make the code neater.
+ - Send message(s) to the case creator and notify staff
 */
 
 public Plugin myinfo = {
@@ -426,11 +427,11 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 				
 				if (strcmp(buffers[0], "slain", false))
 				{
-					case_slay[current_short_id] = 1;
+					case_slay[current_short_id] = should_slay;
 				}
 				else if (strcmp(buffers[0], "warned", false))
 				{
-					case_slay[current_short_id] = 2;
+					case_slay[current_short_id] = should_warn;
 				}
 				
 				short_ids[current_short_id] = death_index;
@@ -629,48 +630,48 @@ public Action Command_Verdict(int client, int args) {
 	
 	char verdict[32];
 	GetCmdArg(1, verdict, sizeof(verdict));
-	if (strcmp(verdict, "guilty", false) == 0)
+	
+	if (last_handled[client] == -1)
 	{
-		if (last_handled[client] == -1)
-		{
-			CPrintToChat(client, "You do not have any handled RDM's");
-			return Plugin_Handled;
-		}
+		CPrintToChat(client, "{purple}[RDM] {orchid}You do not have any handled RDM's");
+		return Plugin_Handled;
+	}
+	
+	int case_id = last_handled[client];
+	
+	if (case_slay[case_id] == 0)
+	{
+		CPrintToChat(client, "{purple}[RDM] {red}User did not choose slay or warn.");
+		return Plugin_Handled;
+	}
+	if (case_accused[case_id] == 0) 
+	{
+		return Plugin_Handled;
+	}
+	
+	int attacker_id = case_accused[case_id];
+	int attacker_clientid = GetClientOfUserId(attacker_id);
 		
-		int case_id = last_handled[client];
-		
-		if (case_slay[case_id] == 0)
-		{
-			CPrintToChat(client, "User did not choose slay or warn.");
-			return Plugin_Handled;
-		}
-		if (case_accused[case_id] == 0) 
-		{
-			CPrintToChat(client, "I do not have the accused' client id.");
-			return Plugin_Handled;
-		}
-		
-		int attacker_id = case_accused[case_id];
-		
+	if (strcmp(verdict, "guilty", false) == 0)
+	{		
 		if (case_slay[case_id] == should_slay)
 		{
 			ClientCommand(client, "sm_slaynr #%d", attacker_id);
-			CPrintToChat(client, "Slaying RDM\'er next round");
+			CPrintToChat(client, "{purple}[RDM] {red}Case closed, slaying %N next round!", attacker_clientid);
 		}
 		else
 		{
-			CPrintToChat(client, "Please warn the RDMer");
+			CPrintToChat(client, "{purple}[RDM] {orchid}Case closed, please message %N and explain your evidence.", attacker_clientid);
 		}
 		
-		CPrintToChat(client, "{Red} (name)'s case is closed.");
 	}
 	else if (strcmp(verdict, "innocent", false) == 0)
 	{
-		CPrintToChat(client, "{Green} (name)'s case is closed.");
+		CPrintToChat(client, "{purple}[RDM] {Green}A case has been solved!");
 	}
 	else
 	{
-		CPrintToChat(client, "Unrecognized verdict, please try again.");
+		CPrintToChat(client, "{purple}[RDM] {red}Unrecognized verdict, type 'innocent' or 'guilty'");
 	}
 
 	return Plugin_Handled;
