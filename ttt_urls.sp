@@ -17,6 +17,8 @@
 #define PLUGIN_DESCRIPTION		"Opens URLs."
 #define PLUGIN_URL				"https://sinisterheavens.com"
 
+bool url_seen[MAXPLAYERS + 1];
+
 public Plugin myinfo =
 {
 	name = PLUGIN_NAME,
@@ -47,17 +49,25 @@ public OnPluginStart()
 public void Display_Page(int client, char[] url) {
 	char web_url[512];
 	strcopy(web_url, sizeof(web_url), url);
-	CraftMOTDUrl(web_url);
+	CraftMOTDUrl(client, web_url);
 	AdvMOTD_ShowMOTDPanel(client, "Displaying...", web_url, MOTDPANEL_TYPE_URL);
 	CPrintToChat(client, "{purple}[URL] {yellow}Loading {green}%s", url);
 }
 
-stock void CraftMOTDUrl(char WebUrl[512]) {
+stock void CraftMOTDUrl(int client, char WebUrl[512]) {
 	char encodedWebUrl[512];
 	Crypt_Base64Encode(WebUrl, encodedWebUrl, sizeof(encodedWebUrl));
 
 	char buffer[512];
-	Format(buffer, sizeof(buffer), "http://clwo.inilo.net/webredirect/payload/direct.php?website=%s", encodedWebUrl);
+	if (url_seen[client]) {
+		PrintToConsole(client, "1");
+		url_seen[client] = false;
+		Format(buffer, sizeof(buffer), "http://clwo.inilo.net/webredirect/payload/direct.php?website=%s", encodedWebUrl);
+	} else {
+		PrintToConsole(client, "2");
+		url_seen[client] = true;
+		Format(buffer, sizeof(buffer), "http://clwo.eu/webredirect/payload/direct.php?website=%s", encodedWebUrl);
+	}
 	strcopy(WebUrl, 512, buffer);
 }
 

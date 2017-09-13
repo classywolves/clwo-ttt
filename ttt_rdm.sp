@@ -58,8 +58,6 @@ char slay_admins[MAXPLAYERS + 1][255];
 // Prevent spamming of rdm command
 int rdm_cooldown[MAXPLAYERS + 1];
 
-
-
 // Array of last player death indexes
 // int player_death_index[MAXPLAYERS + 1];
 
