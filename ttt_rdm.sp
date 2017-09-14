@@ -374,8 +374,7 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 		
 		menu.GetItem(item, info, sizeof(info));
 		
-		short_ids[current_short_id] = death_index;
-		case_accused[current_short_id] = GetClientUserId(FindTarget(client, killer_name, false));
+		short_ids[current_short_id] = StringToInt(info);
 		current_short_id++;
 		
 		Menu menu_slay = new Menu(RDM_SlayMenu_Callback);
@@ -432,7 +431,7 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 				{
 					case_slay[current_short_id-1] = should_warn;
 				}
-				
+				case_accused[current_short_id-1] = GetClientUserId(FindTarget(client, killer_name, false));
 				char message[256];
 				Format(message, sizeof(message), "{purple}[RDM] {orchid}%s may have been RDM'd by %s. Handle with `/handle %i`", victim_name, killer_name, current_short_id-1);
 				CPrintToStaff(message);
