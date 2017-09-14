@@ -135,6 +135,7 @@ public HookEvents() {
 }
 
 public OnPluginStart() {
+	LoadTranslations("common.phrases");
 	StartTimers();
 	InitialiseVariables();
 	SetCVARS();
