@@ -374,7 +374,7 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 		
 		menu.GetItem(item, info, sizeof(info));
 		
-		short_ids[current_short_id] = StringToInt(info);
+		short_ids[current_short_id] = StringToInt(info);`
 		current_short_id++;
 		
 		Menu menu_slay = new Menu(RDM_SlayMenu_Callback);
@@ -521,7 +521,7 @@ public Action Command_HandleNext(int client, int args) {
 		int first_unhandled = 0;
 		for (int i = 0; i < 500; i++) {
 			if (short_ids[i] && run) {
-				if (handled_by[i] == 0 && run) {
+				if (handled_by[i] == 0 && run && (case_slay[i] != 0)) {
 					run = false;
 					first_unhandled = i;
 				}
@@ -547,6 +547,12 @@ public HandleCase(int client, int case_id)
 	
 	if (short_ids[case_id] == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}The given case_id is either invalid or not distributed yet.");
+		return;
+	}
+	
+	if (case_slay[case_id] == 0)
+	{
+		CPrintToChat(client, "{purple}[RDM] {orchid}Waiting for %N to complete their case.", client);
 		return;
 	}
 	
