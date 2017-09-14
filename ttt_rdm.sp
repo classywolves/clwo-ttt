@@ -374,6 +374,10 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 		
 		menu.GetItem(item, info, sizeof(info));
 		
+		short_ids[current_short_id] = death_index;
+		case_accused[current_short_id] = GetClientUserId(FindTarget(client, killer_name, false));
+		current_short_id++;
+		
 		Menu menu_slay = new Menu(RDM_SlayMenu_Callback);
 		menu_slay.SetTitle("Slain or Warned?");
 		
@@ -420,23 +424,20 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 			SQL_FetchString(rdm_instance, 6, killer_name, sizeof(killer_name));
 
 			if (Count_Staff() != 0) {
-				char message[256];
-				Format(message, sizeof(message), "{purple}[RDM] {orchid}%s may have been RDM'd by %s. Handle with `/handle %i`", victim_name, killer_name, current_short_id);
-				CPrintToStaff(message);
-				CPrintToChat(client, "{purple}[RDM] {orchid}Thanks for the report.  Awaiting staff response..."); 
-				
 				if (strcmp(buffers[0], "slain", false))
 				{
-					case_slay[current_short_id] = should_slay;
+					case_slay[current_short_id-1] = should_slay;
 				}
 				else if (strcmp(buffers[0], "warned", false))
 				{
-					case_slay[current_short_id] = should_warn;
+					case_slay[current_short_id-1] = should_warn;
 				}
 				
-				short_ids[current_short_id] = death_index;
-				case_accused[current_short_id] = GetClientUserId(FindTarget(client, killer_name, false));
-				current_short_id++;
+				char message[256];
+				Format(message, sizeof(message), "{purple}[RDM] {orchid}%s may have been RDM'd by %s. Handle with `/handle %i`", victim_name, killer_name, current_short_id-1);
+				CPrintToStaff(message);
+				CPrintToChat(client, "{purple}[RDM] {orchid}Thanks for the report.  Awaiting staff response..."); 
+				
 				
 			} else {
 				CPrintToChat(client, "{purple}[RDM] {darkred}There are no staff online, you can do /calladmin to request one join.");
