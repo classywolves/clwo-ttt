@@ -38,7 +38,7 @@ public OnPluginStart()
 {
 	CreateConVar("lastseen_version", PLUGIN_VERSION_M, "LastSeen Plugin Version");
 	RegConsoleCmd("sm_visible", Command_Visible, "Prints all players that are visible");
-	CreateTimer(1.0, Timer_UpdateLastSeen, _, TIMER_FLAG_NO_MAPCHANGE);
+	// CreateTimer(1.0, Timer_UpdateLastSeen, _, TIMER_FLAG_NO_MAPCHANGE);
 	PrintToServer("[LSeen] Has Loaded Succcessfully!");
 }
 
@@ -46,6 +46,7 @@ public OnPluginEnd() {
 	PrintToServer("[LSeen] Has Unloaded Successfully!");
 }
 
+/*
 public Action Timer_UpdateLastSeen(Handle timer)
 {
 	
@@ -57,6 +58,7 @@ public Action Timer_UpdateLastSeen(Handle timer)
   
 	return Plugin_Continue;
 }
+*/
 
 public Action Command_Visible(int client, int args) {
 	if (args != 0) {
