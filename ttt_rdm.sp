@@ -375,7 +375,7 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 		
 		menu.GetItem(item, info, sizeof(info));
 		
-		short_ids[current_short_id] = StringToInt(info);`
+		short_ids[current_short_id] = StringToInt(info);
 		current_short_id++;
 		
 		Menu menu_slay = new Menu(RDM_SlayMenu_Callback);
