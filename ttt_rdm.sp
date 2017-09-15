@@ -669,6 +669,7 @@ public Action Command_Verdict(int client, int args) {
 		else
 		{
 			CPrintToChat(client, "{purple}[RDM] {orchid}Case closed, please message %N and explain your evidence.", attacker_clientid);
+			CPrintToChat(client, "{purple}[RDM] {yellow}case_slay[case_id] = %d, case_id = ", case_slay[case_id], case_id);
 		}
 		
 	}
