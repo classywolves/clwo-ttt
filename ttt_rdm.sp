@@ -683,10 +683,10 @@ public Action Command_Verdict(int client, int args) {
 	if (attacker_id != -1) {attacker_clientid = GetClientOfUserId(attacker_id);}
 	
 	char error[255];
-	DBStatement update_handled = SQL_PrepareQuery(db, "UPDATE FROM deaths SET verdict=? WHERE death_index=?;", error, sizeof(error));
+	DBStatement update_handled = SQL_PrepareQuery(db, "UPDATE deaths SET verdict=? WHERE death_index=?;", error, sizeof(error));
 	if (update_handled == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
 	
-	DBStatement handled_handles = SQL_PrepareQuery(db, "UPDATE FROM handles SET verdict=? WHERE death_index=?;", error, sizeof(error));
+	DBStatement handled_handles = SQL_PrepareQuery(db, "UPDATE handles SET verdict=? WHERE death_index=?;", error, sizeof(error));
 	if (handled_handles == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
 	
 	
