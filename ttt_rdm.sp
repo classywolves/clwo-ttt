@@ -333,8 +333,8 @@ public Action Command_RDM(int client, int args) {
 		
 	char client_auth[100];
 	GetClientAuthId(client, AuthId_Steam2, client_auth, sizeof(client_auth), true);
-
-	DBStatement rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? ORDER BY `death_time` DESC LIMIT 20;");
+		
+	DBStatement rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND verdict=null ORDER BY `death_time` DESC LIMIT 20;");
 
 	char time[100];
 	IntToString(GetTime() - 24 * 60 * 60, time, sizeof(time));
@@ -440,12 +440,6 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 				
 				int killer_id = FindTarget(client, killer_name, false);
 				int victim_id = FindTarget(client, victim_name, false);
-				
-				if ( ( killer_id == -1 ) || ( victim_id == -1 ) )
-				{
-					CPrintToChat(client, "{purple}[RDM] {red}Could not complete report, the killer has left"); 
-					return;
-				}
 				
 				case_accused[current_short_id - 1] = GetClientUserId(killer_id);
 				case_accuser[current_short_id - 1] = GetClientUserId(victim_id);
@@ -587,6 +581,7 @@ public HandleCase(int client, int case_id)
 	last_handled[client] = case_id;
 
 	// Prepare a SQL statement for the insertion
+		
 	char error[255];
 	DBStatement insert_handles = SQL_PrepareQuery(db, "INSERT INTO handles (death_index, staff_name, staff_auth) VALUES (?, ?, ?);", error, sizeof(error));
 	if (insert_handles == null) { PrintToServer("Error templating handles in the database"); PrintToServer(error); return; }
@@ -686,14 +681,32 @@ public Action Command_Verdict(int client, int args) {
 	
 	if (victim_id != -1) {victim_clientid = GetClientOfUserId(victim_id);}
 	if (attacker_id != -1) {attacker_clientid = GetClientOfUserId(attacker_id);}
-
+	
+	char error[255];
+	DBStatement update_handled = SQL_PrepareQuery(db, "UPDATE FROM deaths SET verdict=? WHERE death_index=?;", error, sizeof(error));
+	if (update_handled == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
+	
+	DBStatement handled_handles = SQL_PrepareQuery(db, "UPDATE FROM handles SET verdict=? WHERE death_index=?;", error, sizeof(error));
+	if (handled_handles == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
+	
+	
+	
 	if (strcmp(verdict, "guilty", false) == 0)
 	{		
+		SQL_BindParamInt(update_handled, 0, 2, false);
+		SQL_BindParamInt(update_handled, 1, short_ids[case_id], false);
+		
+		SQL_BindParamInt(handled_handles, 0, 2, false);
+		SQL_BindParamInt(handled_handles, 1, short_ids[case_id], false);
+		
+		if (!SQL_Execute(update_handled)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
+		if (!SQL_Execute(handled_handles)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
+		
 		if ( (case_slay[case_id] == should_slay) && (attacker_id != -1) )
 		{
 			ClientCommand(client, "sm_slaynr #%d", attacker_id);
 			CPrintToChat(client, "{purple}[RDM] {red}Case closed, slaying %s next round!", _killer_name[case_id]);
-			CPrintToChat(client, "{purple}[RDM] {orchid}please message %s and explain your evidence.", _killer_name[case_id]);
+			CPrintToChat(client, "{purple}[RDM] {orchid}Please message %s and explain your evidence.", _killer_name[case_id]);
 		}
 		else
 		{
@@ -710,6 +723,15 @@ public Action Command_Verdict(int client, int args) {
 	}
 	else if (strcmp(verdict, "innocent", false) == 0)
 	{
+		SQL_BindParamInt(update_handled, 0, 1, false);
+		SQL_BindParamInt(update_handled, 1, short_ids[case_id], false);
+		
+		SQL_BindParamInt(handled_handles, 0, 1, false);
+		SQL_BindParamInt(handled_handles, 1, short_ids[case_id], false);
+		
+		if (!SQL_Execute(update_handled)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
+		if (!SQL_Execute(handled_handles)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
+		
 		if (victim_id == -1)
 		{
 			CPrintToChat(client, "{purple}[RDM] {green} %s {yellow} has left before the verdict was given.", _victim_name[case_id]);
