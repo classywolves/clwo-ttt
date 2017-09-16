@@ -49,12 +49,16 @@ int current_short_id = 0;
 int short_ids[500];
 int handled_by[500];
 int case_accused[500];
+int case_accuser[500];
 
 // Lists clients to slay (1 = slay, 0 = don't slay)
 int to_slay[MAXPLAYERS + 1];
 int last_handled[MAXPLAYERS + 1];	// Store a staff's last handled case id.
 int case_slay[500];		// Store a 1 if case wants the other person slain, 2 if to warn.
+
 char slay_admins[MAXPLAYERS + 1][255];
+char _victim_name[500][255];
+char _killer_name[500][255];
 
 // Number of times a person has been slain this map.
 int slay_count[MAXPLAYERS + 1];
@@ -107,6 +111,7 @@ public ResetShorts() {
 		handled_by[i] = 0;
 		case_slay[i] = 0;
 		case_accused[i] = 0;
+		case_accuser[i] = 0;
 	}
 	for (int i = 0; i < MAXPLAYERS + 1; i++) {
 		last_handled[i] = -1;
@@ -424,15 +429,28 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 			SQL_FetchString(rdm_instance, 6, killer_name, sizeof(killer_name));
 
 			if (Count_Staff() != 0) {
-				if (strcmp(buffers[0], "slain", false))
+				if (strcmp(buffers[0], "slain", false) == 0)
 				{
 					case_slay[current_short_id-1] = should_slay;
 				}
-				else if (strcmp(buffers[0], "warned", false))
+				else if (strcmp(buffers[0], "warned", false) == 0)
 				{
 					case_slay[current_short_id-1] = should_warn;
 				}
-				case_accused[current_short_id-1] = GetClientUserId(FindTarget(client, killer_name, false));
+				
+				int killer_id = FindTarget(client, killer_name, false);
+				int victim_id = FindTarget(client, victim_name, false);
+				
+				if ( ( killer_id == -1 ) || ( victim_id == -1 ) )
+				{
+					CPrintToChat(client, "{purple}[RDM] {red}Could not complete report, the killer has left"); 
+					return;
+				}
+				
+				case_accused[current_short_id - 1] = GetClientUserId(killer_id);
+				case_accuser[current_short_id - 1] = GetClientUserId(victim_id);
+				_victim_name[current_short_id - 1] = victim_name;
+				_killer_name[current_short_id - 1] = killer_name;
 				char message[256];
 				Format(message, sizeof(message), "{purple}[RDM] {orchid}%s may have been RDM'd by %s. Handle with `/handle %i`", victim_name, killer_name, current_short_id-1);
 				CPrintToStaff(message);
@@ -656,26 +674,56 @@ public Action Command_Verdict(int client, int args) {
 		return Plugin_Handled;
 	}
 	
+	if (case_accuser[case_id] == 0) 
+	{
+		return Plugin_Handled;
+	}
+	
 	int attacker_id = case_accused[case_id];
-	int attacker_clientid = GetClientOfUserId(attacker_id);
-		
+	int victim_id = case_accuser[case_id];
+	int victim_clientid = 0;
+	int attacker_clientid = 0;
+	
+	if (victim_id != -1) {victim_clientid = GetClientOfUserId(victim_id);}
+	if (attacker_id != -1) {attacker_clientid = GetClientOfUserId(attacker_id);}
+
 	if (strcmp(verdict, "guilty", false) == 0)
 	{		
-		if (case_slay[case_id] == should_slay)
+		if ( (case_slay[case_id] == should_slay) && (attacker_id != -1) )
 		{
 			ClientCommand(client, "sm_slaynr #%d", attacker_id);
-			CPrintToChat(client, "{purple}[RDM] {red}Case closed, slaying %N next round!", attacker_clientid);
+			CPrintToChat(client, "{purple}[RDM] {red}Case closed, slaying %s next round!", _killer_name[case_id]);
+			CPrintToChat(client, "{purple}[RDM] {orchid}please message %s and explain your evidence.", _killer_name[case_id]);
 		}
 		else
 		{
-			CPrintToChat(client, "{purple}[RDM] {orchid}Case closed, please message %N and explain your evidence.", attacker_clientid);
-			CPrintToChat(client, "{purple}[RDM] {yellow}case_slay[case_id] = %d, case_id = ", case_slay[case_id], case_id);
+			// Accused left
+			// TODO: Handle this to auto-slay when they next join.
+			CPrintToChat(client, "{purple}[RDM] {orchid}Case closed, please message %s and explain your evidence.", _killer_name[case_id]);
+		}
+		
+		if (victim_id != -1)
+		{
+			CPrintToChat(victim_clientid, "{purple}[RDM] {green}%s will be slain next round!", _killer_name[case_id]);
 		}
 		
 	}
 	else if (strcmp(verdict, "innocent", false) == 0)
 	{
-		CPrintToChat(client, "{purple}[RDM] {Green}A case has been solved!");
+		if (victim_id == -1)
+		{
+			CPrintToChat(client, "{purple}[RDM] {green} %s {yellow} has left before the verdict was given.", _victim_name[case_id]);
+		}
+		else
+		{
+			CPrintToChat(client, "{purple}[RDM] {green}Case closed, please message %s and explain why you thought it wasn't an RDM", _victim_name[case_id]);
+		}
+		
+		if (attacker_id != -1)
+		{
+			CPrintToChat(attacker_clientid, "{purple}[RDM] {green}You were found innocent of %s's case", _victim_name[case_id]);
+		}
+		
 	}
 	else
 	{
