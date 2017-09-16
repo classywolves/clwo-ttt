@@ -9,7 +9,7 @@
 
 /* Plugin Info */
 #define PLUGIN_NAME 			"TTT RDM"
-#define PLUGIN_VERSION_M 		"0.0.4"
+#define PLUGIN_VERSION_M 		"0.0.5"
 #define PLUGIN_AUTHOR 			"Popey"
 #define PLUGIN_DESCRIPTION		"Handles TTT RDMs."
 #define PLUGIN_URL				"https://sinisterheavens.com"
