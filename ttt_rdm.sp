@@ -716,7 +716,7 @@ public Action Command_Verdict(int client, int args) {
 		
 		if (victim_id != -1)
 		{
-			CPrintToChat(victim_clientid, "{purple}[RDM] {green}%s will be slain next round!", _killer_name[case_id]);
+			CPrintToChat(victim_clientid, "{purple}[RDM] {green}%s was found guilty and will be slain next round!", _killer_name[case_id]);
 		}
 		
 	}
