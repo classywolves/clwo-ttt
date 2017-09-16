@@ -334,7 +334,7 @@ public Action Command_RDM(int client, int args) {
 	char client_auth[100];
 	GetClientAuthId(client, AuthId_Steam2, client_auth, sizeof(client_auth), true);
 		
-	DBStatement rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND verdict=null ORDER BY `death_time` DESC LIMIT 20;");
+	DBStatement rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 20;");
 
 	char time[100];
 	IntToString(GetTime() - 24 * 60 * 60, time, sizeof(time));
