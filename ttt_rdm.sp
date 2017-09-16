@@ -380,9 +380,6 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 		
 		menu.GetItem(item, info, sizeof(info));
 		
-		short_ids[current_short_id] = StringToInt(info);
-		current_short_id++;
-		
 		Menu menu_slay = new Menu(RDM_SlayMenu_Callback);
 		menu_slay.SetTitle("Slain or Warned?");
 		
@@ -405,6 +402,8 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 		char buffers[2][32];
 		ExplodeString(to_explode, ",", buffers, 2, 32);
 		
+		current_short_id++;
+		short_ids[current_short_id] = StringToInt(buffers[1]);
 		
 		rdm_cooldown[client] = GetTime();
 		
@@ -438,8 +437,8 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 					case_slay[current_short_id-1] = should_warn;
 				}
 				
-				int killer_id = FindTarget(client, killer_name, false);
-				int victim_id = FindTarget(client, victim_name, false);
+				int killer_id = FindTarget(client, killer_name, true, false);
+				int victim_id = FindTarget(client, victim_name, true, false);
 				
 				case_accused[current_short_id - 1] = GetClientUserId(killer_id);
 				case_accuser[current_short_id - 1] = GetClientUserId(victim_id);
@@ -943,7 +942,7 @@ public Action Command_SlayNR(int client, int args) {
 	GetCmdArg(1, target_string, sizeof(target_string));
 	
 	// Ensure target exists 
-	int target_client = FindTarget(client, target_string);
+	int target_client = FindTarget(client, target_string, true, false);
 	if (target_client == -1) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Target not found.");
 		return Plugin_Handled;
@@ -980,7 +979,7 @@ public Action Command_UnSlayNR(int client, int args) {
 	GetCmdArg(1, target_string, sizeof(target_string));
 	
 	// Ensure target exists 
-	int target_client = FindTarget(client, target_string);
+	int target_client = FindTarget(client, target_string, true, false);
 	if (target_client == -1) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Target not found.");
 		return Plugin_Handled;
