@@ -334,7 +334,7 @@ public Action Command_RDM(int client, int args) {
 	char client_auth[100];
 	GetClientAuthId(client, AuthId_Steam2, client_auth, sizeof(client_auth), true);
 		
-	DBStatement rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 20;");
+	DBStatement rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND NOT victim_id <=> killer_id AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 20;");
 
 	char time[100];
 	IntToString(GetTime() - 24 * 60 * 60, time, sizeof(time));
@@ -379,7 +379,7 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 		char message_warned[32];
 		
 		menu.GetItem(item, info, sizeof(info));
-		
+
 		Menu menu_slay = new Menu(RDM_SlayMenu_Callback);
 		menu_slay.SetTitle("Slain or Warned?");
 		
@@ -402,8 +402,9 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 		char buffers[2][32];
 		ExplodeString(to_explode, ",", buffers, 2, 32);
 
-		short_ids[current_short_id - 1] = StringToInt(buffers[1]);
-		
+		short_ids[current_short_id] = StringToInt(buffers[1]);
+		current_short_id++;
+
 		rdm_cooldown[client] = GetTime();
 		
 		int death_index = StringToInt(buffers[1]);
