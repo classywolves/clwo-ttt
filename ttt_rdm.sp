@@ -334,7 +334,7 @@ public Action Command_RDM(int client, int args) {
 	char client_auth[100];
 	GetClientAuthId(client, AuthId_Steam2, client_auth, sizeof(client_auth), true);
 		
-	DBStatement rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND verdict=null ORDER BY `death_time` DESC LIMIT 20;");
+	DBStatement rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 20;");
 
 	char time[100];
 	IntToString(GetTime() - 24 * 60 * 60, time, sizeof(time));
@@ -380,7 +380,6 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 		
 		menu.GetItem(item, info, sizeof(info));
 		
-		short_ids[current_short_id] = StringToInt(info);
 		current_short_id++;
 		
 		Menu menu_slay = new Menu(RDM_SlayMenu_Callback);
@@ -405,6 +404,7 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 		char buffers[2][32];
 		ExplodeString(to_explode, ",", buffers, 2, 32);
 		
+		short_ids[current_short_id - 1] = StringToInt(buffers[1]);
 		
 		rdm_cooldown[client] = GetTime();
 		
@@ -683,10 +683,10 @@ public Action Command_Verdict(int client, int args) {
 	if (attacker_id != -1) {attacker_clientid = GetClientOfUserId(attacker_id);}
 	
 	char error[255];
-	DBStatement update_handled = SQL_PrepareQuery(db, "UPDATE FROM deaths SET verdict=? WHERE death_index=?;", error, sizeof(error));
+	DBStatement update_handled = SQL_PrepareQuery(db, "UPDATE deaths SET verdict=? WHERE death_index=?;", error, sizeof(error));
 	if (update_handled == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
 	
-	DBStatement handled_handles = SQL_PrepareQuery(db, "UPDATE FROM handles SET verdict=? WHERE death_index=?;", error, sizeof(error));
+	DBStatement handled_handles = SQL_PrepareQuery(db, "UPDATE handles SET verdict=? WHERE death_index=?;", error, sizeof(error));
 	if (handled_handles == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
 	
 	
