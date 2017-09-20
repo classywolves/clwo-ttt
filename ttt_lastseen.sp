@@ -5,6 +5,7 @@
 #include <sdktools_trace>
 #include <sdktools_engine>
 #include <entity>
+#include <ttt>
 #include <general>
 
 /* Plugin Info */
@@ -16,7 +17,7 @@
 
 int array_lastseen[MAXPLAYERS + 1][MAXPLAYERS + 1];
 float vec_eyes[MAXPLAYERS + 1][3];
-
+int round_time = 0;
 /*
 TODO:
  - Add a function to check if visible in FOV of 90, from client's view angles.
@@ -38,12 +39,27 @@ public OnPluginStart()
 {
 	CreateConVar("lastseen_version", PLUGIN_VERSION_M, "LastSeen Plugin Version");
 	RegConsoleCmd("sm_visible", Command_Visible, "Prints all players that are visible");
+	
+	HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
+	CreateTimer(1.0, Timer_1, _, TIMER_REPEAT);
+	
 	// CreateTimer(1.0, Timer_UpdateLastSeen, _, TIMER_FLAG_NO_MAPCHANGE);
 	PrintToServer("[LSeen] Has Loaded Succcessfully!");
 }
 
 public OnPluginEnd() {
 	PrintToServer("[LSeen] Has Unloaded Successfully!");
+}
+
+public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
+	round_time = 0;
+	return Plugin_Continue;
+}
+
+public Action Timer_1(Handle timer) {
+	if (TTT_IsRoundActive()) {
+		round_time++;
+	}
 }
 
 /*

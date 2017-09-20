@@ -9,7 +9,7 @@
 
 /* Plugin Info */
 #define PLUGIN_NAME 			"TTT RDM"
-#define PLUGIN_VERSION_M 		"0.0.5"
+#define PLUGIN_VERSION_M 		"0.0.6"
 #define PLUGIN_AUTHOR 			"Popey"
 #define PLUGIN_DESCRIPTION		"Handles TTT RDMs."
 #define PLUGIN_URL				"https://sinisterheavens.com"
@@ -23,13 +23,7 @@ TODO:
  - Allow people to target by death number, instead of just shortid.
  - Profile: Karma, good actions, bad actions, percentage, playtime, innocent times, traitor times, longest traitorless streak
     
- - Create sm_verdict <case> - Menu with guilty or innocent.
- - Add menu after /rdm, whether the rdmer slain or not. (If found guilty).
- - Only store non-traitor kills.
- - Add "handled" column to the kills db, only show unhandled cases.
- - Add how many times a person has rdmed in a time period.
  - Merge a couple if int arrays together to make the code neater.
- - Send message(s) to the case creator and notify staff
 */
 
 public Plugin myinfo = {
@@ -996,26 +990,28 @@ public Action Command_UnSlayNR(int client, int args) {
 	return Plugin_Handled
 }
 
-public void TTT_OnRoundStart() {
-	for (new i = 0; i < MAXPLAYERS; i++) {
-		last_gun_fire[i] = -1;
-		if (to_slay[i] == 1) {
-			if (IsValidClient(i) && IsPlayerAlive(i)) {
-				slay_count[i]++;
-				char message[255];
-				if (slay_count[i] > 2) {
-					Format(message, sizeof(message), "{purple}[RDM] {red}%N has been slain %d times this map.  Consider a specban.", i, slay_count[i]);
-				} else {
-					Format(message, sizeof(message), "{purple}[RDM] {yellow}%N has been slain (no. %d).", i, slay_count[i]);
-				}
-				CPrintToStaff(message);
-				CPrintToChat(i, "{purple}[Slay] {orchid}You were slain by %s.  Please read /rules.", slay_admins[i]);
-				ForcePlayerSuicide(i);
-				TTT_SetFoundStatus(i, true);
+
+public void TTT_OnClientGetRole(int client, int role)
+{
+	last_gun_fire[client] = -1;
+	if (to_slay[client] == 1)
+	{
+		if (IsValidClient(client) && IsPlayerAlive(client))
+		{
+			slay_count[client]++;
+			char message[255];
+			if (slay_count[client] > 2) {
+				Format(message, sizeof(message), "{purple}[RDM] {red}%N has been slain %d times this map.  Consider a specban.", client, slay_count[client]);
+			} else {
+				Format(message, sizeof(message), "{purple}[RDM] {yellow}%N has been slain (no. %d).", client, slay_count[client]);
 			}
-			to_slay[i] = 0;
-			slay_admins[i] = "";
+			CPrintToStaff(message);
+			CPrintToChat(client, "{purple}[Slay] {orchid}You were slain by %s.  Please read /rules.", slay_admins[client]);
+			ForcePlayerSuicide(client);
+			TTT_SetFoundStatus(client, true);
 		}
+		to_slay[client] = 0;
+		slay_admins[client] = "";
 	}
 }
 
