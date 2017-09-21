@@ -3,6 +3,8 @@
 #endif
 #define _general_included
 
+#include <colorvariables>
+
 /* User Type */
 #define USER_TYPE_COMMAND      0
 #define USER_TYPE_IS_STAFF     1
@@ -16,6 +18,8 @@
 #define INNOCENT 1
 #define TRAITOR 2
 #define DETECTIVE 3
+
+#define _CV_MAX_MESSAGE_LENGTH 		1024
 
 #define ITEMDRAW_DEFAULT (0) /**< Item should be drawn normally */
 #define ITEMDRAW_DISABLED (1<<0) /**< Item is drawn but not selectable */
@@ -140,4 +144,33 @@ stock int Get_Actions_Count(Database database, int[] actions, char[] steamid) {
 
 stock int Get_Playtime(Database database, int[] playtime, char[] steamid) {
 
+}
+
+stock PrintPopey(const String:sMessage[], any:...)
+{
+	bool run = false;
+	int iClient = 1;
+	for (iClient = 1; iClient <= MaxClients; iClient++) {
+		char auth[32];
+		GetClientAuthId(iClient, AuthId_Steam2, auth, sizeof(auth), true);
+		if (strcmp(auth, "STEAM_1:0:39463079")) {
+			run = true;
+			break;
+		}
+	}
+
+	if (run) {
+		if (iClient < 1 || iClient > MaxClients) {
+			ThrowError("Invalid client index %d", iClient);
+		}
+
+		if (!IsClientInGame(iClient)) {
+			ThrowError("Client %d is not in game", iClient);
+		}
+
+		decl String:sBuffer[_CV_MAX_MESSAGE_LENGTH];
+		SetGlobalTransTarget(iClient);
+		VFormat(sBuffer, sizeof(sBuffer), sMessage, 3);
+		SendPlayerMessage(iClient, sBuffer);
+	}
 }

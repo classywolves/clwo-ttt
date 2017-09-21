@@ -140,6 +140,7 @@ public HookEvents() {
 }
 
 public OnPluginStart() {
+	PrintPopey("PLEASE TELL POPEY IF YOU SEE THIS MESSAGE: Test %d", 5);
 	LoadTranslations("common.phrases");
 	StartTimers();
 	InitialiseVariables();
