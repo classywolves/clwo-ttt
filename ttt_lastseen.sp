@@ -4,6 +4,8 @@
 #include <sdktools_functions>
 #include <sdktools_trace>
 #include <sdktools_engine>
+#include <sdktools_tempents>
+#include <sdktools_tempents_stocks>
 #include <entity>
 #include <ttt>
 #include <general>
@@ -15,9 +17,11 @@
 #define PLUGIN_DESCRIPTION		"Logs time you last saw a player."
 #define PLUGIN_URL				"http://screenman.pro"
 
-int array_lastseen[MAXPLAYERS + 1][MAXPLAYERS + 1];
-float vec_eyes[MAXPLAYERS + 1][3];
+//int array_lastseen[MAXPLAYERS + 1][MAXPLAYERS + 1];
+//float vec_eyes[MAXPLAYERS + 1][3];
 int round_time = 0;
+// Integer for prechache index
+int g_iSprite = -1;
 /*
 TODO:
  - Add a function to check if visible in FOV of 90, from client's view angles.
@@ -54,6 +58,11 @@ public OnPluginEnd() {
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
 	round_time = 0;
 	return Plugin_Continue;
+}
+
+public void OnMapStart()
+{
+	g_iSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
 }
 
 public Action Timer_1(Handle timer) {
@@ -118,9 +127,12 @@ bool C_IsValidClient(int client,bool allowconsole=false) {
 bool TraceHeadToFeet(int client, int target, float clientLoc[3], float targetLoc[3])
 {
 	clientLoc[2] += 10;
+	int color[4] =  { 255, 0, 0, 255 };
 	// targetLoc[2] += 5;
 	TR_TraceRayFilter(clientLoc, targetLoc, MASK_SHOT, RayType_EndPoint, TraceRayDontHitSelf, client);
-
+	TE_SetupBeamPoints(clientLoc, targetLoc, g_iSprite, 0, 0, 0, 5.0, 3.0, 3.0, 10, 0.0, color, 0);
+	TE_SendToAll();
+	
 	return (!TR_DidHit() || TR_GetEntityIndex() == target);
 }
 
@@ -128,8 +140,11 @@ bool TraceHeadToHead(int client, int target, float clientLoc[3], float targetLoc
 {
 	clientLoc[2] += 10;
 	targetLoc[2] += 10;
+	int color[4] =  { 0, 255, 0, 255 };
 	TR_TraceRayFilter(clientLoc, targetLoc, MASK_SHOT, RayType_EndPoint, TraceRayDontHitSelf, client);
-
+	TE_SetupBeamPoints(clientLoc, targetLoc, g_iSprite, 0, 0, 0, 5.0, 3.0, 3.0, 10, 0.0, color, 0);
+	TE_SendToAll();
+	
 	return (!TR_DidHit() || TR_GetEntityIndex() == target);
 }
 
