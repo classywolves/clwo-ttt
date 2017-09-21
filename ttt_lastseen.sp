@@ -22,6 +22,13 @@
 int round_time = 0;
 // Integer for prechache index
 int g_iSprite = -1;
+
+ConVar g_hCvar_OffsetHead;
+int g_Shadow_OffsetHead;
+
+ConVar g_hCvar_OffsetFeet;
+int g_Shadow_OffsetFeet;
+
 /*
 TODO:
  - Add a function to check if visible in FOV of 90, from client's view angles.
@@ -44,11 +51,32 @@ public OnPluginStart()
 	CreateConVar("lastseen_version", PLUGIN_VERSION_M, "LastSeen Plugin Version");
 	RegConsoleCmd("sm_visible", Command_Visible, "Prints all players that are visible");
 	
+	g_hCvar_OffsetHead = CreateConVar("lseen_offset_head", "10", "Sets the offset.");
+	g_hCvar_OffsetFeet = CreateConVar("lseen_offset_feet", "10", "Sets the offset.");
+	
+	g_Shadow_OffsetHead = g_hCvar_OffsetHead.IntValue;
+	g_Shadow_OffsetFeet = g_hCvar_OffsetFeet.IntValue;
+	
+	HookConVarChange(g_hCvar_OffsetHead, CvarChanged);
+	HookConVarChange(g_hCvar_OffsetFeet, CvarChanged);
+	
 	HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
 	CreateTimer(1.0, Timer_1, _, TIMER_REPEAT);
 	
 	// CreateTimer(1.0, Timer_UpdateLastSeen, _, TIMER_FLAG_NO_MAPCHANGE);
 	PrintToServer("[LSeen] Has Loaded Succcessfully!");
+}
+
+public void CvarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
+{
+	if (convar == g_hCvar_OffsetHead)
+	{
+		g_Shadow_OffsetHead = StringToInt(newValue);
+	}
+	else if (convar == g_hCvar_OffsetFeet)
+	{
+		g_Shadow_OffsetFeet = StringToInt(newValue);
+	}
 }
 
 public OnPluginEnd() {
@@ -126,7 +154,7 @@ bool C_IsValidClient(int client,bool allowconsole=false) {
 
 bool TraceHeadToFeet(int client, int target, float clientLoc[3], float targetLoc[3])
 {
-	clientLoc[2] += 10;
+	clientLoc[2] += g_Shadow_OffsetHead;
 	int color[4] =  { 255, 0, 0, 255 };
 	// targetLoc[2] += 5;
 	TR_TraceRayFilter(clientLoc, targetLoc, MASK_SHOT, RayType_EndPoint, TraceRayDontHitSelf, client);
@@ -138,8 +166,8 @@ bool TraceHeadToFeet(int client, int target, float clientLoc[3], float targetLoc
 
 bool TraceHeadToHead(int client, int target, float clientLoc[3], float targetLoc[3])
 {
-	clientLoc[2] += 10;
-	targetLoc[2] += 10;
+	clientLoc[2] += g_Shadow_OffsetHead;
+	targetLoc[2] += g_Shadow_OffsetFeet;
 	int color[4] =  { 0, 255, 0, 255 };
 	TR_TraceRayFilter(clientLoc, targetLoc, MASK_SHOT, RayType_EndPoint, TraceRayDontHitSelf, client);
 	TE_SetupBeamPoints(clientLoc, targetLoc, g_iSprite, 0, 0, 0, 5.0, 3.0, 3.0, 10, 0.0, color, 0);
