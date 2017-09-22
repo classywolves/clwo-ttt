@@ -225,7 +225,10 @@ public OnGameFrame()
 
 BanDelayed(client, const String:type[])
 {
-	CPrintToStaff("[Anti-BHOP] %N is using %s", client, type);
+	char buffer[255];
+	FormatEx(buffer, sizeof(buffer), "[Anti-BHOP] %N is using %s", client, type )
+	
+	CPrintToStaff(buffer);
     /*new String:uid[64];
     GetClientAuthString(client, uid, sizeof(uid));
     new Handle:banfile = OpenFile(pathdat, "a+");
