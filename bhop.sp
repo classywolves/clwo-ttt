@@ -32,7 +32,7 @@
 #include <general>
 #include <imod>
 
-public Plugin:myinfo = 
+public Plugin myinfo = 
 {
     name = "macrodox",
     author = "aspi",
@@ -44,28 +44,28 @@ public Plugin:myinfo =
 
 
 //General variables
-new aiJumps[MAXPLAYERS+1] = {0, ...};
-new Float:afAvgJumps[MAXPLAYERS+1] = {1.0, ...};
-new Float:afAvgSpeed[MAXPLAYERS+1] = {250.0, ...};
-new Float:avVEL[MAXPLAYERS+1][3];
-new aiPattern[MAXPLAYERS+1] = {0, ...};
-new aiPatternhits[MAXPLAYERS+1] = {0, ...};
-new Float:avLastPos[MAXPLAYERS+1][3];
-new aiAutojumps[MAXPLAYERS+1] = {0, ...};
-new aaiLastJumps[MAXPLAYERS+1][30];
-new Float:afAvgPerfJumps[MAXPLAYERS+1] = {0.3333, ...};
-new iTickCount = 1;
-new aiIgnoreCount[MAXPLAYERS+1];
-new String:path[PLATFORM_MAX_PATH];
-new String:pathdat[PLATFORM_MAX_PATH];
-new bool:bBanFlagged[MAXPLAYERS+1];
-new bool:bSurfCheck[MAXPLAYERS+1];
-new aiLastPos[MAXPLAYERS+1] = {0, ...};
+int aiJumps[MAXPLAYERS+1] = {0, ...};
+float afAvgJumps[MAXPLAYERS+1] = {1.0, ...};
+float afAvgSpeed[MAXPLAYERS+1] = {250.0, ...};
+float avVEL[MAXPLAYERS+1][3];
+int aiPattern[MAXPLAYERS+1] = {0, ...};
+int aiPatternhits[MAXPLAYERS+1] = {0, ...};
+float avLastPos[MAXPLAYERS+1][3];
+int aiAutojumps[MAXPLAYERS+1] = {0, ...};
+int aaiLastJumps[MAXPLAYERS+1][30];
+float afAvgPerfJumps[MAXPLAYERS+1] = {0.3333, ...};
+int iTickCount = 1;
+int aiIgnoreCount[MAXPLAYERS+1];
+char path[PLATFORM_MAX_PATH];
+char pathdat[PLATFORM_MAX_PATH];
+bool bBanFlagged[MAXPLAYERS+1];
+bool bSurfCheck[MAXPLAYERS+1];
+int aiLastPos[MAXPLAYERS+1] = {0, ...};
 
 #if defined DEFAULT_DEBUGID
-new String:debugid[32] = DEFAULT_DEBUGID;
+char debugid[32] = DEFAULT_DEBUGID;
 #else
-new String:debugid[32];
+char debugid[32];
 #endif
 
 
@@ -81,15 +81,15 @@ public OnPluginStart()
     RegConsoleCmd("mdx_test", Command_test, "mdx_test <#userid|name|@all>");
     
 }
-public Event_PlayerJump(Handle:event, const String:name[], bool:dontBroadcast)
+public Event_PlayerJump(Handle event, const char name[], bool dontBroadcast)
 {
-    new client = GetClientOfUserId(GetEventInt(event, "userid"));
+    int client = GetClientOfUserId(GetEventInt(event, "userid"));
     afAvgJumps[client] = ( afAvgJumps[client] * 9.0 + float(aiJumps[client]) ) / 10.0;
     
-    decl Float:vec_vel[3];
+    const float vec_vel[3];
     GetEntPropVector(client, Prop_Data, "m_vecVelocity", vec_vel);
     vec_vel[2] = 0.0;
-    new Float:speed = GetVectorLength(vec_vel);
+    float speed = GetVectorLength(vec_vel);
     afAvgSpeed[client] = (afAvgSpeed[client] * 9.0 + speed) / 10.0;
     
     aaiLastJumps[client][aiLastPos[client]] = aiJumps[client];
@@ -149,11 +149,11 @@ public Event_PlayerJump(Handle:event, const String:name[], bool:dontBroadcast)
     } 
 
     aiJumps[client] = 0;
-    new Float:tempvec[3];
+    float tempvec[3];
     tempvec = avLastPos[client];
     GetEntPropVector(client, Prop_Send, "m_vecOrigin", avLastPos[client]);
     
-    new Float:len = GetVectorDistance(avLastPos[client], tempvec, true);
+    float len = GetVectorDistance(avLastPos[client], tempvec, true);
     if (len < 30.0)
     {   
         aiIgnoreCount[client] = 2;
@@ -190,7 +190,7 @@ public OnClientDisconnect(client)
     aiIgnoreCount[client] = 0;
     bBanFlagged[client] = false;
     avVEL[client][2] = 0.0;
-    new i;
+    int i;
     while (i < 30)
     {
         aaiLastJumps[client][i] = 0;
@@ -208,7 +208,7 @@ public OnGameFrame()
     {
         if (iTickCount % 1 == 0)
         {
-            new index = iTickCount / 1;
+            int index = iTickCount / 1;
             if (bSurfCheck[index] && IsClientInGame(index) && IsPlayerAlive(index))
             {	
                 GetEntPropVector(index, Prop_Data, "m_vecVelocity", avVEL[index]);
@@ -223,21 +223,21 @@ public OnGameFrame()
     }
 }
 
-BanDelayed(client, const String:type[])
+BanDelayed(client, const char type[])
 {
 	char buffer[255];
 	FormatEx(buffer, sizeof(buffer), "[Anti-BHOP] %N is using %s", client, type )
 	
 	CPrintToStaff(buffer);
-    /*new String:uid[64];
+    /*char uid[64];
     GetClientAuthString(client, uid, sizeof(uid));
-    new Handle:banfile = OpenFile(pathdat, "a+");
+    int Handle banfile = OpenFile(pathdat, "a+");
     if (banfile == INVALID_HANDLE)
     {
         LogError("Cannot open macrodox.dat");
         return;
     }
-    new String:reader[65];
+    char reader[65];
     while (ReadFileLine(banfile, reader, sizeof(reader)))
     {
         TrimString(reader);
@@ -251,7 +251,7 @@ BanDelayed(client, const String:type[])
             return;
         }
     }
-    new String:banstats[256];
+    char banstats[256];
     GetClientStats(client, banstats, sizeof(banstats));
     LogToFile(path, "%s %s", banstats, type);
     WriteFileLine(banfile, uid);
@@ -263,13 +263,13 @@ BanDelayed(client, const String:type[])
 }
 DoBans()
 {
-  //  new Handle:banfile = OpenFile(pathdat, "a+");
+  //  int Handle banfile = OpenFile(pathdat, "a+");
   //  if (banfile == INVALID_HANDLE)
   //  {
   //      LogError("Cannot open macrodox.dat");
   //      return;
   //  }
-  //  new String:reader[65];
+  //  char reader[65];
   //  while (ReadFileLine(banfile, reader, sizeof(reader)))
   //  {
   //      TrimString(reader);
@@ -292,7 +292,7 @@ DoBans()
 }
 
 
-public Action:Command_Stats(client, args)
+public Action Command_Stats(client, args)
 {
     if (args < 1)
     {
@@ -300,11 +300,11 @@ public Action:Command_Stats(client, args)
         return Plugin_Handled;
     }
     
-    decl String:arg[65];
+    const char arg[65];
     GetCmdArg(1, arg, sizeof(arg));
     
-    decl String:target_name[MAX_TARGET_LENGTH];
-    decl target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+    const char target_name[MAX_TARGET_LENGTH];
+    const target_list[MAXPLAYERS], target_count, bool tn_is_ml;
     
     if ((target_count = ProcessTargetString(
                     arg,
@@ -320,7 +320,7 @@ public Action:Command_Stats(client, args)
         return Plugin_Handled;
     }
     
-    for (new i = 0; i < target_count; i++)
+    for (int i = 0; i < target_count; i++)
     {
         PerformStats(client, target_list[i]);
     }
@@ -329,9 +329,9 @@ public Action:Command_Stats(client, args)
     return Plugin_Handled;
 }
 
-public Action:Command_test(client, args)
+public Action Command_test(client, args)
 {
-    new String:auth[32];
+    char auth[32];
     GetClientAuthString(client,auth,sizeof(auth));
     if(!StrEqual(auth, debugid))
     {
@@ -344,11 +344,11 @@ public Action:Command_test(client, args)
         return Plugin_Handled;
     }
     
-    decl String:arg[65];
+    const char arg[65];
     GetCmdArg(1, arg, sizeof(arg));
     
-    decl String:target_name[MAX_TARGET_LENGTH];
-    decl target_list[MAXPLAYERS], target_count, bool:tn_is_ml;
+    const char target_name[MAX_TARGET_LENGTH];
+    const target_list[MAXPLAYERS], target_count, bool tn_is_ml;
     
     if ((target_count = ProcessTargetString(
                     arg,
@@ -364,7 +364,7 @@ public Action:Command_test(client, args)
         return Plugin_Handled;
     }
     
-    for (new i = 0; i < target_count; i++)
+    for (int i = 0; i < target_count; i++)
     {
         PerformStats(client, target_list[i]);
     }
@@ -374,15 +374,15 @@ public Action:Command_test(client, args)
 }
 PerformStats(client, target)
 {
-    new String:banstats[256];
+    char banstats[256];
     GetClientStats(target, banstats, sizeof(banstats));
     PrintToConsole(client, "%d %s",bBanFlagged[target], banstats);
 }
-GetClientStats(client, String:string[], length)
+GetClientStats(client, char string[], length)
 {
-    new Float:origin[3];
+    float origin[3];
     GetEntPropVector(client, Prop_Send, "m_vecOrigin", origin);
-    new String:map[128];
+    char map[128];
     GetCurrentMap(map, 128);
     Format(string, length, "%L Avg: %f/%f Perf: %f %s %f %f %f Last: %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i %i",
     client,
@@ -425,11 +425,11 @@ GetClientStats(client, String:string[], length)
     aaiLastJumps[client][29]);
 }
 
-public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:angles[3], &weapon)
+public Action OnPlayerRunCmd(client, &buttons, &impulse, float vel[3], float angles[3], &weapon)
 {
     if(IsPlayerAlive(client))
     {
-        static bool:bHoldingJump[MAXPLAYERS + 1];
+        static bool bHoldingJump[MAXPLAYERS + 1];
         static bLastOnGround[MAXPLAYERS + 1];
         if(buttons & IN_JUMP)
         {
@@ -466,7 +466,7 @@ public Action:OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
     
     return Plugin_Continue;
 }
-public Action:Command_Debug(client, args)
+public Action Command_Debug(client, args)
 {
     GetCmdArgString(debugid, sizeof(debugid));
 
