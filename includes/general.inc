@@ -83,7 +83,7 @@ stock void CPrintToStaff(char[] message) {
 	for (int client = 1; client <= MaxClients; client++) {
 		if(IsValidClient(client)) {
 			if(iMod_IsStaff(client)) {
-				CPrintToChat(client, message)
+				CPrintToChat(client, message);
 			}
 		}
 	}
