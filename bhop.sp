@@ -30,6 +30,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <general>
+#include <imod>
 
 public Plugin:myinfo = 
 {
@@ -38,7 +39,7 @@ public Plugin:myinfo =
     description = "Macro detection plugin",
     version = PLUGIN_VERSION,
     url = ""
-}
+}   
 
 
 
@@ -259,32 +260,32 @@ BanDelayed(client, const String:type[])
 }
 DoBans()
 {
-    new Handle:banfile = OpenFile(pathdat, "a+");
-    if (banfile == INVALID_HANDLE)
-    {
-        LogError("Cannot open macrodox.dat");
-        return;
-    }
-    new String:reader[65];
-    while (ReadFileLine(banfile, reader, sizeof(reader)))
-    {
-        TrimString(reader);
-        #if defined DEBUG
-        PrintToChatAll("banned %s", reader);
-        #endif
-		#if defined BAN_CMD
-        ServerCommand(BAN_CMD, reader);
-		#endif      
-		#if defined DELETE_CMD
-		ServerCommand("%s %s", DELETE_CMD, reader); 
-		#endif
-    }
-    CloseHandle(banfile);
-    banfile = OpenFile(pathdat, "w");
-    CloseHandle(banfile);
-    #if defined BAN_WRITE
-    ServerCommand("writeid");
-    #endif   
+  //  new Handle:banfile = OpenFile(pathdat, "a+");
+  //  if (banfile == INVALID_HANDLE)
+  //  {
+  //      LogError("Cannot open macrodox.dat");
+  //      return;
+  //  }
+  //  new String:reader[65];
+  //  while (ReadFileLine(banfile, reader, sizeof(reader)))
+  //  {
+  //      TrimString(reader);
+  //      #if defined DEBUG
+  //      PrintToChatAll("banned %s", reader);
+  //      #endif
+		//#if defined BAN_CMD
+  //      ServerCommand(BAN_CMD, reader);
+		//#endif      
+		//#if defined DELETE_CMD
+		//ServerCommand("%s %s", DELETE_CMD, reader); 
+		//#endif
+  //  }
+  //  CloseHandle(banfile);
+  //  banfile = OpenFile(pathdat, "w");
+  //  CloseHandle(banfile);
+  //  #if defined BAN_WRITE
+  //  ServerCommand("writeid");
+  //  #endif   
 }
 
 

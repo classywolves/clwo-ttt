@@ -4,6 +4,7 @@
 #define _general_included
 
 #include <colorvariables>
+#include <imod>
 
 /* User Type */
 #define USER_TYPE_COMMAND      0
