@@ -11,9 +11,9 @@
 #include <smlib>
 
 /* Plugin Info */
-#define PLUGIN_NAME 			"TTT URLs"
-#define PLUGIN_VERSION_M 		"0.0.4"
-#define PLUGIN_AUTHOR 			"Popey"
+#define PLUGIN_NAME				"TTT URLs"
+#define PLUGIN_VERSION_M		"0.0.4"
+#define PLUGIN_AUTHOR			"Popey"
 #define PLUGIN_DESCRIPTION		"Opens URLs."
 #define PLUGIN_URL				"https://sinisterheavens.com"
 
@@ -31,7 +31,6 @@ public Plugin myinfo =
 public OnPluginStart()
 {
 	// Register CVARS
-	// rdm_version = CreateConVar("ldb_version", PLUGIN_VERSION_M, "Leaderboard Plugin Version");
 	CreateConVar("url_version", PLUGIN_VERSION_M, "URL Plugin Version");
 	
 	// Register Commands
@@ -44,6 +43,11 @@ public OnPluginStart()
 	
 	// Alert Load Success
 	PrintToServer("[URL] Has Loaded Succcessfully!");
+}
+
+public OnPluginEnd() {
+	// Alert Unload Success
+	PrintToServer("[URL] Has Unloaded Successfully!");
 }
 
 public void Display_Page(int client, char[] url) {
@@ -100,9 +104,4 @@ public Action Command_Google(int client, int args) {
 public Action Command_Gametracker(int client, int args) {
 	Display_Page(client, "https://www.gametracker.com/server_info/ttt.clwo.eu:27015");
 	return Plugin_Handled;
-}
-
-public OnPluginEnd() {
-	// Alert Unload Success
-	PrintToServer("[URL] Has Unloaded Successfully!");
 }

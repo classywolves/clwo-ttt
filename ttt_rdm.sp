@@ -18,7 +18,6 @@ Database db;
 
 /*
 TODO:
- - Add a command to list deaths.
  - Add a command to search recents deaths per player.
  - Allow people to target by death number, instead of just shortid.
  - Profile: Karma, good actions, bad actions, percentage, playtime, innocent times, traitor times, longest traitorless streak
@@ -48,7 +47,7 @@ int case_accuser[500];
 // Lists clients to slay (1 = slay, 0 = don't slay)
 int to_slay[MAXPLAYERS + 1];
 int last_handled[MAXPLAYERS + 1];	// Store a staff's last handled case id.
-int case_slay[500];		// Store a 1 if case wants the other person slain, 2 if to warn.
+int case_slay[500];					// Store a 1 if case wants the other person slain, 2 if to warn.
 
 char slay_admins[MAXPLAYERS + 1][255];
 char _victim_name[500][255];
@@ -59,9 +58,6 @@ int slay_count[MAXPLAYERS + 1];
 
 // Prevent spamming of rdm command
 int rdm_cooldown[MAXPLAYERS + 1];
-
-// Array of last player death indexes
-// int player_death_index[MAXPLAYERS + 1];
 
 // Array of last time players fired guns
 int last_gun_fire[MAXPLAYERS + 1];
@@ -114,6 +110,7 @@ public ResetShorts() {
 
 public SetCommands() {
 	RegConsoleCmd("sm_rdm", Command_RDM, "Requests help with an RDM");
+	RegConsoleCmd("sm_ardm", Command_aRDM, "Allows one to list all RDMs");
 	RegAdminCmd("sm_handle", Command_Handle, ADMFLAG_GENERIC, "Handle an RDM");
 	RegAdminCmd("sm_handlenext", Command_HandleNext, ADMFLAG_GENERIC, "Handle next unhandled RDM");
 	RegAdminCmd("sm_verdict", Command_Verdict, ADMFLAG_GENERIC, "Give a verdict");
@@ -134,7 +131,6 @@ public HookEvents() {
 }
 
 public OnPluginStart() {
-	PrintPopey("PLEASE TELL POPEY IF YOU SEE THIS MESSAGE: Test %d", 5);
 	LoadTranslations("common.phrases");
 	StartTimers();
 	InitialiseVariables();
@@ -310,7 +306,7 @@ public Action Timer_1(Handle timer) {
 public Action Timer_60(Handle timer) {
 	for (int i = 0; i < 500; i++) {
 		if (short_ids[i] == 0) {
-			break;
+			continue;
 		}
 		if (handled_by[i] == 0) {
 			char message[255];
@@ -320,7 +316,28 @@ public Action Timer_60(Handle timer) {
 	}
 }
 
+public Action Command_aRDM(int client, int args) {
+	ClientCommand(client, "sm_rdm all");
+}
+
 public Action Command_RDM(int client, int args) {
+	bool admin = false;
+	if (args == 1) {
+		char target_string[32];
+		GetCmdArg(1, target_string, sizeof(target_string));
+
+		if (StrEqual(target_string, "admin", false) || StrEqual(target_string, "all", false)) {
+			if (iMod_IsStaff(client)) {
+				CPrintToChat(client, "{purple}[RDM] {orchid}This command is running in admin mode.");
+				admin = true
+			}
+		}
+	}
+	
+	// Get target
+	char target_string[32];
+	GetCmdArg(1, target_string, sizeof(target_string));
+
 	if (GetTime() - rdm_cooldown[client] < 15) {
 		CPrintToChat(client, "{purple}[RDM] {darkred}Please do not spam this command...")
 		return Plugin_Handled; // 15 seconds hasn't passed yet, don't allow
@@ -328,14 +345,20 @@ public Action Command_RDM(int client, int args) {
 		
 	char client_auth[100];
 	GetClientAuthId(client, AuthId_Steam2, client_auth, sizeof(client_auth), true);
-		
-	DBStatement rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND NOT victim_id <=> killer_id AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 20;");
 
-	char time[100];
-	IntToString(GetTime() - 24 * 60 * 60, time, sizeof(time));
+	DBStatement rdm_statement;
 
-	SQL_BindParamString(rdm_statement, 0, client_auth, false);
-	SQL_BindParamString(rdm_statement, 1, time, false);
+	if (admin) {
+		rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE NOT victim_id <=> killer_id AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 60;");
+	} else {
+		rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND NOT victim_id <=> killer_id AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 20;");
+
+		char time[100];
+		IntToString(GetTime() - 24 * 60 * 60, time, sizeof(time));
+
+		SQL_BindParamString(rdm_statement, 0, client_auth, false);
+		SQL_BindParamString(rdm_statement, 1, time, false);
+	}
 	
 	if (!SQL_Execute(rdm_statement)) { PrintToServer("SQL Execute Failed..."); return Plugin_Continue; }
 	
@@ -345,14 +368,21 @@ public Action Command_RDM(int client, int args) {
 	while (SQL_FetchRow(rdm_statement)) {
 		ran = true;
 		
-		char killer_name[100], death_index_string[100], print_string[200];
+		char killer_name[100], victim_name[100], death_index_string[100], print_string[200];
 		
 		int death_index = SQL_FetchInt(rdm_statement, 0);
 		int death_time = SQL_FetchInt(rdm_statement, 1);
-		SQL_FetchString(rdm_statement, 6, killer_name, sizeof(killer_name))		
+		SQL_FetchString(rdm_statement, 2, victim_name, sizeof(victim_name));
+		SQL_FetchString(rdm_statement, 6, killer_name, sizeof(killer_name));
 
 		IntToString(death_index, death_index_string, sizeof(death_index_string));
-		Format(print_string, sizeof(print_string), "%d secs ago by %s", GetTime() - death_time, killer_name);
+		
+		if (admin) {
+			Format(print_string, sizeof(print_string), "%d | %s by %s", GetTime() - death_time, victim_name, killer_name);
+		} else {
+			Format(print_string, sizeof(print_string), "%d secs ago by %s", GetTime() - death_time, killer_name);
+		}
+
 		menu.AddItem(death_index_string, print_string);
 	}
 	
@@ -443,8 +473,6 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 				Format(message, sizeof(message), "{purple}[RDM] {orchid}%s may have been RDM'd by %s. Handle with `/handle %i`", victim_name, killer_name, current_short_id-1);
 				CPrintToStaff(message);
 				CPrintToChat(client, "{purple}[RDM] {orchid}Thanks for the report.  Awaiting staff response..."); 
-				
-				
 			} else {
 				CPrintToChat(client, "{purple}[RDM] {darkred}There are no staff online, you can do /calladmin to request one join.");
 			}

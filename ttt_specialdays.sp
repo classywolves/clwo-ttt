@@ -3,11 +3,9 @@
 #include <sourcemod>
 #include <sdktools>
 #include <colorvariables>
-#include <advanced_motd>
 #include <ttt>
 #include <cstrike>
 #include <general>
-#include <smlib>
 
 /* Plugin Info */
 #define PLUGIN_NAME 			"TTT Special Days"
@@ -16,7 +14,8 @@
 #define PLUGIN_DESCRIPTION		"Special days."
 #define PLUGIN_URL				"https://sinisterheavens.com"
 
-bool url_seen[MAXPLAYERS + 1];
+bool is_gravity_day = false;
+bool is_tp_day = true;
 
 public Plugin myinfo =
 {
@@ -27,84 +26,108 @@ public Plugin myinfo =
 	url = PLUGIN_URL
 };
 
-public OnPluginStart()
-{
-
-	
+public OnPluginStart() {
 	// Register CVARS
 	// rdm_version = CreateConVar("ldb_version", PLUGIN_VERSION_M, "Leaderboard Plugin Version");
 	CreateConVar("url_version", PLUGIN_VERSION_M, "URL Plugin Version");
 	
 	// Register Commands
-	RegAdminCmd("sm_force_day", Command_Force_Day, FCVAR_CHEAT, "Force a special day");
-	
+	RegAdminCmd("sm_force_day", Command_Force_Day, FCVAR_CHEAT, "Force a gravity day");
+
 	// Register Events
-	
+	HookEvent("round_end", OnRoundEnd, EventHookMode_PostNoCopy);
+
 	// Alert Load Success
 	PrintToServer("[URL] Has Loaded Succcessfully!");
 }
 
-public Action Command_Force_Day(int client, int args) {
-
+public Action TTT_OnRoundStart_Pre() {
+	return Plugin_Continue;
 }
 
-public void Display_Page(int client, char[] url) {
-	char web_url[512];
-	strcopy(web_url, sizeof(web_url), url);
-	CraftMOTDUrl(client, web_url);
-	AdvMOTD_ShowMOTDPanel(client, "Displaying...", web_url, MOTDPANEL_TYPE_URL);
-	CPrintToChat(client, "{purple}[URL] {yellow}Loading {green}%s", url);
-}
+public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
+	if (!is_tp_day) { return Plugin_Continue; }
+	
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-stock void CraftMOTDUrl(int client, char WebUrl[512]) {
-	char encodedWebUrl[512];
-	Crypt_Base64Encode(WebUrl, encodedWebUrl, sizeof(encodedWebUrl));
-
-	char buffer[512];
-	if (url_seen[client]) {
-		PrintToConsole(client, "1");
-		url_seen[client] = false;
-		Format(buffer, sizeof(buffer), "http://clwo.inilo.net/webredirect/payload/direct.php?website=%s", encodedWebUrl);
-	} else {
-		PrintToConsole(client, "2");
-		url_seen[client] = true;
-		Format(buffer, sizeof(buffer), "http://clwo.eu/webredirect/payload/direct.php?website=%s", encodedWebUrl);
+	if(IsValidClient(client)) {
+		SetEntityGravity(client, 1.0);
 	}
-	strcopy(WebUrl, 512, buffer);
+
+	return Plugin_Continue;
 }
 
-public Action Command_Rules(int client, int args) {
-	SetCommandFlags("sm_tp", FCVAR_CHEAT);
-	SetCommandFlags("/tp", FCVAR_CHEAT);
-	SetCommandFlags("!tp", FCVAR_CHEAT);
-	Display_Page(client, "https://clwo.eu/thread-1614-post-15525.html#pid15525");
-	return Plugin_Handled;
+public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
+{
+	if (is_gravity_day) {
+		is_gravity_day = false;
+		for (int client = 1; client <= MaxClients; client++) {
+			if(IsValidClient(client)) {
+				SetEntityGravity(client, 1.0);
+			}
+		}
+	}
+
+	if (is_tp_day) {
+		is_tp_day = false;
+		for (int client = 1; client <= MaxClients; client++) {
+			if(IsValidClient(client)) {
+				ClientCommand(client, "firstperson");
+			}
+		}
+	}
 }
 
-public Action Command_CLWO(int client, int args) {
-	Display_Page(client, "https://clwo.eu");
-	return Plugin_Handled;
+public Action OnClientCommand(int client, int args)
+{
+	char cmd[16];
+	GetCmdArg(0, cmd, sizeof(cmd));	/* Get command name */
+ 
+ 	if (is_tp_day && StrEqual(cmd, "sm_tp")) {
+		/* Got the client command! Block it... */
+		CPrintToChat(client, "{purple}[SD] {orchid}You cannot disable third person during a special day.");
+		return Plugin_Handled;
+	}
+ 
+	return Plugin_Continue;
 }
 
-public Action Command_Group(int client, int args) {
-	Display_Page(client, "https://steamcommunity.com/groups/ClassyWolves");
-	return Plugin_Handled;
+public Action Command_Force_Day(int client, int args) {
+	Third_Person()
 }
 
+public Maybe_Special_Day() {
+	int random = GetRandomInt(0, 1000)
 
-public Action Command_New(int client, int args) {
-	Display_Page(client, "https://clwo.eu/thread-2123-post-21215.html#pid21215");
-	return Plugin_Handled;
+	if (random < 10) {
+		// Gravity_Day()
+	} else if (random < 30) {
+		Third_Person();
+	}
+
+	// Not a special day.
 }
 
-public Action Command_Google(int client, int args) {
-	Display_Page(client, "https://google.com");
-	return Plugin_Handled;
+public Gravity_Day() {
+	PrintToServer("It's a gravity day!  Setting players gravity.");
+	is_gravity_day = true
+	CPrintToChatAll("{purple}[SD] {green}It's a gravity day!  Setting all players gravity to {yellow}0.3{green}.")
+	for (int client = 1; client <= MaxClients; client++) {
+		if(IsValidClient(client)) {
+			SetEntityGravity(client, 0.3);
+		}
+	}
 }
 
-public Action Command_Gametracker(int client, int args) {
-	Display_Page(client, "https://www.gametracker.com/server_info/ttt.clwo.eu:27015");
-	return Plugin_Handled;
+public Third_Person() {
+	PrintToServer("It's a third person day!");
+	is_tp_day = true
+	CPrintToChatAll("{purple}[SD] {green}It's a third person day!  Enabled {yellow}thirdperson{green} on all players.")
+	for (int client = 1; client <= MaxClients; client++) {
+		if(IsValidClient(client)) {
+			ClientCommand(client, "thirdperson");
+		}
+	}
 }
 
 public OnPluginEnd() {
