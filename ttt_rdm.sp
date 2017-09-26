@@ -105,6 +105,7 @@ public ResetShorts() {
 	}
 	for (int i = 0; i < MAXPLAYERS + 1; i++) {
 		last_handled[i] = -1;
+		slay_count[i] = 0;
 	}
 }
 
@@ -175,7 +176,8 @@ public Action OnPlayerDisconnect(Event event, const char[] name, bool dontBroadc
 	{
 		last_handled[client] = -1;
 	}
-	
+
+	slay_count[client] = 0;	
 	
 	return Plugin_Continue;
 }

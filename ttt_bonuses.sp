@@ -25,7 +25,7 @@ public Plugin myinfo =
 public OnPluginStart() {
 	// Register CVARS
 	// rdm_version = CreateConVar("ldb_version", PLUGIN_VERSION_M, "Leaderboard Plugin Version");
-	CreateConVar("ttt_bonuses", PLUGIN_VERSION_M, "URL Plugin Version");
+	CreateConVar("ttt_bonuses", PLUGIN_VERSION_M, "TTT Plugin Version");
 	
 	// Register Commands
 	RegAdminCmd("sm_force_day", Command_Force_Day, FCVAR_CHEAT, "Force a gravity day");

@@ -29,11 +29,13 @@
 #include <sourcemod>
 #include <sdktools>
 #include <geoip>
+#include <general>
+#include <ttt>
 #undef REQUIRE_EXTENSIONS
 #include <geoipcity>
 #undef REQUIRE_PLUGIN
 #include <adminmenu>
-#include <multicolors>
+//#include <multicolors>
 //#include <general>
 
 #define VERSION "1.8"
@@ -51,6 +53,8 @@ new String:g_filesettings[128];
 new bool:g_UseGeoIPCity = false;
 
 new Handle:g_CvarConnectDisplayType = INVALID_HANDLE;
+
+Database ttt_db;
 /*****************************************************************
 
 
@@ -104,7 +108,8 @@ public OnPluginStart()
 	//event hooks
 	HookEvent("player_disconnect", event_PlayerDisconnect, EventHookMode_Pre);
 	
-	
+	ttt_db = ConnectDatabase("ttt", "ANN");
+
 	//country show
 	SetupCountryShow();
 	
@@ -162,7 +167,7 @@ public OnClientPostAdminCheck(client)
 	
 	if( GetConVarInt(g_CvarConnectDisplayType) == 1 )
 	{
-		GetClientAuthId( client, AuthId_Steam2, auth, sizeof(auth) );
+		GetClientAuthId(client, AuthId_Steam2, auth, sizeof(auth));
 		
 		if( !IsFakeClient(client) && GetClientCount(true) < MaxClients )
 		{
@@ -311,6 +316,8 @@ PrintFormattedMsgToNonAdmins( String:rawmsg[301], client )
 GetFormattedMessage( String:rawmsg[301], client, String:outbuffer[], outbuffersize )
 {
 	decl String:buffer[256];
+	decl String:steam_auth[256];
+	decl String:karma_string[32];
 	decl String:ip[16];
 	decl String:city[46];
 	decl String:region[46];
@@ -322,9 +329,25 @@ GetFormattedMessage( String:rawmsg[301], client, String:outbuffer[], outbuffersi
 	new bool:bIsLanIp;
 	
 	decl AdminId:aid;
+	int karma = 0;
 	
 	if( client > -1 )
 	{
+		GetClientAuthId(client, AuthId_SteamID64, steam_auth, strlen(steam_auth), false);
+
+		DBStatement get_karma = PrepareStatement(ttt_db, "SELECT `karma` FROM `ttt` WHERE communityid=?");
+		SQL_BindParamString(get_karma, 0, steam_auth, false);	
+		if (!SQL_Execute(get_karma)) { PrintToServer("SQL Execute Failed..."); }
+
+		PrintToServer("Community ID: %s", steam_auth);
+
+		while (SQL_FetchRow(get_karma)) {
+			karma = SQL_FetchInt(get_karma, 0);
+			PrintToServer("While loop ran... %d %s", karma, steam_auth);
+		}
+
+		IntToString(karma, karma_string, sizeof(karma_string));
+
 		GetClientIP(client, ip, sizeof(ip)); 
 		
 		//detect LAN ip
@@ -475,6 +498,11 @@ GetFormattedMessage( String:rawmsg[301], client, String:outbuffer[], outbuffersi
 		if (StrContains(rawmsg, "{PLAYERIP}") != -1 ) 
 		{
 			ReplaceString(rawmsg, sizeof(rawmsg), "{PLAYERIP}", ip);
+		}
+
+		if (StrContains(rawmsg, "{KARMA}") != -1 ) 
+		{
+			ReplaceString(rawmsg, sizeof(rawmsg), "{KARMA}", karma_string);
 		}
 		
 		if( StrContains(rawmsg, "{PLAYERTYPE}") != -1 && GetConVarInt(g_CvarConnectDisplayType) == 1  )
