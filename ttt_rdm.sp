@@ -210,6 +210,13 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 
 	// Determine is the kill was a bad action or not
 	int bad_action = BadAction(victim_role, attacker_role);
+
+	if (bad_action == 1) {
+		Handle hHudText = CreateHudSynchronizer();
+		SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 2, 5.0, 0.5, 0.5);
+		ShowSyncHudText(attacker, hHudText, "WARNING: Please do not RDM.");
+		CloseHandle(hHudText);
+	}
 	
 	// Identify permanent names for victim & attacker, plus grab weapon used to kill
 	char weapon[100];
