@@ -7,7 +7,7 @@
 
 #define ValidClientsAlive(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client && Player(%1).alive)
 #define ValidClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client)
-#define Clients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client)
+#define Clients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1))
 
 int sprite_beam = -1;
 int sprite_halo = -1;
@@ -16,6 +16,7 @@ int color_grey[4]	= {128, 128, 128, 255};
 int color_red[4]	= {255, 0, 0, 255};
 int color_green[4]	= {0, 255, 0, 255};
 int color_blue[4]	= {0, 0, 255, 255};
+int color_cyan[4]   = {0, 255, 255, 255};
 
 bool player_beacon[MAXPLAYERS + 1];
 bool third_person[MAXPLAYERS + 1];
@@ -81,6 +82,10 @@ methodmap Player {
 
 	public void auth_64(char auth_id[255]) {
 		GetClientAuthId(this, AuthId_SteamID64, auth_id, sizeof(auth_id));
+	}
+
+	property float volume {
+		public set(float volume) { FadeClientVolume(this, volume, 0.5, 99999.0, 0.5); }
 	}
 
 	property int playtime {
@@ -324,7 +329,7 @@ public Action timer_beacon(Handle Timer) {
 		//CPrintToChatAll("{purple}[TTT] {yellow}Debug: Testing Ping For: %N", client);
 		if (player.beacon_enabled) {
 			//CPrintToChatAll("{purple}[TTT] {yellow}Debug: Beacon Ping For: %N", client);
-			player.beacon_ping(color_red)
+			player.beacon_ping(color_cyan)
 		}
 	}
 }
