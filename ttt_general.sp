@@ -157,7 +157,7 @@ methodmap Player {
 		return response;
 	}
 
-	public int target_one(char target[128]) {
+	public int target_one(char target[128]) {w
 		int target_index = FindTarget(this, target, true, false);
 
 		if (target_index == -1) {
@@ -189,12 +189,13 @@ methodmap Player {
 		int actions[2];
 		player.get_actions(actions);
 
-		int good_action_percentage = RoundFloat(float(actions[0]) * 100 / float(actions[0] + actions[1]))
+		int good_action_percentage = RoundFloat(float(actions[0]) * 100 / float(actions[0] + actions[1]));
+		char good_action_colour[32] = "{GREEN}";
 
 		// We have nine lines to work with...
 		CPrintToChat(this, "┏━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
 		CPrintToChat(this, "┃ Playtime: %d", this.playtime);
-		CPrintToChat(this, "┃ Karma: %d (+%d, -%d, %d%s)", this.karma, actions[0], actions[1], good_action_percentage, "%%");
+		CPrintToChat(this, "┃ Karma: %d ({GREEN}+%d{DEFAULT}, {RED}-%d{DEFAULT}, %s%d%s)", this.karma, actions[0], actions[1], good_action_colour, good_action_percentage, "%%");
 		CPrintToChat(this, "┃ Playtime: ");
 		CPrintToChat(this, "┃ Playtime: ");
 		CPrintToChat(this, "┃ Playtime: ");
