@@ -7,7 +7,8 @@
 
 #define ValidClientsAlive(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client && Player(%1).alive)
 #define ValidClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client)
-#define Clients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1))
+#define StaffClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).staff)
+#define Clients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client)
 
 int sprite_beam = -1;
 int sprite_halo = -1;
