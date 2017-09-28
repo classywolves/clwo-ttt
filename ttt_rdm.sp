@@ -20,7 +20,7 @@ Database db;
 TODO:
  - Add a command to search recents deaths per player.
  - Allow people to target by death number, instead of just shortid.
- - Profile: Karma, good actions, bad actions, percentage, playtime, innocent times, traitor times, longest traitorless streak
+ - Profile: innocent times, traitor times, longest traitorless streak
     
  - Merge a couple if int arrays together to make the code neater.
 */

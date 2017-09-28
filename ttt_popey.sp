@@ -34,13 +34,8 @@ public OnPluginStart()
 	RegisterCmds();
 	HookEvents();
 	
-	char error[255];
-	db_pa = SQL_Connect("player_analytics", false, error, sizeof(error));
-	 
-	if (db_pa == null)
-	{
-		PrintToServer("Could not connect: %s", error);
-	}
+	db_pa = ConnectDatabase("player_analytics", "PA");
+	db_ttt = ConnectDatabase("ttt", "ttt")
 	
 	PrintToServer("[TTT Popey] Has Loaded Succcessfully!");
 }
@@ -120,8 +115,8 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 }
 
 public Action BeaconAfterTime(Handle timer) {
-	CPrintToChatAll("{purple}[Beacon] {yellow}There's only one minute thirty left!");
-	ServerCommand("sm_beacon @all");
+	//CPrintToChatAll("{purple}[Beacon] {yellow}There's only one minute thirty left!");
+	//ServerCommand("sm_beacon @all");
 }
 
 public void TestArmour() {
@@ -188,11 +183,12 @@ public Action Command_Playtime(int client, int args) {
 	char format_query[1024];
 	Format(format_query, sizeof(format_query), "SELECT SUM(`duration`) FROM `player_analytics` WHERE auth='%s' LIMIT 50", auth);
 	
-	DBResultSet query = SQL_Query(db, format_query);
+	DBResultSet query = SQL_Query(db_pa, format_query);
 
 	if (query == null)
 	{
-		SQL_GetError(db, error, sizeof(error));
+		char error[512];
+		SQL_GetError(db_pa, error, sizeof(error));
 		PrintToServer("Failed to query (error: %s)", error);
 	} else {
 		char timestr[15];
@@ -211,8 +207,6 @@ public Action Command_Playtime(int client, int args) {
 		}
 		delete query;
 	}
-	
-	delete db;
 }
 
 public Action Command_BanTimes(int client, int args) {
@@ -225,14 +219,6 @@ public Action Command_BanTimes(int client, int args) {
 }
 
 public Action Command_Rank(int client, int args) {
-	char error[255];
-	Database db = SQL_Connect("ttt", false, error, sizeof(error));
-	 
-	if (db == null)
-	{
-		PrintToServer("Could not connect: %s", error);
-	}
-	
 	char auth[255];
 	
 	GetClientAuthId(client, AuthId_SteamID64, auth, sizeof(auth)) 
@@ -241,11 +227,12 @@ public Action Command_Rank(int client, int args) {
 	char format_query[1024];
 	Format(format_query, sizeof(format_query), "SELECT karma, FIND_IN_SET( karma, (SELECT GROUP_CONCAT( karma ORDER BY karma DESC ) FROM `ttt` )) AS rank, (select COUNT(*) from `ttt`) as total FROM `ttt` WHERE communityid = '%s' or communityid = (select communityid from `ttt` where karma > (select karma from `ttt` where communityid = '%s') order by karma asc limit 1)", auth, auth);
 	
-	DBResultSet query = SQL_Query(db, format_query);
+	DBResultSet query = SQL_Query(db_ttt, format_query);
 
 	if (query == null)
 	{
-		SQL_GetError(db, error, sizeof(error));
+		char error[512];
+		SQL_GetError(db_ttt, error, sizeof(error));
 		PrintToServer("Failed to query (error: %s)", error);
 	} else {
 		char rank[15];
@@ -289,8 +276,6 @@ public Action Command_Rank(int client, int args) {
 		
 		delete query;
 	}
-	
-	delete db;
 }
 
 public Action Command_Staff(int client, int args) {
