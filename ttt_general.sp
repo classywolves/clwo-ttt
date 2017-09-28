@@ -4,10 +4,13 @@
 #include <colorvariables>
 #include <general>
 #include <imod>
+#include <clientprefs>
 
 #define ValidClientsAlive(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client && Player(%1).alive)
 #define ValidClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client)
-#define Clients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1))
+#define Clients(%1) for(int %1 = 1; %1 <= MaxClients; %1++)
+
+Handle cookie_player_volume;
 
 int sprite_beam = -1;
 int sprite_halo = -1;
@@ -85,7 +88,18 @@ methodmap Player {
 	}
 
 	property float volume {
-		public set(float volume) { FadeClientVolume(this, volume, 0.5, 99999.0, 0.5); }
+		public get() {
+			char player_volume[64];
+			GetClientCookie(this, cookie_player_volume, player_volume, sizeof(player_volume));
+			if (player_volume[0] == '\0') return 100.0;
+			return StringToFloat(player_volume);
+		}
+		public set(float volume) {
+			char player_volume[64];
+			FloatToString(volume, player_volume, sizeof(player_volume));
+			SetClientCookie(this, cookie_player_volume, player_volume);
+			FadeClientVolume(this, volume, 0.5, 99999.0, 0.5);
+		}
 	}
 
 	property int playtime {
@@ -157,7 +171,7 @@ methodmap Player {
 		return response;
 	}
 
-	public int target_one(char target[128]) {w
+	public int target_one(char target[128]) {
 		int target_index = FindTarget(this, target, true, false);
 
 		if (target_index == -1) {
@@ -207,17 +221,24 @@ methodmap Player {
 
 public void OnPluginStart() {
 	RegAdminCmd("sm_cbeacon", command_toggle_beacon, ADMFLAG_GENERIC);
+	RegAdminCmd("sm_volume", command_volume, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_profile", command_profile, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_tp", command_toggle_third_person, ADMFLAG_CHEATS);
 
 	database_ttt = ConnectDatabase("ttt", "ttt");
 	database_player_analytics = ConnectDatabase("player_analytics", "P_A");
 
+	cookie_player_volume = RegClientCookie("player_volume", "Current player volume as percentage", CookieAccess_Private);
+
 	HookEvent("round_start", OnRoundStart);
 	HookEvent("round_end", OnRoundEnd, EventHookMode_PostNoCopy);
 	HookEvent("player_death", OnPlayerDeath);
 
 	CreateTimer(1.5, timer_beacon, 0, TIMER_REPEAT);
+
+	Clients(client) {
+		if (AreClientCookiesCached(client)) OnClientCookiesCached(client);
+	}
 }
 
 public void OnMapStart() {
@@ -255,6 +276,11 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
 	return Plugin_Continue;
 }
 
+OnClientCookiesCached(int client) {
+	Player player = Player(client);
+	player.volume = player.volume;
+}
+
 public Action command_toggle_beacon(int client, int args) {
 	if (args == 0) {
 		Player(client).toggle_beacon();
@@ -278,6 +304,29 @@ public Action command_toggle_beacon(int client, int args) {
 		}
 	}
 	
+	return Plugin_Handled;
+}
+
+public Action command_volume(int client, int args) {
+	if (args != 2) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /volume <target> <percentage>");
+		return Plugin_Handled;
+	}
+
+	char target[128], volume_string[128];
+	GetCmdArg(1, target, sizeof(target));
+	GetCmdArg(2, volume_string, sizeof(volume_string));
+
+	int target_player = Player(client).target_one(target)
+	if (target_player == -1) return Plugin_Handled;
+
+	float volume = StringToFloat(volume_string);
+	if (volume == 0.0) volume = 100.0;
+
+	Player(target_player).volume = volume;
+
+	CPrintToChat(client, "{purple}[TTT] {yellow}Set volume on %N to %.0f%s.", target_player, volume, "%%");
+
 	return Plugin_Handled;
 }
 
