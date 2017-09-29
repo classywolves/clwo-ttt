@@ -64,14 +64,13 @@ stock void CraftMOTDUrl(int client, char WebUrl[512]) {
 
 	char buffer[512];
 	if (url_seen[client]) {
-		PrintToConsole(client, "1");
-		url_seen[client] = false;
 		Format(buffer, sizeof(buffer), "http://clwo.inilo.net/webredirect/payload/direct.php?website=%s", encodedWebUrl);
 	} else {
-		PrintToConsole(client, "2");
-		url_seen[client] = true;
 		Format(buffer, sizeof(buffer), "http://clwo.eu/webredirect/payload/direct.php?website=%s", encodedWebUrl);
 	}
+
+	url_seen[client] = !url_seen[client]
+
 	strcopy(WebUrl, 512, buffer);
 }
 
