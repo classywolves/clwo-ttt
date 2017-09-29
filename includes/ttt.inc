@@ -3,7 +3,9 @@
 #endif
 #define _ttt_included
 
-#define LoopValidClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(TTT_IsClientValid(%1))
+#if !defined(LoopValidClients)
+	#define LoopValidClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(TTT_IsClientValid(%1))
+#endif
 
 #define TTT_PLUGIN_NAME "Trouble in Terrorist Town"
 #define TTT_PLUGIN_AUTHOR "TTT-Contributors"
