@@ -94,15 +94,11 @@ stock substr(char[] input_string, int start_pos, char[] result, int len=-1)
 
 }
 
-stock bool IsEven(num)
+stock bool IsNotOdd(num)
 {
     return (num & 1) == 0;
 }
 
-stock bool IsOdd(num)
-{
-    return (num & 1) == 1;
-}  
 
 
 
@@ -131,7 +127,7 @@ public int Native_Steam64ToSteamID(Handle plugin, int numParams)
 																				// The output is Steam32
 
 	int a = 1;
-	if (IsEven(cutdown2_int)){a = 0;}											// A = 1 if Output = Odd | A = 0 if Output = Even
+	if (IsNotOdd(cutdown2_int)){a = 0;}											// A = 1 if Output = Odd | A = 0 if Output = Even
 	
 	int steam2 = (cutdown2_int - a) / 2;										// Calculate the SteamID Z value
 	

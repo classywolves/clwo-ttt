@@ -8,6 +8,7 @@
 
 #define ValidClientsAlive(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client && Player(%1).alive)
 #define ValidClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client)
+#define StaffClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).staff)
 #define Clients(%1) for(int %1 = 1; %1 <= MaxClients; %1++)
 
 Handle cookie_player_volume;
@@ -41,17 +42,17 @@ methodmap Player {
 
 	property bool valid_client {
 		public get() {
-			if(this <= 0) { return false; }
-			if(this > MaxClients) { return false; }
-			if (!IsClientConnected(this)) { return false; } 
-			if(!IsClientInGame(this)) { return false; }
-			if(IsFakeClient(this)) { return false; }
-			return true;
+			return !(this <= 0 || this > MaxClients || !IsClientConnected(this) || !IsClientInGame(this) || IsFakeClient(this))
 		}
 	}
 
 	property bool alive {
 		public get() { return IsPlayerAlive(this); }
+	}
+
+	property int armour {
+		public get() { return GetEntProp(this, Prop_Data, "m_ArmorValue"); }
+		public set(int armour) { SetEntProp(this, Prop_Data, "m_ArmorValue", armour, 1); }
 	}
 
 	property int team {
@@ -61,6 +62,14 @@ methodmap Player {
 
 	property bool staff {
 		public get() { return iMod_IsStaff(this); }
+	}
+
+	property bool has_clan_tag {
+		public get() {
+			char player_clan_id[64];
+			GetClientInfo(this, "cl_clanid", player_clan_id, sizeof(player_clan_id));
+			return StrEqual(player_clan_id, "5157979");
+		}
 	}
 
 	public void staff_name(char name[255]) {
@@ -221,7 +230,7 @@ methodmap Player {
 
 public void OnPluginStart() {
 	RegAdminCmd("sm_cbeacon", command_toggle_beacon, ADMFLAG_GENERIC);
-	RegAdminCmd("sm_volume", command_volume, ADMFLAG_GENERIC);
+	//RegAdminCmd("sm_volume", command_volume, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_profile", command_profile, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_tp", command_toggle_third_person, ADMFLAG_CHEATS);
 
@@ -261,6 +270,13 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
 	//CPrintToChatAll("{purple}[TTT] {yellow}Debug: Round Start Event Fired")
 	timer_end_beacons = CreateTimer(210.0, timer_beacon_all);
+
+	ValidClientsAlive(client) {
+		Player player = Player(client);
+		if (player.has_clan_tag) {
+			player.armour += 10;
+		}
+	}
 
 	return Plugin_Continue;
 }

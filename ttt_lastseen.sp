@@ -7,6 +7,7 @@
 #include <sdktools_tempents>
 #include <sdktools_tempents_stocks>
 #include <entity>
+#include <imod>
 #include <ttt>
 #include <general>
 
@@ -16,6 +17,8 @@
 #define PLUGIN_AUTHOR 			"ScreenMan"
 #define PLUGIN_DESCRIPTION		"Logs time you last saw a player."
 #define PLUGIN_URL				"http://screenman.pro"
+
+#define StaffClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).staff)
 
 //int array_lastseen[MAXPLAYERS + 1][MAXPLAYERS + 1];
 //float vec_eyes[MAXPLAYERS + 1][3];
@@ -45,6 +48,37 @@ public Plugin myinfo =
 	version = PLUGIN_VERSION_M,
 	url = PLUGIN_URL
 };
+
+methodmap Player {
+	public Player(int client) {
+		return view_as<Player>(client);
+	}
+
+	property bool beacon {
+		public get() { return player_beacon[this]; }
+		public set(bool enable) { player_beacon[this] = enable; }
+	}
+
+	property bool valid_client {
+		public get() {
+			if(this <= 0) { return false; }
+			if(this > MaxClients) { return false; }
+			if (!IsClientConnected(this)) { return false; } 
+			if(!IsClientInGame(this)) { return false; }
+			if(IsFakeClient(this)) { return false; }
+			return true;
+		}
+	}
+
+	property bool staff {
+		public get() { return iMod_IsStaff(this); }
+	}
+	
+	public void auth_64(char auth_id[255]) {
+		GetClientAuthId(this, AuthId_SteamID64, auth_id, sizeof(auth_id));
+	}
+
+}
 
 public OnPluginStart()
 {
@@ -159,8 +193,15 @@ bool TraceHeadToFeet(int client, int target, float clientLoc[3], float targetLoc
 	// targetLoc[2] += 5;
 	TR_TraceRayFilter(clientLoc, targetLoc, MASK_SHOT, RayType_EndPoint, TraceRayDontHitSelf, client);
 	TE_SetupBeamPoints(clientLoc, targetLoc, g_iSprite, 0, 0, 0, 5.0, 3.0, 3.0, 10, 0.0, color, 0);
-	TE_SendToAll();
-	
+	StaffClients(staff_client)
+	{
+		char auth_id[255];
+		staff_client.auth_64(auth_id);
+		if (auth_id == "76561198373907465" || auth_id == "76561198039191886")
+		{
+			TE_SendToClient(staff_client, 0);
+		}
+	}
 	return (!TR_DidHit() || TR_GetEntityIndex() == target);
 }
 
@@ -168,10 +209,19 @@ bool TraceHeadToHead(int client, int target, float clientLoc[3], float targetLoc
 {
 	clientLoc[2] += g_Shadow_OffsetHead;
 	targetLoc[2] += g_Shadow_OffsetFeet;
+	
 	int color[4] =  { 0, 255, 0, 255 };
 	TR_TraceRayFilter(clientLoc, targetLoc, MASK_SHOT, RayType_EndPoint, TraceRayDontHitSelf, client);
 	TE_SetupBeamPoints(clientLoc, targetLoc, g_iSprite, 0, 0, 0, 5.0, 3.0, 3.0, 10, 0.0, color, 0);
-	TE_SendToAll();
+	StaffClients(staff_client)
+	{
+		char auth_id[255];
+		staff_client.auth_64(auth_id);
+		if (auth_id == "76561198373907465" || auth_id == "76561198039191886")
+		{
+			TE_SendToClient(staff_client, 0);
+		}
+	}
 	
 	return (!TR_DidHit() || TR_GetEntityIndex() == target);
 }
