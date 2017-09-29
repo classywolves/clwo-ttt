@@ -103,7 +103,7 @@ public Action OnPlayerMessage(Event event, const char[] name, bool dontBroadcast
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
-	TestArmour();
+	//TestArmour();
 	Timers[1] = CreateTimer(210.0, BeaconAfterTime);
 	return Plugin_Continue;
 }
