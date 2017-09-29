@@ -1,21 +1,3 @@
-#undef REQUIRE_PLUGIN
-#include <sourcemod>
-#include <sdktools>
-#include <colorvariables>
-#include <imod>
-#include <ttt>
-#include <general>
-#include <cstrike>
-
-/* Plugin Info */
-#define PLUGIN_NAME 			"TTT RDM"
-#define PLUGIN_VERSION_M 		"0.0.6"
-#define PLUGIN_AUTHOR 			"Popey"
-#define PLUGIN_DESCRIPTION		"Handles TTT RDMs."
-#define PLUGIN_URL				"https://sinisterheavens.com"
-
-Database db;
-
 /*
 TODO:
  - Add a command to search recents deaths per player.
@@ -32,38 +14,6 @@ public Plugin myinfo = {
 	version = PLUGIN_VERSION_M,
 	url = PLUGIN_URL
 };
-
-int max_index = 0;
-int max_round = 0;
-int round_time = 0;
-int current_short_id = 0;
-
-// Lists short_ids for RDMs
-int short_ids[500];
-int handled_by[500];
-int case_accused[500];
-int case_accuser[500];
-
-// Lists clients to slay (1 = slay, 0 = don't slay)
-int to_slay[MAXPLAYERS + 1];
-int last_handled[MAXPLAYERS + 1];	// Store a staff's last handled case id.
-int case_slay[500];					// Store a 1 if case wants the other person slain, 2 if to warn.
-
-char slay_admins[MAXPLAYERS + 1][255];
-char _victim_name[500][255];
-char _killer_name[500][255];
-
-// Number of times a person has been slain this map.
-int slay_count[MAXPLAYERS + 1];
-
-// Prevent spamming of rdm command
-int rdm_cooldown[MAXPLAYERS + 1];
-
-// Array of last time players fired guns
-int last_gun_fire[MAXPLAYERS + 1];
-
-#define should_slay		1
-#define should_warn		2
 
 public StartTimers() {
 	CreateTimer(1.0, Timer_1, _, TIMER_REPEAT);
