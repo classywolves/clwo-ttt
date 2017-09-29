@@ -3,16 +3,13 @@
 #endif
 #define _ttt_helpers_included
 
-// Default Sourcemod Includes
-#include <sourcemod>
-#include <sdktools>
-#include <clientprefs>
-
-// Pretty Printing
-#include <colorvariables>
-
-// Interact with TTT
-#include <ttt>
+#include <sourcemod> 		// Default Sourcemod Includes
+#include <sdktools>			// ┫
+#include <clientprefs>		// ┛
+#include <imod>				// iNilo Staff Functionality
+#include <general>			// General Definitions
+#include <colorvariables>	// Pretty Printing
+#include <ttt>				// Interact with TTT
 
 #if !defined(LoopValidClients)
 	#define LoopValidClients(%1) 	for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client)

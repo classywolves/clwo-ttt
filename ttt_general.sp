@@ -5,11 +5,24 @@
 
 Handle timer_end_beacons;
 
+char urls[6][3][512] = {
+	{ "sm_rules", "https://clwo.eu/thread-1614-post-15525.html#pid15525", "Opens the rules page" },
+	{ "sm_clwo", "https://clwo.eu", "Opens the CLWO page" },
+	{ "sm_group", "https://steamcommunity.com/groups/ClassyWolves", "Opens the Steam group page" },
+	{ "sm_new", "https://clwo.eu/thread-2123-post-21215.html#pid21215", "Opens the new player page" },
+	{ "sm_google", "https://google.com", "Opens the Google search page" },
+	{ "sm_gametracker", "https://www.gametracker.com/server_info/ttt.clwo.eu:27015", "Opens the TTT Gametracker page" },
+}
+
 public void OnPluginStart() {
 	RegAdminCmd("sm_cbeacon", command_toggle_beacon, ADMFLAG_GENERIC);
 	//RegAdminCmd("sm_volume", command_volume, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_profile", command_profile, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_tp", command_toggle_third_person, ADMFLAG_CHEATS);
+
+	//for (int url = 0; url < sizeof(urls); url++) {
+	//	RegConsoleCmd(urls[url][0], command_open_url, urls[url][2])
+	//}
 
 	database_ttt = ConnectDatabase("ttt", "ttt");
 	database_player_analytics = ConnectDatabase("player_analytics", "P_A");
@@ -50,7 +63,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
 
 	LoopAliveClients(client) {
 		Player player = Player(client);
-		if (player.has_clan_tag) {
+		if (player.has_clan_tag && player.armour == 0) {
 			player.armour += 10;
 		}
 	}
@@ -163,6 +176,21 @@ public Action command_profile(int client, int args) {
 		}
 	}
 	
+	return Plugin_Handled;
+}
+
+public Action command_open_url(int client, int args) {
+	char page[128];
+	GetCmdArg(0, page, sizeof(page));
+
+	for (int url = 0; url < sizeof(urls); url++) {
+		if (strcmp(page, urls[url][0]) == 0) {
+			Player(client).display_url(urls[url][1])
+			return Plugin_Handled;
+		}
+	}
+
+	CPrintToChat(client, "{purple}[TTT] {orchid}Invalid URL.  This code should be unreachable.");
 	return Plugin_Handled;
 }
 

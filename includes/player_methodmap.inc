@@ -3,13 +3,14 @@
 #endif
 #define _player_methodmap_included
 
-// Default Sourcemod Includes
-#include <sourcemod>
-#include <sdktools>
-#include <clientprefs>
-
-// iNilo Staff Functionality
-#include <imod>
+#include <sourcemod> 		// Default Sourcemod Includes
+#include <sdktools>			// ┫
+#include <clientprefs>		// ┛
+#include <imod>				// iNilo Staff Functionality
+#include <general>			// General Definitions
+#include <colorvariables>	// Pretty Printing
+#include <ttt>				// Interact with TTT
+#include <smlib>			// Larger Standard Library
 
 Handle cookie_player_volume;
 
@@ -18,6 +19,8 @@ int sprite_halo = -1;
 
 bool player_beacon[MAXPLAYERS + 1];
 bool third_person[MAXPLAYERS + 1];
+
+bool website_payload[MAXPLAYERS + 1];
 
 Database database_ttt;
 Database database_player_analytics;
@@ -62,6 +65,13 @@ methodmap Player {
 			GetClientInfo(this, "cl_clanid", player_clan_id, sizeof(player_clan_id));
 			return StrEqual(player_clan_id, "5157979");
 		}
+	}
+
+	public bool bad_kill(int victim) {
+		int attacker_role = TTT_GetClientRole(this);
+		int victim_role = TTT_GetClientRole(victim);
+
+		return (victim_role - attacker_role == 1 || attacker_role - victim_role == 1)
 	}
 
 	public void staff_name(char name[255]) {
@@ -143,6 +153,23 @@ methodmap Player {
 
 	public void toggle_third_person() {
 		this.third_person = !this.third_person;
+	}
+
+	public void display_url(char url[512]) {
+		char web_url[512];
+		Crypt_Base64Encode(url, web_url, sizeof(web_url));
+
+		char buffer[512];
+		if (website_payload[this]) {
+			Format(buffer, sizeof(buffer), "http://clwo.inilo.net/webredirect/payload/direct.php?website=%s", web_url);
+		} else {
+			Format(buffer, sizeof(buffer), "http://clwo.eu/webredirect/payload/direct.php?website=%s", web_url);
+		}
+
+		website_payload[this] = !website_payload[this];
+
+		ShowMOTDPanel(this, "Displaying Page...", url, MOTDPANEL_TYPE_URL);
+		CPrintToChat(this, "{purple}[URL] {yellow}Loading {green}%s", url);
 	}
 
 	public void beacon_ping(int color[4]) {
