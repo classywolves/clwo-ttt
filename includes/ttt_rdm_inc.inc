@@ -15,6 +15,7 @@
 #define should_warn		2
 
 #define StaffClients(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).is_staff)
+#define AllCases(%1) for(int %1 = 0; %1 <= MaxClients; %1++)
 
 Database db;
 
@@ -51,30 +52,26 @@ methodmap Player {
 	public Player(int client) {
 		return view_as<Player>(client);
 	}
-	
 	property bool valid_client {
 		public get() {
-			if (this <= 0) { return false; }
-			if (this > MaxClients) { return false; }
-			if (!IsClientConnected(this)) { return false; }
-			if (!IsClientInGame(this)) { return false; }
-			if (IsFakeClient(this)) { return false; }
+			if (view_as<int>(this) <= 0) { return false; }
+			if (view_as<int>(this) > MaxClients) { return false; }
+			if (!IsClientConnected(view_as<int>(this))) { return false; }
+			if (!IsClientInGame(view_as<int>(this))) { return false; }
+			if (IsFakeClient(view_as<int>(this))) { return false; }
 			return true;
 		}
 	}
-	
 	property bool is_alive {
 		public get() {
-			return IsPlayerAlive(this);
+			return IsPlayerAlive(view_as<int>(this));
 		}
 	}
-	
 	property int id {
 		public get() {
-			return this;
+			return view_as<int>(this);
 		}
 	}
-	
 	property int slay_count {
 		public get() {
 			return (slay_count[this]);
@@ -83,7 +80,6 @@ methodmap Player {
 			slay_count[this] = i;
 		}
 	}
-	
 	property int rdm_cooldown {
 		public get() {
 			return (rdm_cooldown[this]);
@@ -92,7 +88,6 @@ methodmap Player {
 			rdm_cooldown[this] = i;
 		}
 	}
-	
 	property int last_gun_fire {
 		public get() {
 			return (last_gun_fire[this]);
@@ -101,25 +96,22 @@ methodmap Player {
 			last_gun_fire[this] = i;
 		}
 	}
-	
 	property bool slay {
 		public get() {
-			return view_as<bool>to_slay[this];
+			return view_as<bool>(to_slay[this]);
 		}
 		public set(bool slay) {
-			to_slay[this] = view_as<int>slay;
+			to_slay[this] = view_as<int>(slay);
 		}
 	}
-	
 	property bool is_staff {
 		public get() {
-			return CheckCommandAccess(this, "sm_admin", ADMFLAG_GENERIC));
+			return CheckCommandAccess(view_as<int>(this), "sm_admin", ADMFLAG_GENERIC);
 		}
 	}
-	
 	property int last_handled {
 		public get() {
-			if (!this.staff) {
+			if (!this.is_staff) {
 				return 0;
 			}
 			return last_handled[this];
@@ -128,46 +120,45 @@ methodmap Player {
 			last_handled[this] = i;
 		}
 	} 
-	
 	property bool has_handled {
 		public get() {
 			return (last_handled[this] > 0);
 		}
 	}
-	
 	property int ttt_role {
 		public get() {
-			return TTT_GetClientRole(this);
+			return TTT_GetClientRole(view_as<int>(this));
 		}
 	}
-	
 	property int ttt_karma {
 		public get() {
-			return TTT_GetClientKarma(this);
+			return TTT_GetClientKarma(view_as<int>(this));
 		}
 	}
-	
-	
-	public void set_slain_by(char[] name) {
-		slay_admins[this] = name;
+	public void set_slain_by(char name[255]) {
+		slay_admins[view_as<int>(this)] = name;
 	}
-	
-	public void get_slain_by(char[] output) {
-		StrCopy(output, sizeof(output), slay_admins[this]);
+	public void get_slain_by(char output[255]) {
+		strcopy(output, sizeof(output), slay_admins[view_as<int>(this)]);
 	}
-	
-	public int isKillBadAction(int victim_role) {
-		return BadAction(victim_role, this.ttt_role);
+	public int isKillBadAction(Player victim) {
+		return BadAction(victim.ttt_role, this.ttt_role);
 	}
-	
-	public void get_name(char[] output) {
-		GetClientName(this, output, sizeof(output));
+	public void get_name(char output[255]) {
+		GetClientName(view_as<int>(this), output, sizeof(output));
 	}
-	
-	public void get_auth(int auth_id_type , char[] output) {
-		GetClientAuthId(this, auth_id_type, output, sizeof(output));
+	public void get_auth(AuthIdType auth_id_type , char output[255]) {
+		GetClientAuthId(view_as<int>(this), auth_id_type, output, sizeof(output));
 	}
-	
+	public void kill() {
+		ForcePlayerSuicide(view_as<int>(this));
+	}
+	public void ttt_found(bool status) {
+		TTT_SetFoundStatus(view_as<int>(this), status);
+	}
+	public void execute(const char[] command) {
+		ClientCommand(view_as<int>(this), command);
+	}
 	public void reset_all() {
 		this.slay_count = 0;
 		this.last_handled = -1;
@@ -178,8 +169,7 @@ methodmap Player {
 methodmap Case_Victim {
 	public Case_Victim(int case_id) {
 		return view_as<Case_Victim>(case_id);
-	}
-	
+	}	
 	property int id {
 		public get() {
 			return (case_accuser[this]);
@@ -188,15 +178,12 @@ methodmap Case_Victim {
 			case_accuser[this] = i;
 		}
 	}
-	
-	public void set_name(char[] name) {
+	public void set_name(char name[255]) {
 		_victim_name[this] = name;
 	}
-	
-	public void get_name(char[] output) {
-		StrCopy(output, sizeof(output), _victim_name[this]);
+	public void get_name(char output[255]) {
+		strcopy(output, sizeof(output), _victim_name[this]);
 	}
-	
 	public int target_id() { 
 		char output[255];
 		this.get_name(output);
@@ -209,7 +196,6 @@ methodmap Case_Assailant {
 	public Case_Assailant(int case_id) {
 		return view_as<Case_Assailant>(case_id);
 	}
-	
 	property int id {
 		public get() {
 			return (case_accused[this]);
@@ -218,15 +204,12 @@ methodmap Case_Assailant {
 			case_accused[this] = i;
 		}
 	}
-	
-	public void set_name(char[] name) {
+	public void set_name(char name[255]) {
 		_killer_name[this] = name;
 	}
-	
-	public void get_name(char[] output) {
-		StrCopy(output, sizeof(output), _killer_name[this]);
+	public void get_name(char output[255]) {
+		strcopy(output, sizeof(output), _killer_name[this]);
 	}
-	
 	public int target_id() { 
 		char output[255];
 		this.get_name(output);
@@ -236,29 +219,24 @@ methodmap Case_Assailant {
 }
 
 methodmap Case {
-	
 	public Case(int case_id) {
 		return view_as<Case>(case_id);
 	}
-	
 	property bool is_valid {
 		public get() {
 			return (short_ids[this] != 0);
 		}
 	}
-	
 	property int id {
 		public get() {
-			return this;
+			return view_as<int>(this);
 		}
 	}
-	
 	property bool is_handled {
 		public get() {
 			return (handled_by[this] != 0);
 		}
 	}
-	
 	property int handled_client {
 		public get() {
 			return handled_by[this];
@@ -267,7 +245,6 @@ methodmap Case {
 			handled_by[this] = i;
 		}
 	}
-	
 	property int punishment {
 		public get() {
 			return (case_slay[this]);
@@ -276,7 +253,6 @@ methodmap Case {
 			case_slay[this] = i;
 		}
 	}
-	
 	property int death_index {
 		public get() {
 			return short_ids[this];
@@ -285,64 +261,22 @@ methodmap Case {
 			short_ids[this] = i;
 		} 
 	}
-	
 	property Case_Victim victim {
 		public get() {
 			return view_as<Case_Victim>(this);
 		}
 	}
-	
 	property Case_Assailant assailant {
 		public get() {
 			return view_as<Case_Assailant>(this);
 		}
 	}
-	/*
-	property int victim_id {
-		public get() {
-			return (view_as<Case_Victim>(case_id)).id;
-		}
-		public set(int i) {
-			(view_as<Case_Victim>(case_id)).id = i;
-		}
-	}
-	
-	property char[] victim_name {
-		public get() {
-			return (view_as<Case_Victim>(case_id)).name;
-		}
-		public set(char[] i) {
-			(view_as<Case_Victim>(case_id)).name = i;
-		}
-	}
-	
-	property int assailant_id {
-		public get() {
-			return (case_accused[this]);
-		}
-		public set(int i) {
-			case_accused[this] = i;
-		}
-	}
-	
-	property char[] assailant_name {
-		public get() {
-			return (_killer_name[this]);
-		}
-		public set(char[] i) {
-			_killer_name[this] = i;
-		}
-	}
-	*/
-	
 	public void slay() {
 		this.punishment = should_slay;
 	}
-	
 	public void warn() {
 		this.punishment = should_warn;
 	}
-	
 	public void reset_all() {
 		this.handled_client = 0;
 		this.punishment = 0;
