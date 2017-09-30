@@ -5,14 +5,15 @@
 
 #define that view_as<int>(this)
 
-#include <sourcemod> 		// Default Sourcemod Includes
-#include <sdktools>			// ┫
-#include <clientprefs>		// ┛
-#include <imod>				// iNilo Staff Functionality
-#include <general>			// General Definitions
-#include <colorvariables>	// Pretty Printing
-#include <ttt>				// Interact with TTT
-#include <smlib>			// Larger Standard Library
+#include <sourcemod> 			// Default Sourcemod Includes
+#include <sdktools>				// ┫
+#include <clientprefs>			// ┛
+#include <imod>					// iNilo Staff Functionality
+#include <general>				// General Definitions
+#include <colorvariables>		// Pretty Printing
+#include <ttt>					// Interact with TTT
+#include <smlib>				// Larger Standard Library
+#include <database_methodmap>	// Helpers for working with a DB
 
 Handle cookie_player_volume;
 Handle cookie_player_experience;
@@ -282,6 +283,30 @@ methodmap Player {
 		CPrintToChat(that, "┃ Playtime: ");
 		CPrintToChat(that, "┃ Playtime: ");
 		CPrintToChat(that, "┗━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
+	}
+
+	public void session(char string[63]) {
+		char auth[255];
+		this.auth_64(auth);
+		DBStatement statement = PrepareStatement(database_ttt, "SELECT * FROM sessions WHERE steam_id=?");
+		SQL_BindParamString(statement, 0, auth, false);
+		if (!SQL_Execute(statement)) { PrintToServer("SQL Execute Failed..."); return; }
+
+		if (SQL_FetchRow(statement)) {
+			// A row was found!  Return the session.
+			SQL_FetchString(statement, 1, string, sizeof(string));
+		} else {
+			// A row was not found.  Generate the session and insert it into the DB.
+			int session_number = GetRandomInt(10000, 1000000000)
+			IntToString(session_number, string, sizeof(string))
+			DBStatement insert_statement = PrepareStatement(database_ttt, "INSERT INTO sessions (steam_id, session_id, skill_hash, skill_points) VALUES (?, ?, \"\", ?);");
+			SQL_BindParamString(insert_statement, 0, auth, false);
+			SQL_BindParamString(insert_statement, 1, string, false);
+			SQL_BindParamInt(insert_statement, 3, this.skill_points, false);
+			if (!SQL_Execute(insert_statement)) { PrintToServer("SQL Execute Failed..."); return; }
+		}
+
+		return;
 	}
 }
 

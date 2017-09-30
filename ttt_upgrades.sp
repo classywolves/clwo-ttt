@@ -8,9 +8,13 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_experience", command_display_experience, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_setexperience", command_experience, ADMFLAG_ROOT);
 	RegAdminCmd("sm_update_info", command_update_info, ADMFLAG_ROOT);
+	RegAdminCmd("sm_session", command_get_session, ADMFLAG_ROOT);
 
 	cookie_player_experience = RegClientCookie("player_experience", "Current experience player has.", CookieAccess_Private);
 	cookie_player_level = RegClientCookie("player_level", "Current player level.", CookieAccess_Private);
+
+	database_ttt = ConnectDatabase("ttt", "ttt");
+	database_player_analytics = ConnectDatabase("player_analytics", "P_A");
 
 	HookEvent("player_death", OnPlayerDeath);
 
@@ -110,4 +114,11 @@ public Action command_update_info(int client, int args) {
 	PrintToServer("Update Info Called, %s %s", target, hashmap);
 
 	return Plugin_Handled;
+}
+
+public Action command_get_session(int client, int args) {
+	Player player = Player(client)
+	char session[63];
+	player.session(session)
+	CPrintToChat(client, "{purple}[TTT] {yellow}Debug: Your session is %s", session)
 }
