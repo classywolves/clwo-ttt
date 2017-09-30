@@ -20,9 +20,9 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_profile", command_profile, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_tp", command_toggle_third_person, ADMFLAG_CHEATS);
 
-	//for (int url = 0; url < sizeof(urls); url++) {
-	//	RegConsoleCmd(urls[url][0], command_open_url, urls[url][2])
-	//}
+	for (int url = 0; url < sizeof(urls); url++) {
+		RegConsoleCmd(urls[url][0], command_open_url, urls[url][2])
+	}
 
 	database_ttt = ConnectDatabase("ttt", "ttt");
 	database_player_analytics = ConnectDatabase("player_analytics", "P_A");
@@ -35,9 +35,7 @@ public void OnPluginStart() {
 
 	CreateTimer(1.5, timer_beacon, 0, TIMER_REPEAT);
 
-	LoopClients(client) {
-		if (AreClientCookiesCached(client)) OnClientCookiesCached(client);
-	}
+	LoopClients(client) if (AreClientCookiesCached(client)) OnClientCookiesCached(client);
 }
 
 public void OnMapStart() {
@@ -84,7 +82,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
 
 OnClientCookiesCached(int client) {
 	Player player = Player(client);
-	player.volume = player.volume;
+	// player.volume = player.volume;
 }
 
 public Action command_toggle_beacon(int client, int args) {
