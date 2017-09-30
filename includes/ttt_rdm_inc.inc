@@ -156,9 +156,6 @@ methodmap Player {
 	public void ttt_found(bool status) {
 		TTT_SetFoundStatus(view_as<int>(this), status);
 	}
-	public void execute(const char[] command) {
-		ClientCommand(view_as<int>(this), command);
-	}
 	public void reset_all() {
 		this.slay_count = 0;
 		this.last_handled = -1;

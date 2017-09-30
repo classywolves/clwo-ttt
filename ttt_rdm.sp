@@ -1,3 +1,5 @@
+#include <ttt_rdm_inc>
+
 /*
 TODO:
  - Add a command to search recents deaths per player.
@@ -6,6 +8,7 @@ TODO:
     
  - Merge a couple if int arrays together to make the code neater.
 */
+
 
 public Plugin myinfo = {
 	name = PLUGIN_NAME,
@@ -47,16 +50,12 @@ public SetCVARS() {
 public ResetShorts() {
 	current_short_id = 0;
 	for (int i = 0; i < 500; i++) {
-		short_ids[i] = 0;
-		handled_by[i] = 0;
-		case_slay[i] = 0;
-		case_accused[i] = 0;
-		case_accuser[i] = 0;
+		Case(i).reset_all();
 	}
 	for (int i = 0; i < MAXPLAYERS + 1; i++) {
-		last_handled[i] = -1;
-		slay_count[i] = 0;
+		Player(i).reset_all();
 	}
+	AllCases(case_id) Case(case_id).reset_all();
 }
 
 public SetCommands() {
@@ -112,29 +111,29 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
 }
 
 public Action OnPlayerDisconnect(Event event, const char[] name, bool dontBroadcast) {
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	Player client_player = Player(GetClientOfUserId(GetEventInt(event, "userid")));
 	
-	if (to_slay[client] == 1) {
+	if (client_player.slay) {
 		char message[256];
-		Format(message, sizeof(message), "{purple}[RDM] {yellow}Player %N left before his slay took place.", client);
+		Format(message, sizeof(message), "{purple}[RDM] {yellow}Player %N left before his slay took place.", client_player.id);
 		CPrintToStaff(message);
-		to_slay[client] = 0;
-		slay_admins[client] = "";
+		client_player.slay = false;
+		client_player.set_slain_by("");
 	}
 	
-	if (last_handled[client] > 0)
+	if (client_player.has_handled)
 	{
-		last_handled[client] = -1;
+		client_player.last_handled = -1;
 	}
 
-	slay_count[client] = 0;	
+	client_player.slay_count = 0;	
 	
 	return Plugin_Continue;
 }
 
 public Action OnWeaponFire(Event event, const char[] name, bool dontBroadcast) {
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	last_gun_fire[client] = GetTime();
+	Player client_player = Player(GetClientOfUserId(GetEventInt(event, "userid")));
+	client_player.last_gun_fire = GetTime();
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
@@ -142,43 +141,34 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	// A player died in round, we need to update the MySQL table.
 	
 	// Identify victim & attacker ids
-	int victim = GetClientOfUserId(GetEventInt(event, "userid"));
-	int attacker = GetClientOfUserId(GetEventInt(event, "attacker", victim));
+	Player victim_player = Player(GetClientOfUserId(GetEventInt(event, "userid")));
+	Player attacker_player = Player(GetClientOfUserId(GetEventInt(event, "attacker", victim_player.id)));
 	
 	// Prepare a SQL statement for the insertion
 	char error[255];
 	DBStatement insert_death = SQL_PrepareQuery(db, "INSERT INTO deaths (death_index, death_time, victim_name, victim_id, victim_role, victim_karma, killer_name, killer_id, killer_role, killer_karma, weapon, bad_action, last_gun_fire, round_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
 	if (insert_death == null) { PrintToServer("Error templating death in the database"); PrintToServer(error); return Plugin_Continue; }
-	
-	// Determine whether RDM
-	int victim_role = TTT_GetClientRole(victim);
-	int attacker_role = TTT_GetClientRole(attacker);
-	
-	// Determine karma
-	int victim_karma = TTT_GetClientKarma(victim);
-	int attacker_karma = TTT_GetClientKarma(attacker);
 
 	// Determine is the kill was a bad action or not
-	int bad_action = BadAction(victim_role, attacker_role);
+	int bad_action = attacker_player.isKillBadAction(victim_player);
 
 	if (bad_action == 1) {
 		Handle hHudText = CreateHudSynchronizer();
 		SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 2, 5.0, 0.5, 0.5);
-		ShowSyncHudText(attacker, hHudText, "WARNING: Please do not RDM.");
+		ShowSyncHudText(attacker_player.id, hHudText, "WARNING: Please do not RDM.");
 		CloseHandle(hHudText);
 	}
 	
 	// Identify permanent names for victim & attacker, plus grab weapon used to kill
 	char weapon[100];
-	char victim_id[100];
-	char attacker_id[100];
-	char victim_name[100];
-	char attacker_name[100];
+	char victim_id[255], attacker_id[255];
+	char victim_name[255], attacker_name[255];
 	
-	GetClientAuthId(victim, AuthId_Steam2, victim_id, sizeof(victim_id), true);
-	GetClientAuthId(attacker, AuthId_Steam2, attacker_id, sizeof(attacker_id), true);
-	GetClientName(victim, victim_name, sizeof(victim_name));
-	GetClientName(attacker, attacker_name, sizeof(attacker_name));
+	victim_player.get_auth(AuthId_Steam2, victim_id);
+	attacker_player.get_auth(AuthId_Steam2, attacker_id);
+
+	victim_player.get_name(victim_name);
+	attacker_player.get_name(attacker_name);
 	GetEventString(event, "weapon", weapon, sizeof(weapon), "Unknown");
 	
 	// Bind parameters to query
@@ -186,15 +176,15 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	SQL_BindParamInt(insert_death, 1, GetTime(), false);
 	SQL_BindParamString(insert_death, 2, victim_name, false);
 	SQL_BindParamString(insert_death, 3, victim_id, false);
-	SQL_BindParamInt(insert_death, 4, victim_role, false);
-	SQL_BindParamInt(insert_death, 5, victim_karma, false);
+	SQL_BindParamInt(insert_death, 4, victim_player.ttt_role, false);
+	SQL_BindParamInt(insert_death, 5, victim_player.ttt_karma, false);
 	SQL_BindParamString(insert_death, 6, attacker_name, false);
 	SQL_BindParamString(insert_death, 7, attacker_id, false);
-	SQL_BindParamInt(insert_death, 8, attacker_role, false);
-	SQL_BindParamInt(insert_death, 9, attacker_karma, false);
+	SQL_BindParamInt(insert_death, 8, attacker_player.ttt_role, false);
+	SQL_BindParamInt(insert_death, 9, attacker_player.ttt_karma, false);
 	SQL_BindParamString(insert_death, 10, weapon, false);
 	SQL_BindParamInt(insert_death, 11, bad_action, false);
-	SQL_BindParamInt(insert_death, 12, last_gun_fire[victim], true);
+	SQL_BindParamInt(insert_death, 12, victim_player.last_gun_fire, true);
 	SQL_BindParamInt(insert_death, 13, max_round, true);
 	
 	// Execute statement
@@ -204,23 +194,21 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 }
 
 public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
-	int victim = GetClientOfUserId(GetEventInt(event, "userid"));
-	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+	Player victim_player = Player(GetClientOfUserId(GetEventInt(event, "userid")));
+	Player attacker_player = Player(GetClientOfUserId(GetEventInt(event, "attacker")));
 	int damage = GetEventInt(event, "dmg_health");
 	int health_left = GetEventInt(event, "health");
 	char weapon[32];
 	GetEventString(event, "weapon", weapon, sizeof(weapon), "Unknown");
 	
-	char victim_name[64], attacker_name[64];
-	char victim_auth[32], attacker_auth[32];
-	GetClientName(victim, victim_name, sizeof(victim_name));
-	GetClientName(attacker, attacker_name, sizeof(attacker_name));
-	GetClientAuthId(victim, AuthId_Steam2, victim_auth, sizeof(victim_auth));
-	GetClientAuthId(attacker, AuthId_Steam2, attacker_auth, sizeof(attacker_auth));
-	
-	// Determine whether RDM
-	int victim_role = TTT_GetClientRole(victim);
-	int attacker_role = TTT_GetClientRole(attacker);
+	char victim_name[255], attacker_name[255];
+	char victim_auth[255], attacker_auth[255];
+
+	victim_player.get_name(victim_name);
+	attacker_player.get_name(attacker_name);
+
+	victim_player.get_auth(AuthId_Steam2, victim_auth);
+	attacker_player.get_auth(AuthId_Steam2, attacker_auth);
 
 	// Prepare a SQL statement for the insertion
 	char error[255];
@@ -230,10 +218,10 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	SQL_BindParamInt(insert_damage, 0, max_round, false);
 	SQL_BindParamString(insert_damage, 1, victim_name, false);
 	SQL_BindParamString(insert_damage, 2, victim_auth, false);
-	SQL_BindParamInt(insert_damage, 3, victim_role, false);
+	SQL_BindParamInt(insert_damage, 3, victim_player.ttt_role, false);
 	SQL_BindParamString(insert_damage, 4, attacker_name, false);
 	SQL_BindParamString(insert_damage, 5, attacker_auth, false);
-	SQL_BindParamInt(insert_damage, 6, attacker_role, false);
+	SQL_BindParamInt(insert_damage, 6, attacker_player.ttt_role, false);
 	SQL_BindParamInt(insert_damage, 7, damage, false);
 	SQL_BindParamInt(insert_damage, 8, health_left, false);
 	SQL_BindParamInt(insert_damage, 9, round_time, false);
@@ -246,12 +234,12 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 }
 
 public Action OnPlayerSpawned(Event event, const char[] name, bool dontBroadcast) {
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	Player client_player = Player(GetClientOfUserId(GetEventInt(event, "userid")));
 	if (TTT_IsRoundActive()) {
-		if (IsValidClient(client) && IsPlayerAlive(client)) {
-			CPrintToChat(client, "{purple}[Slay] {orchid}You joined the game too late and were automatically slain.");
-			ForcePlayerSuicide(client);
-			TTT_SetFoundStatus(client, true);
+		if (client_player.valid_client && client_player.is_alive) {
+			CPrintToChat(client_player.id, "{purple}[Slay] {orchid}You joined the game too late and were automatically slain.");
+			client_player.kill();
+			client_player.ttt_found(true);
 		}
 	}
 }
@@ -276,17 +264,18 @@ public Action Timer_60(Handle timer) {
 }
 
 public Action Command_aRDM(int client, int args) {
-	ClientCommand(client, "sm_rdm all");
+	Player(client).execute("sm_rdm all");
 }
 
 public Action Command_RDM(int client, int args) {
 	bool admin = false;
+	Player client_player = Player(client);
 	if (args == 1) {
 		char target_string[32];
 		GetCmdArg(1, target_string, sizeof(target_string));
 
 		if (StrEqual(target_string, "admin", false) || StrEqual(target_string, "all", false)) {
-			if (iMod_IsStaff(client)) {
+			if (client_player.is_staff) {
 				CPrintToChat(client, "{purple}[RDM] {orchid}This command is running in admin mode.");
 				admin = true
 			}
@@ -302,8 +291,8 @@ public Action Command_RDM(int client, int args) {
 		return Plugin_Handled; // 15 seconds hasn't passed yet, don't allow
 	}
 		
-	char client_auth[100];
-	GetClientAuthId(client, AuthId_Steam2, client_auth, sizeof(client_auth), true);
+	char client_auth[255];
+	client_player.get_auth(AuthId_Steam2, client_auth[255])
 
 	DBStatement rdm_statement;
 
@@ -386,10 +375,13 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 		char buffers[2][32];
 		ExplodeString(to_explode, ",", buffers, 2, 32);
 
-		short_ids[current_short_id] = StringToInt(buffers[1]);
+		Case current_case = Case(current_short_id);
+		Player current_player = Player(client);
+
+		current_case.death_index = StringToInt(buffers[1]);
 		current_short_id++;
 
-		rdm_cooldown[client] = GetTime();
+		current_player.rdm_cooldown = GetTime();
 		
 		int death_index = StringToInt(buffers[1]);
 		
@@ -405,29 +397,28 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 		
 		// Only Expecting 1 row, changed while to if.
 		if (SQL_FetchRow(rdm_instance)) {
-			char victim_name[100];
-			char killer_name[100];
+			char victim_name[255];
+			char killer_name[255];
 
 			SQL_FetchString(rdm_instance, 2, victim_name, sizeof(victim_name));
 			SQL_FetchString(rdm_instance, 6, killer_name, sizeof(killer_name));
 
-			if (Count_Staff() != 0) {
+			current_case.victim.set_name(victim_name);
+			current_case.assailant.set_name(killer_name);
+
+			if (Count_Staff_New() != 0) {
 				if (strcmp(buffers[0], "slain", false) == 0)
 				{
-					case_slay[current_short_id-1] = should_slay;
+					current_case.slay();
 				}
 				else if (strcmp(buffers[0], "warned", false) == 0)
 				{
-					case_slay[current_short_id-1] = should_warn;
+					current_case.warn();
 				}
 				
-				int killer_id = FindTarget(client, killer_name, true, false);
-				int victim_id = FindTarget(client, victim_name, true, false);
-				
-				case_accused[current_short_id - 1] = GetClientUserId(killer_id);
-				case_accuser[current_short_id - 1] = GetClientUserId(victim_id);
-				_victim_name[current_short_id - 1] = victim_name;
-				_killer_name[current_short_id - 1] = killer_name;
+				current_case.victim.target_id();
+				current_case.assailant.target_id();
+
 				char message[256];
 				Format(message, sizeof(message), "{purple}[RDM] {orchid}%s may have been RDM'd by %s. Handle with `/handle %i`", victim_name, killer_name, current_short_id-1);
 				CPrintToStaff(message);
@@ -450,16 +441,14 @@ public Action Command_Info(int client, int args) {
 	// Get target
 	char target_string[32];
 	GetCmdArg(1, target_string, sizeof(target_string));
-	int target_id = StringToInt(target_string);
+	Case target_case = Case(StringToInt(target_string));
 	
-	if (short_ids[target_id] == 0) {
+	if (!target_case.is_valid) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}The given target_id is either invalid or not distributed yet.");
 		return Plugin_Handled;
 	}
 	
-	int death_index = short_ids[target_id];
-	
-	Display_Information(client, death_index);
+	Display_Information(client, target_case.death_index);
 	
 	return Plugin_Handled;
 }
@@ -476,14 +465,15 @@ public Action Command_Handle(int client, int args) {
 		Menu menu = new Menu(Handle_Menu_Callback);
 		menu.SetTitle("Unhandled Cases");
 		bool run = false;
-		for (int i = 0; i < 500; i++) {
-			if (short_ids[i]) {
-				if (handled_by[i] == 0) {
+		AllCases(case_id) {
+			Case current_case = Case(case_id);
+			if (current_case.is_valid) {
+				if (!current_case.is_handled) {
 					run = true;
 					char message[255];
-					Format(message, sizeof(message), "%d", i);
+					Format(message, sizeof(message), "%d", case_id);
 					char index[64];
-					Format(index, sizeof(index), "%d", i);
+					Format(index, sizeof(index), "%d", case_id);
 					menu.AddItem(index, message);
 				}
 			}
@@ -513,11 +503,12 @@ public Action Command_HandleNext(int client, int args) {
 	if (args == 0) {
 		bool run = true;
 		int first_unhandled = 0;
-		for (int i = 0; i < 500; i++) {
-			if (short_ids[i] && run) {
-				if (handled_by[i] == 0 && run && (case_slay[i] != 0)) {
+		AllCases(case_id) {
+			Case current_case = Case(case_id);
+			if (current_case.is_valid && run) {
+				if (!current_case.is_handled && run && (current_case.punishment)) {
 					run = false;
-					first_unhandled = i;
+					first_unhandled = case_id;
 				}
 			}
 		}
@@ -538,28 +529,27 @@ public Action Command_HandleNext(int client, int args) {
 
 public HandleCase(int client, int case_id)
 {
-	
-	if (short_ids[case_id] == 0) {
+	Case current_case = Case(case_id);
+	if (current_case.is_valid) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}The given case_id is either invalid or not distributed yet.");
 		return;
 	}
 	
-	if (case_slay[case_id] == 0)
+	if (!current_case.punishment)
 	{
 		CPrintToChat(client, "{purple}[RDM] {orchid}Waiting for %N to complete their case.", client);
 		return;
 	}
 	
-	if (handled_by[case_id] != 0) {
+	if (current_case.is_handled) {
 		char message[512];
 		Format(message, sizeof(message), "{purple}[RDM] {orchid}This case has already been handled by %N.  You can stil find information about this event by doing /info %d", handled_by[case_id], case_id);
 		CPrintToChat(client, message);
 		return;
 	}
 	
-	int death_index = short_ids[case_id];
-	handled_by[case_id] = client;
-	last_handled[client] = case_id;
+	current_case.handled_client = client;
+	Player(client).last_handled = case_id;
 
 	// Prepare a SQL statement for the insertion
 		
@@ -571,7 +561,7 @@ public HandleCase(int client, int case_id)
 	GetClientAuthId(client, AuthId_Steam2, staff_auth, sizeof(staff_auth), true);
 	GetClientName(client, staff_name, sizeof(staff_name));
 	
-	SQL_BindParamInt(insert_handles, 0, death_index, false);
+	SQL_BindParamInt(insert_handles, 0, current_case.death_index, false);
 	SQL_BindParamString(insert_handles, 1, staff_name, false);
 	SQL_BindParamString(insert_handles, 2, staff_auth, false);
 	
@@ -583,7 +573,7 @@ public HandleCase(int client, int case_id)
 		PrintToServer(error);
 		return;
 	}
-	SQL_BindParamInt(rdm_instance, 0, death_index, false);
+	SQL_BindParamInt(rdm_instance, 0, current_case.death_index, false);
 	
 	if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return; }
 	
@@ -605,7 +595,7 @@ public HandleCase(int client, int case_id)
 		CPrintToChat(victim_client, message);
 	}
 	
-	Display_Information(client, death_index);
+	Display_Information(client, current_case.death_index);
 	return;
 }
 
@@ -632,36 +622,30 @@ public Action Command_Verdict(int client, int args) {
 	char verdict[32];
 	GetCmdArg(1, verdict, sizeof(verdict));
 	
-	if (last_handled[client] == -1)
+	Player current_player = Player(client);
+
+	if (!current_player.has_handled)
 	{
 		CPrintToChat(client, "{purple}[RDM] {orchid}You do not have any handled RDM's");
 		return Plugin_Handled;
 	}
 	
-	int case_id = last_handled[client];
+	Case current_case = Case(current_player.last_handled);
 	
-	if (case_slay[case_id] == 0)
+	if (!current_case.punishment)
 	{
 		CPrintToChat(client, "{purple}[RDM] {red}User did not choose slay or warn.");
 		return Plugin_Handled;
 	}
-	if (case_accused[case_id] == 0) 
+	if (!current_case.assailant.id) 
 	{
 		return Plugin_Handled;
 	}
 	
-	if (case_accuser[case_id] == 0) 
+	if (!current_case.victim.id) 
 	{
 		return Plugin_Handled;
 	}
-	
-	int attacker_id = case_accused[case_id];
-	int victim_id = case_accuser[case_id];
-	int victim_clientid = 0;
-	int attacker_clientid = 0;
-	
-	if (victim_id != -1) {victim_clientid = GetClientOfUserId(victim_id);}
-	if (attacker_id != -1) {attacker_clientid = GetClientOfUserId(attacker_id);}
 	
 	char error[255];
 	DBStatement update_handled = SQL_PrepareQuery(db, "UPDATE deaths SET verdict=? WHERE death_index=?;", error, sizeof(error));
@@ -671,60 +655,59 @@ public Action Command_Verdict(int client, int args) {
 	if (handled_handles == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
 	
 	
-	
 	if (strcmp(verdict, "guilty", false) == 0)
 	{		
 		SQL_BindParamInt(update_handled, 0, 2, false);
-		SQL_BindParamInt(update_handled, 1, short_ids[case_id], false);
+		SQL_BindParamInt(update_handled, 1, current_case.death_index, false);
 		
 		SQL_BindParamInt(handled_handles, 0, 2, false);
-		SQL_BindParamInt(handled_handles, 1, short_ids[case_id], false);
+		SQL_BindParamInt(handled_handles, 1, current_case.death_index, false);
 		
 		if (!SQL_Execute(update_handled)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
 		if (!SQL_Execute(handled_handles)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
 		
-		if ( (case_slay[case_id] == should_slay) && (attacker_id != -1) )
+		if ( (current_case.punishment == should_slay) && (current_case.assailant.id) )
 		{
-			ClientCommand(client, "sm_slaynr #%d", attacker_id);
-			CPrintToChat(client, "{purple}[RDM] {red}Case closed, slaying %s next round!", _killer_name[case_id]);
-			CPrintToChat(client, "{purple}[RDM] {orchid}Please message %s and explain your evidence.", _killer_name[case_id]);
+			ClientCommand(client, "sm_slaynr #%d", current_case.assailant.id);
+			CPrintToChat(client, "{purple}[RDM] {red}Case closed, slaying %s next round!", _killer_name[current_case.id]);
+			CPrintToChat(client, "{purple}[RDM] {orchid}Please message %s and explain your evidence.", _killer_name[current_case.id]);
 		}
 		else
 		{
 			// Accused left
 			// TODO: Handle this to auto-slay when they next join.
-			CPrintToChat(client, "{purple}[RDM] {orchid}Case closed, please message %s and explain your evidence.", _killer_name[case_id]);
+			CPrintToChat(client, "{purple}[RDM] {orchid}Case closed, please message %s and explain your evidence.", _killer_name[current_case.id]);
 		}
 		
-		if (victim_id != -1)
+		if (!current_case.victim.id)
 		{
-			CPrintToChat(victim_clientid, "{purple}[RDM] {green}%s was found guilty and will be slain next round!", _killer_name[case_id]);
+			CPrintToChat(current_case.victim.id, "{purple}[RDM] {green}%s was found guilty and will be slain next round!", _killer_name[current_case.id]);
 		}
 		
 	}
 	else if (strcmp(verdict, "innocent", false) == 0)
 	{
 		SQL_BindParamInt(update_handled, 0, 1, false);
-		SQL_BindParamInt(update_handled, 1, short_ids[case_id], false);
+		SQL_BindParamInt(update_handled, 1, current_case.death_index, false);
 		
 		SQL_BindParamInt(handled_handles, 0, 1, false);
-		SQL_BindParamInt(handled_handles, 1, short_ids[case_id], false);
+		SQL_BindParamInt(handled_handles, 1, current_case.death_index, false);
 		
 		if (!SQL_Execute(update_handled)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
 		if (!SQL_Execute(handled_handles)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
 		
-		if (victim_id == -1)
+		if (!current_case.assailant.id)
 		{
-			CPrintToChat(client, "{purple}[RDM] {green} %s {yellow} has left before the verdict was given.", _victim_name[case_id]);
+			CPrintToChat(client, "{purple}[RDM] {green} %s {yellow} has left before the verdict was given.", _victim_name[current_case.id]);
 		}
 		else
 		{
-			CPrintToChat(client, "{purple}[RDM] {green}Case closed, please message %s and explain why you thought it wasn't an RDM", _victim_name[case_id]);
+			CPrintToChat(client, "{purple}[RDM] {green}Case closed, please message %s and explain why you thought it wasn't an RDM", _victim_name[current_case.id]);
 		}
 		
-		if (attacker_id != -1)
+		if (current_case.assailant.id)
 		{
-			CPrintToChat(attacker_clientid, "{purple}[RDM] {green}You were found innocent of %s's case", _victim_name[case_id]);
+			CPrintToChat(current_case.assailant.id, "{purple}[RDM] {green}You were found innocent of %s's case", _victim_name[current_case.id]);
 		}
 		
 	}
@@ -745,14 +728,12 @@ public Action Command_Damage(int client, int args) {
 	// Get target
 	char target_string[32];
 	GetCmdArg(1, target_string, sizeof(target_string));
-	int target_id = StringToInt(target_string);
+	Case target_case = Case(StringToInt(target_string));
 	
-	if (short_ids[target_id] == 0) {
+	if (!target_case.is_valid) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}The given target_id is either invalid or not distributed yet.");
 		return Plugin_Handled;
 	}
-
-	int death_index = short_ids[target_id];
 
 	char error[255];
 	DBStatement rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error))
@@ -760,7 +741,7 @@ public Action Command_Damage(int client, int args) {
 		PrintToServer(error);
 		return Plugin_Handled;
 	}
-	SQL_BindParamInt(rdm_instance, 0, death_index, false);
+	SQL_BindParamInt(rdm_instance, 0, target_case.death_index, false);
 	
 	if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
 	
@@ -924,27 +905,27 @@ public Action Command_SlayNR(int client, int args) {
 	GetCmdArg(1, target_string, sizeof(target_string));
 	
 	// Ensure target exists 
-	int target_client = FindTarget(client, target_string, true, false);
-	if (target_client == -1) {
+	Player target_player = Player(FindTarget(client, target_string, true, false));
+	if (target_player.id == -1) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Target not found.");
 		return Plugin_Handled;
 	}
 
 	// Format slay message and send to recipients
 	char message[256];
-	if (to_slay[target_client] == 1) {
-		Format(message, sizeof(message), "{purple}[RDM] {yellow}%N was already set to slay by %s.", target_client, slay_admins[client]);
+	if (target_player.slay) {
+		Format(message, sizeof(message), "{purple}[RDM] {yellow}%N was already set to slay by %s.", target_player.id, slay_admins[target_player.id]);
 		CPrintToChat(client, message);
 	} else {
 		char string_slay_admin[255];
 		Format(string_slay_admin, sizeof(string_slay_admin), "%N", client)
-		slay_admins[client] = string_slay_admin;
-		Format(message, sizeof(message), "{purple}[RDM] {yellow}Slaying %N next round by request from %s.", target_client, slay_admins[client]);
+		target_player.set_slain_by(string_slay_admin);
+		Format(message, sizeof(message), "{purple}[RDM] {yellow}Slaying %N next round by request from %s.", target_player.id, slay_admins[target_player.id]);
 		CPrintToStaff(message);
 	}
 	
 	// Set target to slay
-	to_slay[target_client] = 1;
+	target_player.slay = true;
 
 	return Plugin_Handled
 }
@@ -961,19 +942,19 @@ public Action Command_UnSlayNR(int client, int args) {
 	GetCmdArg(1, target_string, sizeof(target_string));
 	
 	// Ensure target exists 
-	int target_client = FindTarget(client, target_string, true, false);
-	if (target_client == -1) {
+	Player target_player = Player(FindTarget(client, target_string, true, false));
+	if (target_player.id == -1) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Target not found.");
 		return Plugin_Handled;
 	}
 	
 	// Set target to slay
-	to_slay[target_client] = 0;
-	slay_admins[target_client] = "";
+	target_player.slay = false;
+	target_player.set_slain_by("");
 	
 	// Display slay message to staff
 	char message[256];
-	Format(message, sizeof(message), "{purple}[RDM] {yellow}No longer slaying %N next round by request of %N.", target_client, client);
+	Format(message, sizeof(message), "{purple}[RDM] {yellow}No longer slaying %N next round by request of %N.", target_player.id, client);
 	CPrintToStaff(message);
 	return Plugin_Handled
 }
@@ -981,25 +962,26 @@ public Action Command_UnSlayNR(int client, int args) {
 
 public void TTT_OnClientGetRole(int client, int role)
 {
-	last_gun_fire[client] = -1;
-	if (to_slay[client] == 1)
+	Player current_player = Player(client);
+	current_player.last_gun_fire = -1
+	if (current_player.slay)
 	{
-		if (IsValidClient(client) && IsPlayerAlive(client))
+		if (current_player.valid_client && current_player.is_alive)
 		{
-			slay_count[client]++;
+			current_player.slay_count++;
 			char message[255];
-			if (slay_count[client] > 2) {
-				Format(message, sizeof(message), "{purple}[RDM] {red}%N has been slain %d times this map.  Consider a specban.", client, slay_count[client]);
+			if (current_player.slay_count > 2) {
+				Format(message, sizeof(message), "{purple}[RDM] {red}%N has been slain %d times this map.  Consider a specban.", client, current_player.slay_count);
 			} else {
-				Format(message, sizeof(message), "{purple}[RDM] {yellow}%N has been slain (no. %d).", client, slay_count[client]);
+				Format(message, sizeof(message), "{purple}[RDM] {yellow}%N has been slain (no. %d).", client, current_player.slay_count);
 			}
 			CPrintToStaff(message);
 			CPrintToChat(client, "{purple}[Slay] {orchid}You were slain by %s.  Please read /rules.", slay_admins[client]);
-			ForcePlayerSuicide(client);
-			TTT_SetFoundStatus(client, true);
+			current_player.kill();
+			current_player.ttt_found(true);
 		}
-		to_slay[client] = 0;
-		slay_admins[client] = "";
+		current_player.slay = false;
+		current_player.set_slain_by("");
 	}
 }
 
