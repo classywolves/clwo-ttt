@@ -133,6 +133,11 @@ methodmap Player {
 		public set(int level) { this.set_cookie_int(cookie_player_level, level); }
 	}
 
+	property int skill_points {
+		public get() { return this.level; }
+		public set(int skill_points) { this.level = skill_points; }
+	}
+
 	property float volume {
 		public get() {
 			char player_volume[64];

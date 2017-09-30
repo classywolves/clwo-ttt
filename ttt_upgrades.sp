@@ -7,6 +7,7 @@
 public void OnPluginStart() {
 	RegAdminCmd("sm_experience", command_display_experience, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_setexperience", command_experience, ADMFLAG_ROOT);
+	RegAdminCmd("sm_update_info", command_update_info, ADMFLAG_ROOT);
 
 	cookie_player_experience = RegClientCookie("player_experience", "Current experience player has.", CookieAccess_Private);
 	cookie_player_level = RegClientCookie("player_level", "Current player level.", CookieAccess_Private);
@@ -91,6 +92,22 @@ public Action command_experience(int client, int args) {
 	Player(target_player).experience = experience;
 
 	CPrintToChat(client, "{purple}[TTT] {yellow}Set experience on %N to %d.", target_player, experience);
+
+	return Plugin_Handled;
+}
+
+public Action command_update_info(int client, int args) {
+	if (args != 2) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /update_info <steam64> <hashmap>");
+		return Plugin_Handled;
+	}
+
+	char target[128], hashmap[256];
+	GetCmdArg(1, target, sizeof(target));
+	GetCmdArg(2, hashmap, sizeof(hashmap));
+
+	// Do some fantastic stuff with these two values here...
+	PrintToServer("Update Info Called, %s %s", target, hashmap);
 
 	return Plugin_Handled;
 }
