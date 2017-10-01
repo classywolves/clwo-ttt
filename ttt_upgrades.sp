@@ -93,6 +93,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 
 public void TTT_OnBodyFound(int client, int victim, const char[] deadPlayer) {
 	Player(client).experience += 2;
+	Player(client).show_experience_bar();
 }
 
 public Action command_display_experience(int client, int args) {

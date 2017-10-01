@@ -272,6 +272,23 @@ methodmap Player {
 		}
 	}
 
+	public void show_experience_bar()
+	{
+		const int max_bars = 20;
+		float level_up_percentage = float(Percentage(this.experience, this.level_up_experience)) / 100; 
+		int coloured_squares = RoundFloat(20 * level_up_percentage);
+		char unicode_bar[max_bars] = "";
+		for (int i = 0; i < max_bars; i++) {
+			if (i <= coloured_squares) StrCat(unicode_bar, max_bars, "▰");
+			else StrCat(unicode_bar, max_bars, "▱");
+		}
+
+		Handle hHudText = CreateHudSynchronizer();
+		SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 2, 5.0, 0.5, 0.5);
+		ShowSyncHudText(that, hHudText, unicode_bar);
+		CloseHandle(hHudText);
+	}
+
 	public void beacon_ping(int color[4]) {
 		float vec[3];
 		GetClientAbsOrigin(that, vec);
