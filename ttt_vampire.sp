@@ -1,14 +1,12 @@
+#include <sourcemod>
+#include <sdktools>
+#include <sdkhooks>
+
 #include <ttt>
 #include <ttt_helpers>
 #include <player_methodmap>
 
-#define upgrade_id 0
-
-// This is an example plugin layout.  It includes a timer and
-// increases health every (10 - 2 * skill_point) seconds.
-
-// We start by defining an array to hold a timer for each player.
-Handle health_timers[MAXPLAYERS + 1];
+#define upgrade_id 1
 
 // We also need an array to hold players upgrade levels
 int upgrade_levels[MAXPLAYERS + 1];
@@ -29,10 +27,16 @@ public void OnPluginStart() {
 	LoopValidClients(client) OnClientPutInServer(client);
 }
 
+public void OnMapStart() {
+    sprite_beam = PrecacheModel("materials/sprites/laserbeam.vmt");
+    sprite_halo = PrecacheModel("materials/sprites/glow.vmt");
+}
+
 // When a client is put in the server, we want to automatically grab their
 // upgrade level.
 public void OnClientPutInServer(int client) {
 	update_upgrade_level(client);
+	SDKHook(client, SDKHook_OnTakeDamagePost, Hook_OnTakeDamagePost);
 }
 
 // When the player disconnects from the server, we want to reset their upgrade_level
@@ -80,6 +84,7 @@ public void update_upgrade_level(int client) {
 // This function will regenerate a persons health by one.
 // It is called by the timer defined above.
 public Action health_regen(Handle timer, int client) {
+	CPrintToChat(client, "{purple}[TTT] {yellow}We increased your health by one.")
 	Player player = Player(client);
 	if (player.health < 100) {
 		player.health++;

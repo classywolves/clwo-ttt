@@ -30,6 +30,8 @@ bool website_payload[MAXPLAYERS + 1];
 Database database_ttt;
 Database database_player_analytics;
 
+native int upgrades_get_upgrade_points(int client_id, int upgrade_id);
+
 /*======== Upgrades ========*/
 #define AllUpgrades for(int i = 1; i <= MaxClients; i++) for(int j = 1; j <= 64; j++)
 #define PlayerUpgrades(%1) for(int %1 = 1; %1 <= 64; %1++)
@@ -48,10 +50,10 @@ methodmap Upgrades {
     }
 
     public int get_points(int skill_id) {
-        return upg_points[view_as<int>(this)][skill_id];
+        return upg_points[that][skill_id];
     }
     public void set_points(int skill_id, int value) {
-        upg_points[view_as<int>(this)][skill_id] = value;
+        upg_points[that][skill_id] = value;
     }
 }
 
@@ -124,6 +126,10 @@ methodmap Player {
 
 	public void staff_name(char name[255]) {
 		iMod_GetUserTypeString(iMod_GetUserType(that), USER_TYPE_FULLNAME, name, sizeof(name));
+	}
+
+	public int get_upgrade_level(int upgrade_id) {
+		return upgrades_get_upgrade_points(that, upgrade_id);
 	}
 
 	property bool third_person {
