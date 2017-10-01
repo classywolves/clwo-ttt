@@ -5,6 +5,8 @@
 
 #include <general>
 
+typedef NativeCall = function int (Handle plugin, int numParams);
+
 public void OnPluginStart() {
 	RegAdminCmd("sm_experience", command_display_experience, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_setexperience", command_experience, ADMFLAG_ROOT);
@@ -21,6 +23,7 @@ public void OnPluginStart() {
 	database_player_analytics = ConnectDatabase("player_analytics", "P_A");
 
 	HookEvent("player_death", OnPlayerDeath);
+	g_hUpgradeChangeForward = CreateGlobalForward("OnUpgradeChanged", ET_Event, Param_Cell, Param_Cell);
 
 	LoopClients(client) if (AreClientCookiesCached(client)) OnClientCookiesCached(client);
 	LoopValidClients(client) OnClientPutInServer(client);
@@ -33,8 +36,26 @@ public void OnClientPutInServer(int client) {
 	Player(client).populate();
 }
 
+public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max)
+{
+   RegPluginLibrary("ttt_upgrades");
+   CreateNative("upgrades_get_upgrade_points", Native_upgrades_get_upgrade_points);
+}
+
 public void OnClientCookiesCached(int client) {
 
+}
+
+public int Native_upgrades_get_upgrade_points(Handle plugin, int numParams)
+{
+	if (numParams != 2)
+	{
+		return -1;
+	}
+
+	int client_id = GetNativeCell(1);
+	int upgrade_id = GetNativeCell(2);
+	return Player(client_id).upgrades.get_points(upgrade_id);
 }
 
 public Action DoHealthRegen(Handle timer, int client_serial) {

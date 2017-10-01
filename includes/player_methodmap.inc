@@ -17,6 +17,7 @@
 Handle cookie_player_volume;
 Handle cookie_player_experience;
 Handle cookie_player_level;
+Handle g_hUpgradeChangeForward;
 
 int sprite_beam = -1;
 int sprite_halo = -1;
@@ -225,10 +226,24 @@ methodmap Player {
 		DBStatement player_skill_points = PrepareStatement(database_ttt, "SELECT * FROM `upgrades` WHERE steam_id=? LIMIT 1");
 		SQL_BindParamString(player_skill_points, 0, steam_id, false);
 		if (!SQL_Execute(player_skill_points)) { PrintToServer("User Skills grab failed."); return;}
-
+		//int upg_points[MAXPLAYERS+1][64];
 		if (SQL_FetchRow(player_skill_points)) {
+			int latest_value;
 			for (int i = 1;i < 32; i++) {
-				this.upgrades.set_points(i - 1, SQL_FetchInt(player_skill_points, i));
+				latest_value = SQL_FetchInt(player_skill_points, i);
+				this.upgrades.set_points(i - 1, latest_value);
+				int result;
+				if (upg_points[that][i] != latest_value) {
+					/* Start function call */
+					Call_StartForward(g_hUpgradeChangeForward);
+					 
+					/* Push parameters one at a time */
+					Call_PushCell(that);
+					Call_PushCell(i);
+					
+					/* Finish the call, get the result */
+					Call_Finish(result);
+				}
 			}
 		}
 		return;
