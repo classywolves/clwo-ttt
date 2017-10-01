@@ -2,6 +2,7 @@
 #include <player_methodmap>
 
 #include <ttt>
+
 #include <general>
 
 public void OnPluginStart() {
@@ -27,9 +28,9 @@ public void OnPluginStart() {
 
 public void OnClientPutInServer(int client) {
 	Player player = Player(client);
-	//Player(client).populate();
 	char string[63], hash[127];
 	player.session_and_hash(string, hash)
+	Player(client).populate();
 }
 
 public void OnClientCookiesCached(int client) {
@@ -40,23 +41,23 @@ public Action DoHealthRegen(Handle timer, int client_serial) {
 	int client_id = GetClientFromSerial(client_serial);
 	if (!client_id) return Plugin_Stop;
 
-	Player client_player = Player(client_id);
+	Player player = Player(client_id);
 
-	int points_health_regen = client_player.upgrades.get_points(0);
+	int points_health_regen = player.upgrades.get_points(0);
 	if (!points_health_regen || points_health_regen > 4) return Plugin_Stop;
 	float timer_delay = 10 - 2 * float(points_health_regen);
 
-	if (client_player.health > 99) client_player.health = 100;
-	else client_player.health++
+	if (player.health > 99) player.health = 100;
+	else player.health++
 
 	CreateTimer(timer_delay, DoHealthRegen, client_serial);
 	return Plugin_Continue;
 }
 
 public void TTT_OnClientGetRole(int client, int role) {
-	Player client_player = Player(client);
+	Player player = Player(client);
 
-	int points_health_regen = client_player.upgrades.get_points(0);
+	int points_health_regen = player.upgrades.get_points(0);
 	if (!points_health_regen || points_health_regen > 4) return;
 	float timer_delay = 10 - 2 * float(points_health_regen);
 
@@ -75,9 +76,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	char attacker_auth[256];
 
 	Player player = Player(attacker);
-	player.auth_2(attacker_auth);
-
-	if (!StrEqual(attacker_auth, "STEAM_1:0:39463079")) return Plugin_Continue;
+	player.get_auth(AuthId_Steam2, attacker_auth);
 
 	if (player.bad_kill(victim)) {
 		player.experience -= 50 // TODO: Custom karma based on players & etc.
@@ -88,8 +87,6 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 			player.experience += 20
 		}
 	}
-
-	CPrintToChat(attacker, "Your Experience is: %d", player.experience);
 
 	return Plugin_Continue;
 }
