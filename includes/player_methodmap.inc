@@ -156,11 +156,6 @@ methodmap Player {
 		SetClientCookie(that, cookie, cookie_value);
 	}
 
-	property int experience {
-		public get() { return this.get_cookie_int(cookie_player_experience, 0); }
-		public set(int experience) { this.set_cookie_int(cookie_player_experience, experience); check_level(this); }
-	}
-
 	property int level {
 		public get() { return this.get_cookie_int(cookie_player_level, 1); }
 		public set(int level) { this.set_cookie_int(cookie_player_level, level); }
@@ -238,8 +233,8 @@ methodmap Player {
 		if (!SQL_Execute(player_skill_points)) { PrintToServer("User Skills grab failed."); return;}
 
 		if (SQL_FetchRow(player_skill_points)) {
-			for (int i = 0;i < 32; i++) {
-				this.upgrades.set_points(i, SQL_FetchInt(player_skill_points, i));
+			for (int i = 1;i < 32; i++) {
+				this.upgrades.set_points(i - 1, SQL_FetchInt(player_skill_points, i));
 			}
 		}
 		return;
@@ -270,23 +265,6 @@ methodmap Player {
 		if (display) {
 			CPrintToChat(that, "{purple}[URL] {yellow}Loading {green}%s", url);
 		}
-	}
-
-	public void show_experience_bar()
-	{
-		const int max_bars = 20;
-		float level_up_percentage = float(Percentage(this.experience, this.level_up_experience)) / 100; 
-		int coloured_squares = RoundFloat(20 * level_up_percentage);
-		char unicode_bar[max_bars] = "";
-		for (int i = 0; i < max_bars; i++) {
-			if (i <= coloured_squares) StrCat(unicode_bar, max_bars, "▰");
-			else StrCat(unicode_bar, max_bars, "▱");
-		}
-
-		Handle hHudText = CreateHudSynchronizer();
-		SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 2, 5.0, 0.5, 0.5);
-		ShowSyncHudText(that, hHudText, unicode_bar);
-		CloseHandle(hHudText);
 	}
 
 	public void beacon_ping(int color[4]) {
@@ -339,28 +317,6 @@ methodmap Player {
 		}
 	}
 
-	public void profile(int client) {
-		Player player = Player(client);
-
-		// We still need to get colours sorted out.
-		int actions[2];
-		player.get_actions(actions);
-
-		int good_action_percentage = RoundFloat(float(actions[0]) * 100 / float(actions[0] + actions[1]));
-		char good_action_colour[32] = "{GREEN}";
-
-		// We have nine lines to work with...
-		CPrintToChat(that, "┏━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
-		CPrintToChat(that, "┃ Playtime: %d", this.playtime);
-		CPrintToChat(that, "┃ Karma: %d ({GREEN}+%d{DEFAULT}, {RED}-%d{DEFAULT}, %s%d%s)", this.karma, actions[0], actions[1], good_action_colour, good_action_percentage, "%%");
-		CPrintToChat(that, "┃ Level: %d (%d / %d | %d%s)", this.level, this.experience, this.level_up_experience, Percentage(this.experience, this.level_up_experience - this.experience), "%%");
-		CPrintToChat(that, "┃ Playtime: ");
-		CPrintToChat(that, "┃ Playtime: ");
-		CPrintToChat(that, "┃ Playtime: ");
-		CPrintToChat(that, "┃ Playtime: ");
-		CPrintToChat(that, "┗━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
-	}
-
 	public void session_and_hash(char string[63], char hash[127]) {
 		char auth[255];
 		this.auth_64(auth);
@@ -392,6 +348,35 @@ methodmap Player {
 		Format(url, sizeof(url), "http://ttt.clwo.eu:3000/#^%s^%s", hash, session);
 		this.display_url(url);
 	}
+
+	property int experience {
+		public get() { return this.get_cookie_int(cookie_player_experience, 0); }
+		public set(int experience) { this.set_cookie_int(cookie_player_experience, experience); /* check_level(this); show_experience_bar(this); */ }
+	}
+
+	public void profile(int client) {
+		Player player = Player(client);
+
+		// We still need to get colours sorted out.
+		int actions[2];
+		char exp_bar[80];
+		player.get_actions(actions);
+		get_experience_bar(player, exp_bar);
+
+		int good_action_percentage = RoundFloat(float(actions[0]) * 100 / float(actions[0] + actions[1]));
+		char good_action_colour[32] = "{GREEN}";
+
+		// We have nine lines to work with...
+		CPrintToChat(that, "┏━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
+		CPrintToChat(that, "┃ Playtime: %d", player.playtime);
+		CPrintToChat(that, "┃ Karma: %d ({GREEN}+%d{DEFAULT}, {RED}-%d{DEFAULT}, %s%d%s)", player.karma, actions[0], actions[1], good_action_colour, good_action_percentage, "%%");
+		CPrintToChat(that, "┃ Level: %d (%d / %d | %d%s)", player.level, player.experience, player.level_up_experience, Percentage(player.experience, player.level_up_experience - player.experience), "%%");
+		CPrintToChat(that, "┃ EXP: %s", exp_bar);
+		CPrintToChat(that, "┃ Playtime: ");
+		CPrintToChat(that, "┃ Playtime: ");
+		CPrintToChat(that, "┃ Playtime: ");
+		CPrintToChat(that, "┗━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
+	}
 }
 
 public void check_level(Player player) {
@@ -399,6 +384,42 @@ public void check_level(Player player) {
 		player.experience -= player.level_up_experience;
 		player.level++;
 		CPrintToChat(player.id, "{purple}[TTT] {green}Congratulations!  You've levelled up to level %d", player.level);
+
 		check_level(player);
 	}
+}
+
+public void show_experience_bar(Player player)
+{
+	char unicode_bar[80];
+	get_experience_bar(player, unicode_bar);
+	Handle hHudText = CreateHudSynchronizer();
+	SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 0, 0.0, 0.0, 0.0);
+	ShowSyncHudText(player.id, hHudText, unicode_bar);
+	CloseHandle(hHudText);
+}
+
+public void get_experience_bar(Player player, char unicode_bar[80]) {
+	const int bar_size = 80;
+	const int num_bars = 20;
+
+	float level_up_percentage = float(player.experience) / float(player.level_up_experience);
+	int coloured_squares = RoundFloat(num_bars * level_up_percentage);
+
+	//CPrintToChat(player.id, "Bar Size: %d, Levelup Percentage: %f, Total Bars: %d", bar_size, level_up_percentage, coloured_squares, num_bars);
+
+	for (int i = 0; i < num_bars; i++) {
+		//CPrintToChat(player.id, "Bar: %s", unicode_bar);
+		if (i <= coloured_squares) {
+			StrCat(unicode_bar, bar_size, "▰");
+			//CPrintToChat(player.id, "Adding filled in bar: %d", i);
+		}
+		else {
+			StrCat(unicode_bar, bar_size, "▱");
+			//CPrintToChat(player.id, "Adding empty in bar: %d", i);
+		}
+		//CPrintToChat(player.id, "Bar: %s", unicode_bar);
+	}
+
+	//CPrintToChat(player.id, "Bar: %s", unicode_bar);
 }

@@ -26,7 +26,10 @@ public void OnPluginStart() {
 }
 
 public void OnClientPutInServer(int client) {
+	Player player = Player(client);
 	//Player(client).populate();
+	char string[63], hash[127];
+	player.session_and_hash(string, hash)
 }
 
 public void OnClientCookiesCached(int client) {
@@ -93,7 +96,6 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 
 public void TTT_OnBodyFound(int client, int victim, const char[] deadPlayer) {
 	Player(client).experience += 2;
-	Player(client).show_experience_bar();
 }
 
 public Action command_display_experience(int client, int args) {
@@ -114,7 +116,7 @@ public Action command_display_experience(int client, int args) {
 
 public Action command_experience(int client, int args) {
 	if (args != 2) {
-		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /experience <target> <experience>");
+		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /setexperience <target> <experience>");
 		return Plugin_Handled;
 	}
 
