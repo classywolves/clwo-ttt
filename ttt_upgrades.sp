@@ -20,13 +20,8 @@ public void OnPluginStart() {
 
 	HookEvent("player_death", OnPlayerDeath);
 
-	LoopClients(client) {
-		if (AreClientCookiesCached(client)) OnClientCookiesCached(client);
-	}
-
-	LoopValidClients(client) {
-		OnClientPutInServer(client);
-	}
+	LoopClients(client) if (AreClientCookiesCached(client)) OnClientCookiesCached(client);
+	LoopValidClients(client) OnClientPutInServer(client);
 }
 
 public void OnClientPutInServer(int client) {
@@ -140,28 +135,37 @@ public Action command_experience(int client, int args) {
 
 public Action command_update_info(int client, int args) {
 	if (args != 2) {
-		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /update_info <steam64> <hashmap>");
-		return Plugin_Handled;
+		if (client != 0) {
+			CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /update_info <steam64> <hashmap>");
+			return Plugin_Handled;
+		}
 	}
 
 	char target[128], hashmap[256];
 	GetCmdArg(1, target, sizeof(target));
 	GetCmdArg(2, hashmap, sizeof(hashmap));
 
+	int target_id = Get_Client(target, AuthId_SteamID64);
+
+	if (target_id == -1) {
+		PrintToServer("Warning, Steam_64 not found for %s", target)
+		return Plugin_Handled;
+	}
+
 	// Do some fantastic stuff with these two values here...
-	PrintToServer("Update Info Called, %s %s", target, hashmap);
+	PrintToServer("Update Info Called, %s %s %d", target, hashmap, target_id);
 
 	return Plugin_Handled;
 }
 
 public Action command_get_session(int client, int args) {
-	Player player = Player(client)
+	Player player = Player(client);
 	char session[63], hash[127];
-	player.session_and_hash(session, hash)
-	CPrintToChat(client, "{purple}[TTT] {yellow}Debug: Session: %s, Hash: %s", session, hash)
+	player.session_and_hash(session, hash);
+	CPrintToChat(client, "{purple}[TTT] {yellow}Debug: Session: %s, Hash: %s", session, hash);
 }
 
 public Action command_skills(int client, int args) {
-	Player player = Player(client)
-	player.display_skills_page()
+	Player player = Player(client);
+	player.display_skills_page();
 }

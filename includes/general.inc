@@ -101,11 +101,11 @@ stock int Count_Staff() {
 	return counted_mods;
 }
 
-stock int Get_Client(char[] specified_id) {
+stock int Get_Client(char[] specified_id, AuthIdType auth=AuthId_Steam2) {
 	for (int player = 1; player <= MaxClients; player++) {
 		if(IsValidClient(player)) {
 			char steamid[50];
-			GetClientAuthId(player, AuthId_Steam2, steamid, sizeof(steamid), true);
+			GetClientAuthId(player, auth, steamid, sizeof(steamid), true);
 			if(StrEqual(steamid, specified_id)) {
 				return player;
 			}
