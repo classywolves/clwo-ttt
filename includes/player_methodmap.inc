@@ -64,6 +64,9 @@ methodmap Player {
 	property int id {
 		public get() { return that; }
 	}
+	public void get_auth(AuthIdType auth_id_type , char output[255]) {
+		GetClientAuthId(view_as<int>(this), auth_id_type, output, sizeof(output));
+	}
 
 	property bool beacon_enabled {
 		public get() { return player_beacon[this]; }
@@ -135,14 +138,6 @@ methodmap Player {
 		}
 	}
 
-	public void auth_2(char auth_id[255]) {
-		GetClientAuthId(that, AuthId_Steam2, auth_id, sizeof(auth_id));
-	}
-
-	public void auth_64(char auth_id[255]) {
-		GetClientAuthId(that, AuthId_SteamID64, auth_id, sizeof(auth_id));
-	}
-
 	public int get_cookie_int(Handle cookie, int default_value) {
 		char cookie_value[128];
 		GetClientCookie(that, cookie, cookie_value, sizeof(cookie_value));
@@ -184,7 +179,7 @@ methodmap Player {
 	property int playtime {
 		public get() {
 			char auth[255];
-			this.auth_2(auth);
+			this.get_auth(AuthId_Steam2, auth);
 
 			DBStatement player_playtime = PrepareStatement(database_player_analytics, "SELECT SUM(`duration`) FROM `player_analytics` WHERE auth=? LIMIT 1");
 			SQL_BindParamString(player_playtime, 0, auth, false);
@@ -205,7 +200,7 @@ methodmap Player {
 	property int karma {
 		public get() {
 			char auth[255];
-			this.auth_64(auth);
+			this.get_auth(AuthId_Steam64, auth);
 
 			DBStatement player_karma = PrepareStatement(database_ttt, "SELECT `karma` FROM `ttt` WHERE communityid=? LIMIT 1");
 			SQL_BindParamString(player_karma, 0, auth, false);
@@ -227,7 +222,7 @@ methodmap Player {
 	// WIP
 	public void populate() {
 		char steam_id[255];
-		this.auth_64(steam_id);
+		this.get_auth(AuthId_Steam64, steam_id);
 		DBStatement player_skill_points = PrepareStatement(database_ttt, "SELECT * FROM `upgrades` WHERE steam_id=? LIMIT 1");
 		SQL_BindParamString(player_skill_points, 0, steam_id, false);
 		if (!SQL_Execute(player_skill_points)) { PrintToServer("User Skills grab failed."); return;}
@@ -306,7 +301,7 @@ methodmap Player {
 
 	public void get_actions(int actions[2]) {
 		char auth[255];
-		this.auth_2(auth);
+		this.get_auth(AuthId_steam2, auth);
 
 		DBStatement player_actions = PrepareStatement(database_ttt, "SELECT bad_action,COUNT(*) AS count FROM `deaths` WHERE `killer_id`=? GROUP BY bad_action ORDER BY bad_action;");
 		SQL_BindParamString(player_actions, 0, auth, false);
@@ -319,7 +314,7 @@ methodmap Player {
 
 	public void session_and_hash(char string[63], char hash[127]) {
 		char auth[255];
-		this.auth_64(auth);
+		this.get_auth(AuthId_Steam64, auth);
 		DBStatement statement = PrepareStatement(database_ttt, "SELECT * FROM sessions WHERE steam_id=?");
 		SQL_BindParamString(statement, 0, auth, false);
 		if (!SQL_Execute(statement)) { PrintToServer("SQL Execute Failed..."); return; }
@@ -351,7 +346,7 @@ methodmap Player {
 
 	property int experience {
 		public get() { return this.get_cookie_int(cookie_player_experience, 0); }
-		public set(int experience) { this.set_cookie_int(cookie_player_experience, experience); /* check_level(this); show_experience_bar(this); */ }
+		public set(int experience) { this.set_cookie_int(cookie_player_experience, experience); check_level(this); /* check_level(this); show_experience_bar(this); */ }
 	}
 
 	public void profile(int client) {
@@ -385,6 +380,11 @@ public void check_level(Player player) {
 		player.level++;
 		CPrintToChat(player.id, "{purple}[TTT] {green}Congratulations!  You've levelled up to level %d", player.level);
 
+		char auth[255];
+		this.get_auth(AuthId_Steam2, auth);
+		char query[255];
+		FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = %s", player.skill_points, auth);
+		SQL_FastQuery(database_ttt, query)
 		check_level(player);
 	}
 }
