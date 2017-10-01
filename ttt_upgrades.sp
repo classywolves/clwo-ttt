@@ -32,8 +32,6 @@ public void OnClientCookiesCached(int client) {
 
 }
 
-
-
 public Action DoHealthRegen(Handle timer, int client_serial) {
 	int client_id = GetClientFromSerial(client_serial);
 	if (!client_id) return Plugin_Stop;
@@ -63,9 +61,7 @@ public void TTT_OnClientGetRole(int client, int role) {
 }
 
 public void OnClientDisconnect(int client) {
-	AllUpgrades {
-		Player(i).upgrades.set_points(j, 0);
-	}
+	PlayerUpgrades(upgrade_id) Player(client).upgrades.set_points(upgrade_id, 0);
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
@@ -154,6 +150,7 @@ public Action command_update_info(int client, int args) {
 
 	// Do some fantastic stuff with these two values here...
 	PrintToServer("Update Info Called, %s %s %d", target, hashmap, target_id);
+	Player(target_id).populate(target);
 
 	return Plugin_Handled;
 }

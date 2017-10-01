@@ -32,8 +32,11 @@ Database database_player_analytics;
 
 /*======== Upgrades ========*/
 #define AllUpgrades for(int i = 1; i <= MaxClients; i++) for(int j = 1; j <= 64; j++)
+#define PlayerUpgrades(%1) for(int %1 = 1; %1 <= 64; %1++)
+
 int upg_points[MAXPLAYERS+1][64];
-Handle skill_timers[MAXPLAYERS+1];
+
+//Handle skill_timers[MAXPLAYERS+1];
 
 enum UpgradeTypes {
 	health_regen
@@ -222,13 +225,10 @@ methodmap Player {
 	}
 
 	property int health {
-		public get() {
-			return GetEntProp(this.id, Prop_Data, "m_iHealth", 4);
-		}
-		public set(int new_health) {
-			SetEntProp(this.id, Prop_Data, "m_iHealth", new_health);
-		}
+		public get() { return GetEntProp(this.id, Prop_Data, "m_iHealth", 4); }
+		public set(int new_health) { SetEntProp(this.id, Prop_Data, "m_iHealth", new_health); }
 	}
+	
 	// WIP
 	public void populate(char steam_id[255]) {
 			DBStatement player_karma = PrepareStatement(database_ttt, "SELECT * FROM `ttt.karma` WHERE steam_id=?");
