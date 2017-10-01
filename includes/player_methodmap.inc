@@ -171,6 +171,10 @@ methodmap Player {
 		}
 	}
 
+	property int level_up_experience {
+		public get() { return RoundToFloor(this.level + 300 * Pow(2.0, (float(this.level) / 7.0))); }
+	}
+
 	property int karma {
 		public get() {
 			char auth[255];
@@ -196,7 +200,7 @@ methodmap Player {
 		this.third_person = !this.third_person;
 	}
 
-	public void display_url(char url[512]) {
+	public void display_url(char url[512], bool display=true) {
 		char web_url[512];
 		Crypt_Base64Encode(url, web_url, sizeof(web_url));
 
@@ -210,7 +214,9 @@ methodmap Player {
 		website_payload[this] = !website_payload[this];
 
 		ShowMOTDPanel(that, "Displaying Page...", buffer, MOTDPANEL_TYPE_URL);
-		CPrintToChat(that, "{purple}[URL] {yellow}Loading {green}%s", url);
+		if (display) {
+			CPrintToChat(that, "{purple}[URL] {yellow}Loading {green}%s", url);
+		}
 	}
 
 	public void beacon_ping(int color[4]) {
@@ -277,7 +283,7 @@ methodmap Player {
 		CPrintToChat(that, "┏━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
 		CPrintToChat(that, "┃ Playtime: %d", this.playtime);
 		CPrintToChat(that, "┃ Karma: %d ({GREEN}+%d{DEFAULT}, {RED}-%d{DEFAULT}, %s%d%s)", this.karma, actions[0], actions[1], good_action_colour, good_action_percentage, "%%");
-		CPrintToChat(that, "┃ Playtime: ");
+		CPrintToChat(that, "┃ Level: %d (%d / %d | %d%s)", this.level, this.experience, this.level_up_experience, Percentage(this.experience, this.level_up_experience - this.experience), "%%");
 		CPrintToChat(that, "┃ Playtime: ");
 		CPrintToChat(that, "┃ Playtime: ");
 		CPrintToChat(that, "┃ Playtime: ");
@@ -319,9 +325,10 @@ methodmap Player {
 }
 
 public void check_level(Player player) {
-	int level_up_experience = RoundToFloor(player.level + 300 * Pow(2.0, (float(player.level) / 7.0)))
-	CPrintToChat(player.id, "%d %d", player.experience, level_up_experience);
-	if (player.experience > level_up_experience) {
-		CPrintToChat(player.id, "You've levelled up to %d", player.level + 1);
+	if (player.experience > player.level_up_experience) {
+		player.experience -= player.level_up_experience;
+		player.level++;
+		CPrintToChat(player.id, "{purple}[TTT] {green}Congratulations!  You've levelled up to level %d", player.level);
+		check_level(player);
 	}
 }

@@ -27,6 +27,8 @@ public void OnPluginStart() {
 	database_ttt = ConnectDatabase("ttt", "ttt");
 	database_player_analytics = ConnectDatabase("player_analytics", "P_A");
 
+	cookie_player_experience = RegClientCookie("player_experience", "Current experience player has.", CookieAccess_Private);
+	cookie_player_level = RegClientCookie("player_level", "Current player level.", CookieAccess_Private);
 	cookie_player_volume = RegClientCookie("player_volume", "Current player volume as percentage", CookieAccess_Private);
 
 	HookEvent("round_start", OnRoundStart);
