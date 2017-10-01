@@ -11,6 +11,7 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_session", command_get_session, ADMFLAG_ROOT);
 	RegAdminCmd("sm_skills", command_skills, ADMFLAG_ROOT, "Opens the skill menu");
 	RegAdminCmd("sm_skill", command_skills, ADMFLAG_ROOT, "Opens the skill menu");
+	RegAdminCmd("sm_populate", command_populate, ADMFLAG_ROOT, "Populates upgrades");
 
 	cookie_player_experience = RegClientCookie("player_experience", "Current experience player has.", CookieAccess_Private);
 	cookie_player_level = RegClientCookie("player_level", "Current player level.", CookieAccess_Private);
@@ -25,7 +26,7 @@ public void OnPluginStart() {
 }
 
 public void OnClientPutInServer(int client) {
-
+	//Player(client).populate();
 }
 
 public void OnClientCookiesCached(int client) {
@@ -90,6 +91,10 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	return Plugin_Continue;
 }
 
+public void TTT_OnBodyFound(int client, int victim, const char[] deadPlayer) {
+	Player(client).experience += 2;
+}
+
 public Action command_display_experience(int client, int args) {
 	char target[128] = "@me";
 	if (args > 0) {
@@ -150,7 +155,7 @@ public Action command_update_info(int client, int args) {
 
 	// Do some fantastic stuff with these two values here...
 	PrintToServer("Update Info Called, %s %s %d", target, hashmap, target_id);
-	Player(target_id).populate(target);
+	Player(target_id).populate();
 
 	return Plugin_Handled;
 }
@@ -160,6 +165,11 @@ public Action command_get_session(int client, int args) {
 	char session[63], hash[127];
 	player.session_and_hash(session, hash);
 	CPrintToChat(client, "{purple}[TTT] {yellow}Debug: Session: %s, Hash: %s", session, hash);
+}
+
+public Action command_populate(int client, int args) {
+	Player(client).populate();
+	CPrintToChat(client, "{purple}[TTT] {yellow}Debug: Populating your Upgrades");
 }
 
 public Action command_skills(int client, int args) {

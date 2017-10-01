@@ -230,8 +230,10 @@ methodmap Player {
 	}
 	
 	// WIP
-	public void populate(char steam_id[255]) {
-		DBStatement player_skill_points = PrepareStatement(database_ttt, "SELECT * FROM `ttt.karma` WHERE steam_id=? LIMIT 1");
+	public void populate() {
+		char steam_id[255];
+		this.auth_64(steam_id);
+		DBStatement player_skill_points = PrepareStatement(database_ttt, "SELECT * FROM `upgrades` WHERE steam_id=? LIMIT 1");
 		SQL_BindParamString(player_skill_points, 0, steam_id, false);
 		if (!SQL_Execute(player_skill_points)) { PrintToServer("User Skills grab failed."); return;}
 
