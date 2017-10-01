@@ -137,7 +137,7 @@ public Action command_update_info(int client, int args) {
 		}
 	}
 
-	char target[128], hashmap[256];
+	char target[255], hashmap[255];
 	GetCmdArg(1, target, sizeof(target));
 	GetCmdArg(2, hashmap, sizeof(hashmap));
 
