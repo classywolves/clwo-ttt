@@ -29,6 +29,7 @@ bool website_payload[MAXPLAYERS + 1];
 
 Database database_ttt;
 Database database_player_analytics;
+native upgrades_get_upgrade_points( int client_id, int upgrade_id);
 
 /*======== Upgrades ========*/
 #define AllUpgrades for(int i = 1; i <= MaxClients; i++) for(int j = 1; j <= 64; j++)
@@ -247,6 +248,10 @@ methodmap Player {
 			}
 		}
 		return;
+	}
+
+	public int get_skill_points(int upgrades_id) {
+		return upgrades_get_upgrade_points(that, upgrades_id);
 	}
 
 	public void toggle_beacon() {
