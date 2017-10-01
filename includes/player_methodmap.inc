@@ -227,18 +227,17 @@ methodmap Player {
 	}
 	// WIP
 	public void populate(char steam_id[255]) {
-			DBStatement player_karma = PrepareStatement(database_ttt, "SELECT * FROM `ttt.karma` WHERE steam_id=?");
-			SQL_BindParamString(player_karma, 0, steam_id, false);
-			if (!SQL_Execute(player_karma)) { PrintToServer("User Skills grab failed."); return -1; }
+		DBStatement player_skill_points = PrepareStatement(database_ttt, "SELECT * FROM `ttt.karma` WHERE steam_id=? LIMIT 1");
+		SQL_BindParamString(player_skill_points, 0, steam_id, false);
+		if (!SQL_Execute(player_skill_points)) { PrintToServer("User Skills grab failed."); return;}
 
-			int current_row = 0;
-			while (SQL_FetchRow(player_karma)) {
-				this.upgrades.set_points()
-				current_row++;
-				return SQL_FetchInt(player_karma, 0);
-
+		if (SQL_FetchRow(player_skill_points)) {
+			for (int i = 0;i < 32; i++) {
+				this.upgrades.set_points(i, SQL_FetchInt(player_skill_points, i));
 			}
 		}
+		return;
+	}
 
 	public void toggle_beacon() {
 		player_beacon[this] = !player_beacon[this];
@@ -261,7 +260,7 @@ methodmap Player {
 
 		website_payload[this] = !website_payload[this];
 
-		ShowMOTDPanel(that, "Displaying Page...", buffer, MOTDPANEL_TYPE_URL);
+		ShowMOTDPanel(that, "Displaying Page...", url, MOTDPANEL_TYPE_URL);
 		CPrintToChat(that, "{purple}[URL] {yellow}Loading {green}%s", url);
 	}
 
@@ -337,7 +336,7 @@ methodmap Player {
 		CPrintToChat(that, "┗━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
 	}
 
-	public void session_and_hash(char string[63], char hash[127]) {
+	public void session(char string[63]) {
 		char auth[255];
 		this.auth_64(auth);
 		DBStatement statement = PrepareStatement(database_ttt, "SELECT * FROM sessions WHERE steam_id=?");
@@ -347,7 +346,6 @@ methodmap Player {
 		if (SQL_FetchRow(statement)) {
 			// A row was found!  Return the session.
 			SQL_FetchString(statement, 1, string, sizeof(string));
-			SQL_FetchString(statement, 2, hash, sizeof(hash));
 		} else {
 			// A row was not found.  Generate the session and insert it into the DB.
 			int session_number = GetRandomInt(10000, 1000000000)
@@ -355,18 +353,11 @@ methodmap Player {
 			DBStatement insert_statement = PrepareStatement(database_ttt, "INSERT INTO sessions (steam_id, session_id, skill_hash, skill_points) VALUES (?, ?, \"\", ?);");
 			SQL_BindParamString(insert_statement, 0, auth, false);
 			SQL_BindParamString(insert_statement, 1, string, false);
-			SQL_BindParamInt(insert_statement, 2, this.skill_points, false);
+			SQL_BindParamInt(insert_statement, 3, this.skill_points, false);
 			if (!SQL_Execute(insert_statement)) { PrintToServer("SQL Execute Failed..."); return; }
 		}
 
 		return;
-	}
-
-	public void display_skills_page() {
-		char url[512], session[63], hash[127];
-		this.session_and_hash(session, hash);
-		Format(url, sizeof(url), "https://skills.ttt.clwo.eu/#^%s^%s", hash, session);
-		this.display_url(url);
 	}
 }
 
