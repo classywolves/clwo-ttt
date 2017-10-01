@@ -35,6 +35,12 @@ public void OnClientPutInServer(int client) {
 	update_upgrade_level(client);
 }
 
+// When the player disconnects from the server, we want to reset their upgrade_level
+// back to zero.
+public void OnClientDisconnect(int client) {
+	upgrade_levels[client] = 0;
+}
+
 // We also want to update their skill level when it changes via the .populate()
 // function on the player methodmap
 public void OnUpgradeChanged(int client, int upgrade) {
