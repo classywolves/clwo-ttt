@@ -30,6 +30,29 @@ bool website_payload[MAXPLAYERS + 1];
 Database database_ttt;
 Database database_player_analytics;
 
+/*======== Upgrades ========*/
+#define AllUpgrades for(int i = 1; i <= MaxClients; i++) for(int j = 1; j <= 64; j++)
+int upg_points[MAXPLAYERS+1][64];
+Handle skill_timers[MAXPLAYERS+1];
+
+enum UpgradeTypes {
+	health_regen
+}
+
+methodmap Upgrades {
+    public Upgrades(int client) {
+        return view_as<Upgrades>(client);
+    }
+
+    public int get_points(int skill_id) {
+        return upg_points[view_as<int>(this)][skill_id];
+    }
+    public void set_points(int skill_id, int value) {
+        upg_points[view_as<int>(this)][skill_id] = value;
+    }
+}
+
+
 methodmap Player {
 	public Player(int client) {
 		return view_as<Player>(client);
@@ -47,6 +70,12 @@ methodmap Player {
 	property bool valid_client {
 		public get() {
 			return !(that <= 0 || that > MaxClients || !IsClientConnected(that) || !IsClientInGame(that) || IsFakeClient(that))
+		}
+	}
+
+	property Upgrades upgrades {
+		public get() {
+			return view_as<Upgrades>(this);
 		}
 	}
 
@@ -187,6 +216,29 @@ methodmap Player {
 			}
 		}
 	}
+
+	property int health {
+		public get() {
+			return GetEntProp(this.id, Prop_Data, "m_iHealth", 4);
+		}
+		public set(int new_health) {
+			SetEntProp(this.id, Prop_Data, "m_iHealth", new_health);
+		}
+	}
+	// WIP
+	public void populate(char steam_id[255]) {
+			DBStatement player_karma = PrepareStatement(database_ttt, "SELECT * FROM `ttt.karma` WHERE steam_id=?");
+			SQL_BindParamString(player_karma, 0, steam_id, false);
+			if (!SQL_Execute(player_karma)) { PrintToServer("User Skills grab failed."); return -1; }
+
+			int current_row = 0;
+			while (SQL_FetchRow(player_karma)) {
+				this.upgrades.set_points()
+				current_row++;
+				return SQL_FetchInt(player_karma, 0);
+
+			}
+		}
 
 	public void toggle_beacon() {
 		player_beacon[this] = !player_beacon[this];

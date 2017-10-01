@@ -35,6 +35,42 @@ public void OnClientCookiesCached(int client) {
 
 }
 
+
+
+public Action DoHealthRegen(Handle timer, int client_serial) {
+	int client_id = GetClientFromSerial(client_serial);
+	if (!client_id) return Plugin_Stop;
+
+	Player client_player = Player(client_id);
+
+	int points_health_regen = client_player.upgrades.get_points(0);
+	if (!points_health_regen || points_health_regen > 4) return Plugin_Stop;
+	float timer_delay = 10 - 2 * float(points_health_regen);
+
+	if (client_player.health > 99) client_player.health = 100;
+	else client_player.health++
+
+	CreateTimer(timer_delay, DoHealthRegen, client_serial);
+	return Plugin_Continue;
+}
+
+public void TTT_OnClientGetRole(int client, int role) {
+	Player client_player = Player(client);
+
+	int points_health_regen = client_player.upgrades.get_points(0);
+	if (!points_health_regen || points_health_regen > 4) return;
+	float timer_delay = 10 - 2 * float(points_health_regen);
+
+	CreateTimer(timer_delay, DoHealthRegen, GetClientSerial(client), TIMER_REPEAT);
+
+}
+
+public void OnClientDisconnect(int client) {
+	AllUpgrades {
+		Player(i).upgrades.set_points(j, 0);
+	}
+}
+
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
 	int victim = GetClientOfUserId(GetEventInt(event, "userid"));
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
