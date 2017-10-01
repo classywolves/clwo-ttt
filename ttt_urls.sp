@@ -40,8 +40,6 @@ public OnPluginStart()
 	RegConsoleCmd("sm_new", Command_New, "Open the new page");
 	RegConsoleCmd("sm_google", Command_Google, "Open Google");
 	RegConsoleCmd("sm_gametracker", Command_Gametracker, "Open Gametracker");
-	RegConsoleCmd("sm_skills", Command_Skills, "Opens the skill menu");
-	RegConsoleCmd("sm_skill", Command_Skills, "Opens the skill menu");
 	
 	// Alert Load Success
 	PrintToServer("[URL] Has Loaded Succcessfully!");
@@ -104,10 +102,5 @@ public Action Command_Google(int client, int args) {
 
 public Action Command_Gametracker(int client, int args) {
 	Display_Page(client, "https://www.gametracker.com/server_info/ttt.clwo.eu:27015");
-	return Plugin_Handled;
-}
-
-public Action Command_Skills(int client, int args) {
-	Display_Page(client, "https://ttt.clwo.eu/clwo_skill_website/default.htm");
 	return Plugin_Handled;
 }

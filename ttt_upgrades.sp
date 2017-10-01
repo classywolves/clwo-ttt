@@ -9,6 +9,8 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_setexperience", command_experience, ADMFLAG_ROOT);
 	RegAdminCmd("sm_update_info", command_update_info, ADMFLAG_ROOT);
 	RegAdminCmd("sm_session", command_get_session, ADMFLAG_ROOT);
+	RegAdminCmd("sm_skills", command_skills, ADMFLAG_ROOT, "Opens the skill menu");
+	RegAdminCmd("sm_skill", command_skills, ADMFLAG_ROOT, "Opens the skill menu");
 
 	cookie_player_experience = RegClientCookie("player_experience", "Current experience player has.", CookieAccess_Private);
 	cookie_player_level = RegClientCookie("player_level", "Current player level.", CookieAccess_Private);
@@ -154,7 +156,12 @@ public Action command_update_info(int client, int args) {
 
 public Action command_get_session(int client, int args) {
 	Player player = Player(client)
-	char session[63];
-	player.session(session)
-	CPrintToChat(client, "{purple}[TTT] {yellow}Debug: Your session is %s", session)
+	char session[63], hash[127];
+	player.session_and_hash(session, hash)
+	CPrintToChat(client, "{purple}[TTT] {yellow}Debug: Session: %s, Hash: %s", session, hash)
+}
+
+public Action command_skills(int client, int args) {
+	Player player = Player(client)
+	player.display_skills_page()
 }
