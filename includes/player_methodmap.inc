@@ -372,7 +372,7 @@ methodmap Player {
 	public void display_skills_page() {
 		char url[512], session[63], hash[127];
 		this.session_and_hash(session, hash);
-		Format(url, sizeof(url), "https://skills.ttt.clwo.eu/#^%s^%s", hash, session);
+		Format(url, sizeof(url), "http://ttt.clwo.eu:3000/#^%s^%s", hash, session);
 		this.display_url(url);
 	}
 }
