@@ -58,38 +58,6 @@ public int Native_upgrades_get_upgrade_points(Handle plugin, int numParams)
 	return Player(client_id).upgrades.get_points(upgrade_id);
 }
 
-public Action DoHealthRegen(Handle timer, int client_serial) {
-	int client_id = GetClientFromSerial(client_serial);
-	if (!client_id) return Plugin_Stop;
-
-	Player player = Player(client_id);
-
-	int points_health_regen = player.upgrades.get_points(0);
-	if (!points_health_regen || points_health_regen > 4) return Plugin_Stop;
-	float timer_delay = 10 - 2 * float(points_health_regen);
-
-	if (player.health > 99) player.health = 100;
-	else player.health++
-
-	CreateTimer(timer_delay, DoHealthRegen, client_serial);
-	return Plugin_Continue;
-}
-
-public void TTT_OnClientGetRole(int client, int role) {
-	Player player = Player(client);
-
-	int points_health_regen = player.upgrades.get_points(0);
-	if (!points_health_regen || points_health_regen > 4) return;
-	float timer_delay = 10 - 2 * float(points_health_regen);
-
-	CreateTimer(timer_delay, DoHealthRegen, GetClientSerial(client), TIMER_REPEAT);
-
-}
-
-public void OnClientDisconnect(int client) {
-	PlayerUpgrades(upgrade_id) Player(client).upgrades.set_points(upgrade_id, 0);
-}
-
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
 	int victim = GetClientOfUserId(GetEventInt(event, "userid"));
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));

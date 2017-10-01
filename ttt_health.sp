@@ -32,8 +32,19 @@ public void OnPluginStart() {
 // When a client is put in the server, we want to automatically grab their
 // upgrade level.
 public void OnClientPutInServer(int client) {
-	Player player = Player(client);
-	upgrade_levels[player.id] = player.upgrade_level(upgrade_id);
+	update_upgrade_level(client);
+}
+
+// When the player disconnects from the server, we want to reset their upgrade_level
+// back to zero.
+public void OnClientDisconnect(int client) {
+	upgrade_levels[client] = 0;
+}
+
+// We also want to update their skill level when it changes via the .populate()
+// function on the player methodmap
+public void OnUpgradeChanged(int client, int upgrade) {
+	if (upgrade == upgrade_id) update_upgrade_level(client);
 }
 
 // Kill single timer.
@@ -59,6 +70,11 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detectives) {
 	}
 
 	return;
+}
+
+public void update_upgrade_level(int client) {
+	Player player = Player(client);
+	upgrade_levels[player.id] = player.get_upgrade_level(upgrade_id);
 }
 
 // This function will regenerate a persons health by one.
