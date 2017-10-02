@@ -52,7 +52,7 @@ public Action TTT_OnBodyChecked(int client, int[] iRagdollC)
 
 	if (client_player.armour < 100 && upgrade_id && !StrEqual(iRagdollC[Weaponused], "Necrophilia", false)) {
 		Format(iRagdollC[Weaponused], MAX_NAME_LENGTH, "Necrophilia");
-		Effect_DissolvePlayerRagDoll(iRagdollC[Victim], DISSOLVE_ELECTRICAL);
+		Effect_DissolveEntity(iRagdollC[Ent], DISSOLVE_ELECTRICAL);
 		client_player.armour += 15;
 		CPrintToChat(client_player.id, "Necrophilia!  Gained armour.");
 	}
