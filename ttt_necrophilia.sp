@@ -46,8 +46,8 @@ public Action Dissolve_Timer(Handle timer, DataPack Data) {
 	Player client_player = Player(Data.ReadCell());
 	int ragdoll_ent = Data.ReadCell();
 	CloseHandle(Data);
-	SetEntData(ragdoll_ent, FindSendPropInfo("CBaseEntity", "m_CollisionGroup"), 0, 4, true);
-	Effect_DissolveEntity(ragdoll_ent, DISSOLVE_ELECTRICAL,5);
+	SetEntData(ragdoll_ent, FindSendPropInfo("CBaseEntity", "m_CollisionGroup"), 16, 4, true);
+	Effect_DissolveEntity(ragdoll_ent, DISSOLVE_ELECTRICAL,-1);
 	client_player.armour += 15;
 	CPrintToChat(client_player.id, "Necrophilia!  Gained armour.");
 }
