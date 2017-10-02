@@ -47,8 +47,8 @@ public void update_upgrade_level(int client) {
 	upgrade_levels[player.id] = player.get_upgrade_level(upgrade_id);
 }
 
-// This function will regenerate a persons health by one.
-// It is called by the timer defined above.
+// This function will regenerate a persons health by a percentage of any damage
+//  the player does.
 public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3]) {
 	if(attacker <= 0 || attacker > MaxClients || victim <= 0 || victim > MaxClients) return;
 
