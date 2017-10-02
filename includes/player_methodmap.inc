@@ -410,7 +410,7 @@ public void check_level(Player player) {
 		CPrintToChat(player.id, "{purple}[TTT] {green}Congratulations!  You've levelled up to level %d", player.level);
 
 		char auth[255], query[255];
-		player.get_auth(AuthId_Steam2, auth);
+		player.get_auth(AuthId_SteamID64, auth);
 		FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = %s", player.skill_points, auth);
 		SQL_FastQuery(database_ttt, query)
 		check_level(player);
