@@ -29,7 +29,6 @@ bool website_payload[MAXPLAYERS + 1];
 
 Database database_ttt;
 Database database_player_analytics;
-native upgrades_get_upgrade_points( int client_id, int upgrade_id);
 
 native int upgrades_get_upgrade_points(int client_id, int upgrade_id);
 
@@ -223,9 +222,14 @@ methodmap Player {
 
 	property int health {
 		public get() { return GetEntProp(this.id, Prop_Data, "m_iHealth", 4); }
-		public set(int new_health) { SetEntProp(this.id, Prop_Data, "m_iHealth", new_health); }
+		public set(int new_health) { SetEntProp(this.id, Prop_Send, "m_iHealth", new_health); }
 	}
 	
+	property int max_health {
+		public get() { return GetEntProp(this.id, Prop_Data, "m_iMaxHealth", 4); }
+		public set(int new_max_health) { SetEntProp(this.id, Prop_Send, "m_iMaxHealth", new_max_health); }
+	}
+
 	// WIP
 	public void populate() {
 		char steam_id[255];
@@ -366,12 +370,12 @@ methodmap Player {
 		char url[512], session[63], hash[127];
 		this.session_and_hash(session, hash);
 		Format(url, sizeof(url), "http://ttt.clwo.eu:3000/#^%s^%s", hash, session);
-		this.display_url(url);
+		this.display_url(url, false);
 	}
 
 	property int experience {
 		public get() { return this.get_cookie_int(cookie_player_experience, 0); }
-		public set(int experience) { this.set_cookie_int(cookie_player_experience, experience); /* check_level(this); show_experience_bar(this); */ }
+		public set(int experience) { this.set_cookie_int(cookie_player_experience, experience); check_level(this); /*show_experience_bar(this);*/ }
 	}
 
 	public void profile(int client) {

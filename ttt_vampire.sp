@@ -6,21 +6,12 @@
 #include <ttt_helpers>
 #include <player_methodmap>
 
-#define upgrade_id 1
+#define upgrade_id 0
 
 // We also need an array to hold players upgrade levels
 int upgrade_levels[MAXPLAYERS + 1];
 
 public void OnPluginStart() {
-	// Hook the on round start event, we need this to start a timer
-	// to incremement players health.
-	// HookEvent("round_start", OnRoundStart);
-
-	// When a player dies or when the round ends, we want to destroy all
-	// connected timers.
-	HookEvent("round_end", OnRoundEnd);
-	HookEvent("player_death", OnPlayerDeath);
-
 	// For every client we need to grab their current upgrade level.
 	// Populate might not have run yet, but that is fine since that means we
 	// are not late loading anyway.
@@ -51,31 +42,6 @@ public void OnUpgradeChanged(int client, int upgrade) {
 	if (upgrade == upgrade_id) update_upgrade_level(client);
 }
 
-// Kill single timer.
-public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	KillTimer(health_timers[client]);
-}
-
-// Kill all alive timers.
-public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
-	LoopAliveClients(client) {
-		KillTimer(health_timers[client]);
-	}
-}
-
-public void TTT_OnRoundStart(int innocents, int traitors, int detectives) {
-	// We loop through each player, assigning them a repeating timer
-	// that will regenerate their health.
-	LoopAliveClients(client) {
-		if (upgrade_levels[client]) {
-			health_timers[client] = CreateTimer(10.0 - upgrade_levels[client] * 2.0, health_regen, client, TIMER_REPEAT);
-		}
-	}
-
-	return;
-}
-
 public void update_upgrade_level(int client) {
 	Player player = Player(client);
 	upgrade_levels[player.id] = player.get_upgrade_level(upgrade_id);
@@ -83,10 +49,31 @@ public void update_upgrade_level(int client) {
 
 // This function will regenerate a persons health by one.
 // It is called by the timer defined above.
-public Action health_regen(Handle timer, int client) {
-	CPrintToChat(client, "{purple}[TTT] {yellow}We increased your health by one.")
-	Player player = Player(client);
-	if (player.health < 100) {
-		player.health++;
+public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3]) {
+	if(attacker <= 0 || attacker > MaxClients || victim <= 0 || victim > MaxClients) return;
+
+	if (upgrade_levels[attacker]) {
+		Player player_attacker = Player(attacker);
+
+		if(!player_attacker.valid_client) return;
+
+		float health_gain = damage * 0.075 * upgrade_levels[player_attacker.id];
+
+		if (player_attacker.health != player_attacker.max_health) {
+			int new_health = RoundFloat(player_attacker.health + health_gain);
+			if (new_health > player_attacker.max_health) new_health = player_attacker.max_health;
+			player_attacker.health = new_health;
+
+			float fAttackerOrigin[3], fVictimOrigin[3];
+			GetClientEyePosition(attacker, fAttackerOrigin);
+			GetClientEyePosition(victim, fVictimOrigin);
+			fAttackerOrigin[2] -= 10.0;
+			fVictimOrigin[2] -= 10.0;
+
+			TE_SetupBeamPoints(fAttackerOrigin, fVictimOrigin, sprite_beam, sprite_halo, 0, 66, 0.2, 1.0, 20.0, 1, 0.0, colour_red, 5);
+			TE_SendToAll();
+
+			CPrintToChat(player_attacker.id, "Vampirism!  Set health to %d", new_health);
+		}
 	}
 }

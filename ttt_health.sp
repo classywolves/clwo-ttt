@@ -2,7 +2,7 @@
 #include <ttt_helpers>
 #include <player_methodmap>
 
-#define upgrade_id 0
+#define upgrade_id 1
 
 // This is an example plugin layout.  It includes a timer and
 // increases health every (10 - 2 * skill_point) seconds.
