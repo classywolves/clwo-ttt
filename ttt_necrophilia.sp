@@ -62,7 +62,7 @@ public Action TTT_OnBodyChecked(int client, int[] iRagdollC)
 	}
 	Player client_player = Player(client);
 
-	if (client_player.armour < 100 && upgrade_id && !StrEqual(iRagdollC[Weaponused], "Necrophilia", false)) {
+	if (client_player.armour < 100 && client_player.get_upgrade_level(upgrade_id) && !StrEqual(iRagdollC[Weaponused], "Necrophilia", false)) {
 		Format(iRagdollC[Weaponused], MAX_NAME_LENGTH, "Necrophilia");
 		DataPack Data = CreateDataPack();
 		Data.WriteCell(client);
