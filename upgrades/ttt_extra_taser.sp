@@ -41,16 +41,12 @@ public void update_upgrade_level(int client) {
 	upgrade_levels[player.id] = player.get_upgrade_level(upgrade_id);
 }
 
-// This function will regenerate a persons health by a percentage of any damage
-//  the player does.
 public void TTT_OnRoundStart(int innocents, int traitors, int detectives) {
-	// We loop through each player, assigning them a repeating timer
-	// that will regenerate their health.
 	LoopAliveClients(client) {
 		Player player = Player(client);
 		if (player.role == DETECTIVE && upgrade_levels[client]) {
 			if (player.has_weapon("weapon_taser")) {
-
+				
 			}
 		}
 	}

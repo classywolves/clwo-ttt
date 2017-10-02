@@ -12,9 +12,9 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_setexperience", command_experience, ADMFLAG_ROOT);
 	RegAdminCmd("sm_update_info", command_update_info, ADMFLAG_ROOT);
 	RegAdminCmd("sm_session", command_get_session, ADMFLAG_ROOT);
-	RegAdminCmd("sm_skills", command_skills, ADMFLAG_ROOT, "Opens the skill menu");
-	RegAdminCmd("sm_skill", command_skills, ADMFLAG_ROOT, "Opens the skill menu");
-	RegAdminCmd("sm_populate", command_populate, ADMFLAG_ROOT, "Populates upgrades");
+	RegConsoleCmd("sm_skills", command_skills, "Opens the skill menu");
+	RegConsoleCmd("sm_skill", command_skills, "Opens the skill menu");
+	RegConsoleCmd("sm_populate", command_populate, "Populates upgrades");
 
 	cookie_player_experience = RegClientCookie("player_experience", "Current experience player has.", CookieAccess_Private);
 	cookie_player_level = RegClientCookie("player_level", "Current player level.", CookieAccess_Private);
@@ -162,6 +162,15 @@ public Action command_populate(int client, int args) {
 }
 
 public Action command_skills(int client, int args) {
+	char auth[255];
+	Player(client).get_auth(AuthId_Steam2, auth);
+	if (!StrEqual(auth, "STEAM_1:1:206820868") && !StrEqual(auth, "STEAM_1:0:39463079")) {
+		CPrintToChat(client, "{purple}[RDM] {orchid}You are not authorised to use this command.");
+		return Plugin_Handled;
+	}
+
 	Player player = Player(client);
 	player.display_skills_page();
+
+	return Plugin_Handled;
 }
