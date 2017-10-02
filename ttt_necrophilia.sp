@@ -42,6 +42,15 @@ public void update_upgrade_level(int client) {
 	upgrade_levels[player.id] = player.get_upgrade_level(upgrade_id);
 }
 
+public Action Dissolve_Timer(Handle timer, DataPack Data) {
+	Player client_player = Player(Data.ReadCell());
+	int ragdoll_ent = Data.ReadCell();
+	CloseHandle(Data);
+	Effect_DissolveEntity(ragdoll_ent, DISSOLVE_ELECTRICAL,5);
+	client_player.armour += 15;
+	CPrintToChat(client_player.id, "Necrophilia!  Gained armour.");
+}
+
 public Action TTT_OnBodyChecked(int client, int[] iRagdollC)
 {
 	if (!TTT_IsClientValid(client))
@@ -52,9 +61,11 @@ public Action TTT_OnBodyChecked(int client, int[] iRagdollC)
 
 	if (client_player.armour < 100 && upgrade_id && !StrEqual(iRagdollC[Weaponused], "Necrophilia", false)) {
 		Format(iRagdollC[Weaponused], MAX_NAME_LENGTH, "Necrophilia");
-		Effect_DissolveEntity(iRagdollC[Ent], DISSOLVE_ELECTRICAL);
-		client_player.armour += 15;
-		CPrintToChat(client_player.id, "Necrophilia!  Gained armour.");
+		DataPack Data = CreateDataPack();
+		Data.WriteCell(client);
+		Data.WriteCell(iRagdollC[Ent]);
+		Data.Reset();
+		CreateTimer(2.0, Dissolve_Timer, Data);
 	}
 
 
