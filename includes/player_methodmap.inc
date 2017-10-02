@@ -113,6 +113,10 @@ methodmap Player {
 		}
 	}
 
+	public bool has_weapon(const char[] weapon) {
+		return Client_HasWeapon(that, weapon);
+	}
+
 	public bool bad_kill(int victim) {
 		int attacker_role = TTT_GetClientRole(that);
 		int victim_role = TTT_GetClientRole(victim);
