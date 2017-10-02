@@ -6,7 +6,7 @@
 #include <ttt_helpers>
 #include <player_methodmap>
 
-#define upgrade_id 0
+#define upgrade_id 3
 
 // We also need an array to hold players upgrade levels
 int upgrade_levels[MAXPLAYERS + 1];
@@ -50,7 +50,7 @@ public Action TTT_OnBodyChecked(int client, int[] iRagdollC)
 	}
 	Player client_player = Player(client);
 
-	if (client_player.armour < 100) {
+	if (client_player.armour < 100 && upgrade_id) {
 		Effect_DissolvePlayerRagDoll(iRagdollC[Victim], DISSOLVE_ELECTRICAL);
 		client_player.armour += 15;
 		CPrintToChat(client_player.id, "Necrophilia!  Gained armour.");
