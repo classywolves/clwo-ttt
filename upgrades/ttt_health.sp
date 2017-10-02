@@ -50,13 +50,17 @@ public void OnUpgradeChanged(int client, int upgrade) {
 // Kill single timer.
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	KillTimer(health_timers[client]);
+	if (upgrade_levels[client] && health_timers[client] != INVALID_HANDLE) {
+		KillTimer(health_timers[client]);
+	}
 }
 
 // Kill all alive timers.
 public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
 	LoopAliveClients(client) {
-		KillTimer(health_timers[client]);
+		if (upgrade_levels[client] && health_timers[client] != INVALID_HANDLE) {
+			KillTimer(health_timers[client]);
+		}
 	}
 }
 
