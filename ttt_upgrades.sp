@@ -11,6 +11,7 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_experience", command_display_experience, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_setexperience", command_experience, ADMFLAG_ROOT);
 	RegAdminCmd("sm_update_info", command_update_info, ADMFLAG_ROOT);
+	RegAdminCmd("sm_display_upgrades", command_display_upgrades, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_session", command_get_session, ADMFLAG_ROOT);
 	RegConsoleCmd("sm_skills", command_skills, "Opens the skill menu");
 	RegConsoleCmd("sm_skill", command_skills, "Opens the skill menu");
@@ -96,6 +97,26 @@ public Action command_display_experience(int client, int args) {
 	Player target_player = Player(target_client);
 
 	CPrintToChat(client, "{purple}[TTT] {yellow}%N currently has %d experience and is level %d.", target_client, target_player.experience, 1)
+
+	return Plugin_Handled;
+}
+
+public Action command_display_upgrades(int client, int args) {
+	char target[128] = "@me";
+	if (args > 0) {
+		GetCmdArg(1, target, sizeof(target));
+	}
+
+	int target_client = Player(client).target_one(target)
+	if (target_client == -1) return Plugin_Handled;
+
+	Player target_player = Player(target_client);
+
+	CPrintToChat(client, "{purple}[TTT] {yellow}Upgrades for {green}%N {yellow}printed in console.", target_player.id)
+
+	for (int upgrade_id = 0; upgrade_id < 31; upgrade_id++) {
+		PrintToConsole(client, "%d: %d", upgrade_id, target_player.get_upgrade_level(upgrade_id))
+	}
 
 	return Plugin_Handled;
 }

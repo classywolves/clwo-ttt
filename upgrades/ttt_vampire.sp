@@ -52,7 +52,7 @@ public void update_upgrade_level(int client) {
 public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3]) {
 	if(attacker <= 0 || attacker > MaxClients || victim <= 0 || victim > MaxClients) return;
 
-	if (upgrade_levels[attacker]) {
+	if (upgrade_levels[attacker] > 0) {
 		Player player_attacker = Player(attacker);
 
 		if(!player_attacker.valid_client) return;

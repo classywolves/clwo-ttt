@@ -56,13 +56,11 @@ public Action Dissolve_Timer(Handle timer, DataPack Data) {
 
 public Action TTT_OnBodyChecked(int client, int[] iRagdollC)
 {
-	if (!TTT_IsClientValid(client))
-	{
-		return Plugin_Continue;
-	}
+	if (!TTT_IsClientValid(client)) return Plugin_Continue;
+
 	Player client_player = Player(client);
 
-	if (client_player.armour < 100 && upgrade_id && !StrEqual(iRagdollC[Weaponused], "Necrophilia", false)) {
+	if (client_player.armour < 100 && upgrade_levels[client] > 0 && !StrEqual(iRagdollC[Weaponused], "Necrophilia", false)) {
 		Format(iRagdollC[Weaponused], MAX_NAME_LENGTH, "Necrophilia");
 		DataPack Data = CreateDataPack();
 		Data.WriteCell(client);
