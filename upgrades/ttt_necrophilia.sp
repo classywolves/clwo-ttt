@@ -9,8 +9,12 @@
 // Define the sound file location.
 #define bury_sound "sound/ttt_necrophilia_bury.mp3"
 
+/**
+* A global forward from sourcemod, gets called after map load and all cvars initialised.
+*/
 public void OnConfigsExecuted()
 {
+	// Prepare the sound file for use.
 	PrecacheSound(bury_sound);
 	AddFileToDownloadsTable(bury_sound);
 }
