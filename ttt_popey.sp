@@ -110,7 +110,9 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 
 public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
-	KillTimer(Timers[1]);
+	if (Timers[1] != INVALID_HANDLE) {
+		KillTimer(Timers[1]);
+	}
 	return Plugin_Continue;
 }
 

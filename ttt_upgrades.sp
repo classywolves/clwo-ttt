@@ -24,8 +24,6 @@ public void OnPluginStart() {
 	database_player_analytics = ConnectDatabase("player_analytics", "P_A");
 
 	HookEvent("player_death", OnPlayerDeath);
-	g_hUpgradeChangeForward = CreateGlobalForward("OnUpgradeChanged", ET_Event, Param_Cell, Param_Cell);
-
 	LoopClients(client) if (AreClientCookiesCached(client)) OnClientCookiesCached(client);
 	LoopValidClients(client) OnClientPutInServer(client);
 }
@@ -34,7 +32,7 @@ public void OnClientPutInServer(int client) {
 	Player player = Player(client);
 	char string[63], hash[127];
 	player.session_and_hash(string, hash)
-	Player(client).populate();
+	player.populate();
 }
 
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max)
@@ -47,16 +45,20 @@ public void OnClientCookiesCached(int client) {
 
 }
 
+public void OnClientDisconnect(int client) {
+	// Reset upgrade points for the client who just disconnected.
+	for (int upgrade = 0; upgrade < 64; upgrade++) {
+		upg_points[client][upgrade] = 0;
+	}
+}
+
 public int Native_upgrades_get_upgrade_points(Handle plugin, int numParams)
 {
-	if (numParams != 2)
-	{
-		return -1;
-	}
+	if (numParams != 2) return -1;
 
 	int client_id = GetNativeCell(1);
 	int upgrade_id = GetNativeCell(2);
-	return Player(client_id).upgrades.get_points(upgrade_id);
+	return upg_points[client_id][upgrade_id];
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
@@ -69,7 +71,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	player.get_auth(AuthId_Steam2, attacker_auth);
 
 	if (player.bad_kill(victim)) {
-		player.experience -= 50 // TODO: Custom karma based on players & etc.
+		player.experience -= 10
 	} else {
 		if (player.role == TRAITOR) {
 			player.experience += 5
@@ -107,15 +109,28 @@ public Action command_display_upgrades(int client, int args) {
 		GetCmdArg(1, target, sizeof(target));
 	}
 
-	int target_client = Player(client).target_one(target)
-	if (target_client == -1) return Plugin_Handled;
+	int target_client;
+
+	if (StringToInt(target) == 0) {
+		target_client = Player(client).target_one(target);
+		if (target_client == -1) return Plugin_Handled;
+	} else {
+		target_client = StringToInt(target);
+		CPrintToChat(client, "{purple}[TTT] {yellow}Upgrades for {green}%d {yellow}printed in console.", target_client);
+
+		for (int upgrade_id = 0; upgrade_id < 31; upgrade_id++) {
+			PrintToConsole(client, "%d: %d", upgrade_id, upg_points[target_client][upgrade_id]);
+		}
+
+		return Plugin_Handled;
+	}
 
 	Player target_player = Player(target_client);
 
-	CPrintToChat(client, "{purple}[TTT] {yellow}Upgrades for {green}%N {yellow}printed in console.", target_player.id)
+	CPrintToChat(client, "{purple}[TTT] {yellow}Upgrades for {green}%N {yellow}printed in console.", target_player.id);
 
 	for (int upgrade_id = 0; upgrade_id < 31; upgrade_id++) {
-		PrintToConsole(client, "%d: %d", upgrade_id, target_player.get_upgrade_level(upgrade_id))
+		PrintToConsole(client, "%d: %d", upgrade_id, target_player.get_upgrade_level(upgrade_id));
 	}
 
 	return Plugin_Handled;
@@ -185,8 +200,8 @@ public Action command_populate(int client, int args) {
 public Action command_skills(int client, int args) {
 	char auth[255];
 	Player(client).get_auth(AuthId_Steam2, auth);
-	if (!StrEqual(auth, "STEAM_1:1:206820868") && !StrEqual(auth, "STEAM_1:0:39463079")) {
-		CPrintToChat(client, "{purple}[RDM] {orchid}You are not authorised to use this command.");
+	if (!StrEqual(auth, "STEAM_1:1:206820868") && !StrEqual(auth, "STEAM_1:0:39463079") && !StrEqual(auth, "STEAM_1:0:46721510")) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}You are not authorised to use this command.");
 		return Plugin_Handled;
 	}
 

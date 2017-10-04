@@ -17,7 +17,6 @@
 Handle cookie_player_volume;
 Handle cookie_player_experience;
 Handle cookie_player_level;
-Handle g_hUpgradeChangeForward;
 
 int sprite_beam = -1;
 int sprite_halo = -1;
@@ -37,26 +36,6 @@ native int upgrades_get_upgrade_points(int client_id, int upgrade_id);
 #define PlayerUpgrades(%1) for(int %1 = 1; %1 <= 64; %1++)
 
 int upg_points[MAXPLAYERS+1][64];
-
-//Handle skill_timers[MAXPLAYERS+1];
-
-//enum UpgradeTypes {
-//	health_regen
-//}
-
-methodmap Upgrades {
-    public Upgrades(int client) {
-        return view_as<Upgrades>(client);
-    }
-
-    public int get_points(int skill_id) {
-        return upg_points[that][skill_id];
-    }
-    public void set_points(int skill_id, int value) {
-        upg_points[that][skill_id] = value;
-    }
-}
-
 
 methodmap Player {
 	public Player(int client) {
@@ -78,12 +57,6 @@ methodmap Player {
 	property bool valid_client {
 		public get() {
 			return !(that <= 0 || that > MaxClients || !IsClientConnected(that) || !IsClientInGame(that) || IsFakeClient(that))
-		}
-	}
-
-	property Upgrades upgrades {
-		public get() {
-			return view_as<Upgrades>(this);
 		}
 	}
 
@@ -115,6 +88,10 @@ methodmap Player {
 
 	public bool has_weapon(const char[] weapon) {
 		return Client_HasWeapon(that, weapon);
+	}
+
+	public int has_upgrade(int upgrade_id) {
+		return upgrades_get_upgrade_points(that, upgrade_id);
 	}
 
 	public bool bad_kill(int victim) {
@@ -204,7 +181,7 @@ methodmap Player {
 	}
 
 	property int level_up_experience {
-		public get() { return RoundToFloor(this.level + 300 * Pow(2.0, (float(this.level) / 7.0))); }
+		public get() { return RoundToFloor(this.level + 300 * Pow(2.0, (float(this.level) / 4.0))); }
 	}
 
 	property int karma {
@@ -240,25 +217,14 @@ methodmap Player {
 		this.get_auth(AuthId_SteamID64, steam_id);
 		DBStatement player_skill_points = PrepareStatement(database_ttt, "SELECT * FROM `upgrades` WHERE steam_id=? LIMIT 1");
 		SQL_BindParamString(player_skill_points, 0, steam_id, false);
-		if (!SQL_Execute(player_skill_points)) { PrintToServer("User Skills grab failed."); return;}
+		if (!SQL_Execute(player_skill_points)) { PrintToServer("User Skills grab failed."); return; }
 		//int upg_points[MAXPLAYERS+1][64];
 		if (SQL_FetchRow(player_skill_points)) {
 			int latest_value;
-			for (int i = 1;i < 32; i++) {
-				latest_value = SQL_FetchInt(player_skill_points, i);
-				this.upgrades.set_points(i - 1, latest_value);
-				int result;
-				if (upg_points[that][i] != latest_value) {
-					/* Start function call */
-					Call_StartForward(g_hUpgradeChangeForward);
-					 
-					/* Push parameters one at a time */
-					Call_PushCell(that);
-					Call_PushCell(i);
-					
-					/* Finish the call, get the result */
-					Call_Finish(result);
-				}
+			for (int entry = 1; entry < 32; entry++) {
+				int upgrade_id = entry - 1
+				latest_value = SQL_FetchInt(player_skill_points, entry);
+				upg_points[that][upgrade_id] = latest_value;
 			}
 		}
 		return;
@@ -396,7 +362,7 @@ methodmap Player {
 
 		// We have nine lines to work with...
 		CPrintToChat(that, "┏━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
-		CPrintToChat(that, "┃ Playtime: %d", player.playtime);
+		CPrintToChat(that, "┃ Playtime: %d hours", RoundFloat(float(player.playtime) / 3600));
 		CPrintToChat(that, "┃ Karma: %d ({GREEN}+%d{DEFAULT}, {RED}-%d{DEFAULT}, %s%d%s)", player.karma, actions[0], actions[1], good_action_colour, good_action_percentage, "%%");
 		CPrintToChat(that, "┃ Level: %d (%d / %d | %d%s)", player.level, player.experience, player.level_up_experience, Percentage(player.experience, player.level_up_experience - player.experience), "%%");
 		CPrintToChat(that, "┃ EXP: %s", exp_bar);

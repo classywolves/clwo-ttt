@@ -57,7 +57,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 
 // Kill all alive timers.
 public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
-	LoopAliveClients(client) {
+	LoopClients(client) {
 		if (upgrade_levels[client] && health_timers[client] != INVALID_HANDLE) {
 			KillTimer(health_timers[client]);
 		}

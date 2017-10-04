@@ -19,6 +19,9 @@ public void OnPluginStart() {
 	//RegAdminCmd("sm_volume", command_volume, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_profile", command_profile, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_tp", command_toggle_third_person, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_reload", command_reload_plugin, ADMFLAG_CHEATS);
+
+	LoadTranslations("common.phrases");
 
 	for (int url = 0; url < sizeof(urls); url++) {
 		RegConsoleCmd(urls[url][0], command_open_url, urls[url][2])
@@ -162,6 +165,25 @@ public Action command_toggle_third_person(int client, int args) {
 	return Plugin_Handled;
 }
 
+public Action command_reload_plugin(int client, int args) {
+	if (args == 0) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid usage, /reload <plugin_name>");
+		return Plugin_Handled;
+	}
+
+	char plugin_name[128]
+	GetCmdArg(1, plugin_name, sizeof(plugin_name));
+
+	char load[1024], reload[1024];
+	ServerCommandEx(load, sizeof(load), "sm plugins load %s", plugin_name);
+	PrintToConsole(client, load);
+	ServerCommandEx(reload, sizeof(reload), "sm plugins reload %s", plugin_name);
+	PrintToConsole(client, reload);
+	CPrintToChat(client, "{purple}[TTT] {yellow}Reloaded %s successfully!", plugin_name);
+
+	return Plugin_Handled;
+}
+
 public Action command_profile(int client, int args) {
 	if (args == 0) {
 		Player(client).profile(client);
@@ -173,6 +195,8 @@ public Action command_profile(int client, int args) {
 
 		if (target_client != -1) {
 			Player(client).profile(target_client);
+		} else {
+			CPrintToChat(client, "{purple}[TTT] {orchid}Invalid URL.  This code should be unreachable.")
 		}
 	}
 	
