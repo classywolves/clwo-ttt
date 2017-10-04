@@ -116,10 +116,6 @@ methodmap Player {
 		iMod_GetUserTypeString(iMod_GetUserType(that), USER_TYPE_FULLNAME, name, sizeof(name));
 	}
 
-	public int get_upgrade_level(int upgrade_id) {
-		return get_upgrade_points(that, upgrade_id);
-	}
-
 	property bool third_person {
 		public get() { return third_person[this]; }
 		public set(bool enable) {
@@ -234,10 +230,6 @@ methodmap Player {
 			}
 		}
 		return;
-	}
-
-	public int get_skill_points(int upgrades_id) {
-		return get_upgrade_points(that, upgrades_id);
 	}
 
 	public void toggle_beacon() {

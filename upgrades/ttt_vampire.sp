@@ -44,7 +44,7 @@ public void OnUpgradeChanged(int client, int upgrade) {
 
 public void update_upgrade_level(int client) {
 	Player player = Player(client);
-	upgrade_levels[player.id] = player.get_upgrade_level(upgrade_id);
+	upgrade_levels[player.id] = player.has_upgrade(upgrade_id);
 }
 
 // This function will regenerate a persons health by a percentage of any damage
