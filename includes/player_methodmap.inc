@@ -103,7 +103,7 @@ methodmap Player {
 		int attacker_role = TTT_GetClientRole(that);
 		int victim_role = TTT_GetClientRole(victim);
 
-		if (victim == that) return false;
+		if (victim == that || victim == 0 || that == 0) return false;
 
 		return !(victim_role - attacker_role == 1 || attacker_role - victim_role == 1);
 	}
