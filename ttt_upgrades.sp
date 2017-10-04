@@ -1,8 +1,9 @@
+#define _is_main_upgrade 1
+
 #include <ttt_helpers>
 #include <player_methodmap>
 
 #include <ttt>
-
 #include <general>
 
 typedef NativeCall = function int (Handle plugin, int numParams);
@@ -150,7 +151,7 @@ public Action command_display_upgrades(int client, int args) {
 	CPrintToChat(client, "{purple}[TTT] {yellow}Upgrades for {green}%N {yellow}printed in console.", target_player.id);
 
 	for (int upgrade_id = 0; upgrade_id < 31; upgrade_id++) {
-		PrintToConsole(client, "%d: %d", upgrade_id, target_player.get_upgrade_level(upgrade_id));
+		PrintToConsole(client, "%d: %d", upgrade_id, target_player.has_upgrade(upgrade_id));
 	}
 
 	return Plugin_Handled;
