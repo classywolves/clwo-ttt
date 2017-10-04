@@ -20,8 +20,8 @@ public void OnPluginStart() {
 
 public Action command_binoculars(int client, int args) {
 	Player player = Player(client);
-	if (player.has_upgrade(upgrade_id) < 1) {
-		CPrintToChat(client, "{purple}[TTT] {orchid}You do not have a skill point in this skill.");
+	if (player.has_upgrade(upgrade_id) <= 3) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}You do not have three skill point in this skill.");
 		return Plugin_Handled;
 	}
 
@@ -33,7 +33,9 @@ public Action command_binoculars(int client, int args) {
 	zoom_level[client]++;
 	if (zoom_level[client] > 2) zoom_level[client] = 0;
 
-	SetEntProp(client, Prop_Send, "m_iFOV", initial_fov[client] + (15.0 * zoom_level[client]));
+	if (zoom_level[client] == 0) SetEntProp(client, Prop_Send, "m_iFOV", 40);
+	if (zoom_level[client] == 1) SetEntProp(client, Prop_Send, "m_iFOV", 10);
+	if (zoom_level[client] == 2) SetEntProp(client, Prop_Send, "m_iFOV", 0);
 
 	return Plugin_Handled;
 }

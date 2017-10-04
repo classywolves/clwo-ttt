@@ -37,6 +37,7 @@ public void OnPluginStart() {
 	HookEvent("round_start", OnRoundStart);
 	HookEvent("round_end", OnRoundEnd, EventHookMode_PostNoCopy);
 	HookEvent("player_death", OnPlayerDeath);
+	HookEvent("player_say", OnPlayerSay);
 
 	CreateTimer(1.5, timer_beacon, 0, TIMER_REPEAT);
 
@@ -50,6 +51,27 @@ public void OnMapStart() {
 
 OnClientDisconnect(int client) {
 	player_beacon[client] = false;
+}
+
+public Action OnPlayerSay(Event event, const char[] name, bool dontBroadcast) {
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	
+	char text[200];
+	GetEventString(event, "text", text, 200);
+
+	int total_chars = strlen(text)
+	if (total_chars > 10) {
+		int upper_case = 0;
+		for (int character = 0; character < total_chars; character++) {
+			if (IsCharUpper(text[character])) {
+				upper_case++;
+			}
+		}
+		if (float(upper_case) / float(total_chars) > 0.7) {
+			Player(client).display_url("http://theoatmeal.com/pl/minor_differences/capslock");
+			CPrintToChat(client, "{purple}[TTT] {orchid}Please calm the caps! :o")
+		}
+	}
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {

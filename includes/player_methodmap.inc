@@ -34,7 +34,9 @@ native set_upgrade_points(int client_id, int upgrade_id, int points);
 #define AllUpgrades for(int i = 1; i <= MaxClients; i++) for(int j = 1; j <= 64; j++)
 #define PlayerUpgrades(%1) for(int %1 = 1; %1 <= 64; %1++)
 
-// int upg_points[MAXPLAYERS+1][64];
+#if defined _is_main_upgrade
+	int upg_points[MAXPLAYERS+1][64];
+#endif
 
 methodmap Player {
 	public Player(int client) {
@@ -224,7 +226,7 @@ methodmap Player {
 			for (int entry = 1; entry < 32; entry++) {
 				int upgrade_id = entry - 1
 				latest_value = SQL_FetchInt(player_skill_points, entry);
-				set_upgrade_points(that, upgrade_id, latest_value);
+				this.set_upgrade(upgrade_id, latest_value);
 			}
 		}
 		return;
