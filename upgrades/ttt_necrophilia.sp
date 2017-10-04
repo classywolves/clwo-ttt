@@ -40,7 +40,7 @@ public Action Dissolve_Timer(Handle timer, DataPack Data) {
 		Effect_DissolveEntity(ragdoll_ent, DISSOLVE_ELECTRICAL,-1);
 		// Fetch the position of the ragdoll.
 		float position[3];
-		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", position);
+		GetEntPropVector(ragdoll_ent, Prop_Send, "m_vecOrigin", position);
 		// Play a sound for the dissolving effect
 		EmitAmbientSound(bury_sound, position, ragdoll_ent, SNDLEVEL_CONVO);
 	}
