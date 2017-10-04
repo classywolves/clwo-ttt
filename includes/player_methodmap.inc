@@ -8,9 +8,7 @@
 #include <sourcemod> 			// Default Sourcemod Includes
 #include <sdktools>				// ┫
 #include <clientprefs>			// ┛
-#include <imod>					// iNilo Staff Functionality
 #include <general>				// General Definitions
-#include <colorvariables>		// Pretty Printing
 #include <ttt>					// Interact with TTT
 #include <smlib>				// Larger Standard Library
 
@@ -36,7 +34,7 @@ native set_upgrade_points(int client_id, int upgrade_id, int points);
 #define AllUpgrades for(int i = 1; i <= MaxClients; i++) for(int j = 1; j <= 64; j++)
 #define PlayerUpgrades(%1) for(int %1 = 1; %1 <= 64; %1++)
 
-int upg_points[MAXPLAYERS+1][64];
+// int upg_points[MAXPLAYERS+1][64];
 
 methodmap Player {
 	public Player(int client) {
@@ -96,7 +94,7 @@ methodmap Player {
 	}
 
 	public int set_upgrade(int upgrade_id, int points) {
-		upgrades_set_upgrade_points(that, upgrade_id, points);
+		set_upgrade_points(that, upgrade_id, points);
 	}
 
 	public bool bad_kill(int victim) {

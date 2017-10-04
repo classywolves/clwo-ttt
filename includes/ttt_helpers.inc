@@ -3,13 +3,6 @@
 #endif
 #define _ttt_helpers_included
 
-#include <sourcemod> 		// Default Sourcemod Includes
-#include <sdktools>			// ┫
-#include <clientprefs>		// ┛
-#include <imod>				// iNilo Staff Functionality
-#include <general>			// General Definitions
-#include <colorvariables>	// Pretty Printing
-#include <ttt>				// Interact with TTT
 #include <player_methodmap> // Useful Player Related Functions
 
 #if !defined(LoopValidClients)
