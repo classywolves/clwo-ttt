@@ -33,7 +33,6 @@ public Action command_binoculars(int client, int args) {
 	zoom_level[client]++;
 	if (zoom_level[client] > 2) zoom_level[client] = 0;
 
-	CPrintToChat(client, "%d | %f | %f", initial_fov[client], initial_fov[client], initial_fov[client] + (15.0 * zoom_level[client]))
 	SetEntProp(client, Prop_Send, "m_iFOV", initial_fov[client] + (15.0 * zoom_level[client]));
 
 	return Plugin_Handled;

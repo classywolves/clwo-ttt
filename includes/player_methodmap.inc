@@ -29,7 +29,8 @@ bool website_payload[MAXPLAYERS + 1];
 Database database_ttt;
 Database database_player_analytics;
 
-native int upgrades_get_upgrade_points(int client_id, int upgrade_id);
+native int get_upgrade_points(int client_id, int upgrade_id);
+native set_upgrade_points(int client_id, int upgrade_id, int points);
 
 /*======== Upgrades ========*/
 #define AllUpgrades for(int i = 1; i <= MaxClients; i++) for(int j = 1; j <= 64; j++)
@@ -91,12 +92,18 @@ methodmap Player {
 	}
 
 	public int has_upgrade(int upgrade_id) {
-		return upgrades_get_upgrade_points(that, upgrade_id);
+		return get_upgrade_points(that, upgrade_id);
+	}
+
+	public int set_upgrade(int upgrade_id, int points) {
+		upgrades_set_upgrade_points(that, upgrade_id, points);
 	}
 
 	public bool bad_kill(int victim) {
 		int attacker_role = TTT_GetClientRole(that);
 		int victim_role = TTT_GetClientRole(victim);
+
+		if (victim == that) return false;
 
 		return !(victim_role - attacker_role == 1 || attacker_role - victim_role == 1);
 	}
@@ -110,7 +117,7 @@ methodmap Player {
 	}
 
 	public int get_upgrade_level(int upgrade_id) {
-		return upgrades_get_upgrade_points(that, upgrade_id);
+		return get_upgrade_points(that, upgrade_id);
 	}
 
 	property bool third_person {
@@ -218,20 +225,19 @@ methodmap Player {
 		DBStatement player_skill_points = PrepareStatement(database_ttt, "SELECT * FROM `upgrades` WHERE steam_id=? LIMIT 1");
 		SQL_BindParamString(player_skill_points, 0, steam_id, false);
 		if (!SQL_Execute(player_skill_points)) { PrintToServer("User Skills grab failed."); return; }
-		//int upg_points[MAXPLAYERS+1][64];
 		if (SQL_FetchRow(player_skill_points)) {
 			int latest_value;
 			for (int entry = 1; entry < 32; entry++) {
 				int upgrade_id = entry - 1
 				latest_value = SQL_FetchInt(player_skill_points, entry);
-				upg_points[that][upgrade_id] = latest_value;
+				set_upgrade_points(that, upgrade_id, latest_value);
 			}
 		}
 		return;
 	}
 
 	public int get_skill_points(int upgrades_id) {
-		return upgrades_get_upgrade_points(that, upgrades_id);
+		return get_upgrade_points(that, upgrades_id);
 	}
 
 	public void toggle_beacon() {

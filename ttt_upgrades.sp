@@ -38,7 +38,8 @@ public void OnClientPutInServer(int client) {
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max)
 {
    RegPluginLibrary("ttt_upgrades");
-   CreateNative("upgrades_get_upgrade_points", Native_upgrades_get_upgrade_points);
+   CreateNative("get_upgrade_points", Native_upgrades_get_upgrade_points);
+   CreateNative("set_upgrade_points", Native_upgrades_set_upgrade_points);
 }
 
 public void OnClientCookiesCached(int client) {
@@ -61,13 +62,32 @@ public int Native_upgrades_get_upgrade_points(Handle plugin, int numParams)
 	return upg_points[client_id][upgrade_id];
 }
 
+public Native_upgrades_set_upgrade_points(Handle plugin, int numParams) {
+	if (numParams != 3) {
+		PrintToServer("Warning, set_upgrade_points was not called correctly.");
+		return;
+	}
+
+	int client_id = GetNativeCell(1);
+	int upgrade_id = GetNativeCell(2);
+	int points = GetNativeCell(3);
+	upg_points[client_id][upgrade_id] = points;
+}
+
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
 	int victim = GetClientOfUserId(GetEventInt(event, "userid"));
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 
-	char attacker_auth[256];
+	// Not enough players...
+	if (count_players() < 4) return Plugin_Continue;
+	// Suicide...
+	if (victim == attacker) return Plugin_Continue;
+	// Killed by world...
+	if (attacker == 0 || victim == 0) return Plugin_Continue;
 
 	Player player = Player(attacker);
+
+	char attacker_auth[256];
 	player.get_auth(AuthId_Steam2, attacker_auth);
 
 	if (player.bad_kill(victim)) {

@@ -175,10 +175,10 @@ public Action command_reload_plugin(int client, int args) {
 	GetCmdArg(1, plugin_name, sizeof(plugin_name));
 
 	char load[1024], reload[1024];
-	ServerCommandEx(load, sizeof(load), "sm plugins load %s", plugin_name);
-	PrintToConsole(client, load);
 	ServerCommandEx(reload, sizeof(reload), "sm plugins reload %s", plugin_name);
 	PrintToConsole(client, reload);
+	ServerCommandEx(load, sizeof(load), "sm plugins load %s", plugin_name);
+	PrintToConsole(client, load);
 	CPrintToChat(client, "{purple}[TTT] {yellow}Reloaded %s successfully!", plugin_name);
 
 	return Plugin_Handled;
@@ -195,8 +195,6 @@ public Action command_profile(int client, int args) {
 
 		if (target_client != -1) {
 			Player(client).profile(target_client);
-		} else {
-			CPrintToChat(client, "{purple}[TTT] {orchid}Invalid URL.  This code should be unreachable.")
 		}
 	}
 	
