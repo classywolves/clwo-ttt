@@ -364,9 +364,9 @@ methodmap Player {
 		CPrintToChat(that, "┃ Karma: %d ({GREEN}+%d{DEFAULT}, {RED}-%d{DEFAULT}, %s%d%s)", player.karma, actions[0], actions[1], good_action_colour, good_action_percentage, "%%");
 		CPrintToChat(that, "┃ Level: %d (%d / %d | %d%s)", player.level, player.experience, player.level_up_experience, Percentage(player.experience, player.level_up_experience - player.experience), "%%");
 		CPrintToChat(that, "┃ EXP: %s", exp_bar);
-		CPrintToChat(that, "┃ Playtime: ");
-		CPrintToChat(that, "┃ Playtime: ");
-		CPrintToChat(that, "┃ Playtime: ");
+		CPrintToChat(that, "┃ ");
+		CPrintToChat(that, "┃ ");
+		CPrintToChat(that, "┃ ");
 		CPrintToChat(that, "┗━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
 	}
 }

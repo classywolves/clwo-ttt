@@ -41,9 +41,9 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detectives) {
 	// that will regenerate their health.
 	LoopAliveClients(client) {
 		Player player = Player(client);
-		int upgrade_level = player.has_upgrade(upgrade_id)
+		int upgrade_level = Maths().min(player.has_upgrade(upgrade_id), max_upgrade)
 		if (upgrade_level) {
-			health_timers[client] = CreateTimer(10.0 - Maths().min(upgrade_level, max_upgrade) * 2.0, health_regen, client, TIMER_REPEAT);
+			health_timers[client] = CreateTimer(10.0 - upgrade_level * 2.0, health_regen, client, TIMER_REPEAT);
 		}
 	}
 
