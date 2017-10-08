@@ -7,6 +7,18 @@
 #include <general>
 #include <cstrike>
 
+DBStatement global_statement_insert_death;
+DBStatement global_statement_insert_damage;
+DBStatement global_statement_rdm_statement;
+DBStatement global_statement_rdm_statement_admin;
+DBStatement global_statement_rdm_instance;
+DBStatement global_statements_damage_log;
+
+DBStatement global_statement_insert_handles; 
+DBStatement global_statement_update_handled;
+DBStatement global_statement_update_handles;
+
+
 /* Plugin Info */
 #define PLUGIN_NAME 			"TTT RDM"
 #define PLUGIN_VERSION_M 		"0.0.6"
@@ -197,7 +209,9 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	
 	// Prepare a SQL statement for the insertion
 	char error[255];
-	DBStatement insert_death = SQL_PrepareQuery(db, "INSERT INTO deaths (death_index, death_time, victim_name, victim_id, victim_role, victim_karma, killer_name, killer_id, killer_role, killer_karma, weapon, bad_action, last_gun_fire, round_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
+	if (global_statement_insert_death == INVALID_HANDLE)
+		global_statement_insert_death = SQL_PrepareQuery(db, "INSERT INTO deaths (death_index, death_time, victim_name, victim_id, victim_role, victim_karma, killer_name, killer_id, killer_role, killer_karma, weapon, bad_action, last_gun_fire, round_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
+	DBStatement insert_death = global_statement_insert_death;
 	if (insert_death == null) { PrintToServer("Error templating death in the database"); PrintToServer(error); return Plugin_Continue; }
 	
 	// Determine whether RDM
@@ -274,7 +288,13 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 
 	// Prepare a SQL statement for the insertion
 	char error[255];
-	DBStatement insert_damage = SQL_PrepareQuery(db, "INSERT INTO damage (round_no, victim_name, victim_auth, victim_role, attacker_name, attacker_auth, attacker_role, damage_done, health_left, round_time, weapon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
+
+	DBStatement insert_damage;
+	if (global_statement_insert_damage == INVALID_HANDLE)
+	{
+		global_statement_insert_damage = SQL_PrepareQuery(db, "INSERT INTO damage (round_no, victim_name, victim_auth, victim_role, attacker_name, attacker_auth, attacker_role, damage_done, health_left, round_time, weapon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
+	}
+	insert_damage = global_statement_insert_damage;
 	if (insert_damage == null) { PrintToServer("Error templating damage in the database"); PrintToServer(error); return Plugin_Continue; }
 	
 	SQL_BindParamInt(insert_damage, 0, max_round, false);
@@ -358,10 +378,13 @@ public Action Command_RDM(int client, int args) {
 	DBStatement rdm_statement;
 
 	if (admin) {
-		rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE NOT victim_id <=> killer_id AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 60;");
+		if (global_statement_rdm_statement_admin == INVALID_HANDLE)
+			global_statement_rdm_statement_admin = PrepareStatement(db, "SELECT * FROM `deaths` WHERE NOT victim_id <=> killer_id AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 60;");
+		rdm_statement = global_statement_rdm_statement_admin;
 	} else {
-		rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND NOT victim_id <=> killer_id AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 20;");
-
+		if (global_statement_rdm_statement == INVALID_HANDLE)
+			global_statement_rdm_statement = PrepareStatement(db, "SELECT * FROM `deaths` WHERE victim_id=? AND death_time>=? AND NOT victim_id <=> killer_id AND verdict IS NULL ORDER BY `death_time` DESC LIMIT 20;");
+		rdm_statement = global_statement_rdm_statement;
 		char time[100];
 		IntToString(GetTime() - 24 * 60 * 60, time, sizeof(time));
 
@@ -444,7 +467,9 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 		int death_index = StringToInt(buffers[1]);
 		
 		char error[255];
-		DBStatement rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error))
+		if (global_statement_rdm_instance == INVALID_HANDLE)
+			global_statement_rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error));
+		DBStatement rdm_instance = global_statement_rdm_instance;
 		if (rdm_instance == null) {
 			PrintToServer(error);
 			return;
@@ -614,7 +639,9 @@ public HandleCase(int client, int case_id)
 	// Prepare a SQL statement for the insertion
 		
 	char error[255];
-	DBStatement insert_handles = SQL_PrepareQuery(db, "INSERT INTO handles (death_index, staff_name, staff_auth) VALUES (?, ?, ?);", error, sizeof(error));
+	if (global_statement_insert_handles == INVALID_HANDLE)
+		global_statement_insert_handles = SQL_PrepareQuery(db, "INSERT INTO handles (death_index, staff_name, staff_auth) VALUES (?, ?, ?);", error, sizeof(error));
+	DBStatement insert_handles = global_statement_insert_handles;
 	if (insert_handles == null) { PrintToServer("Error templating handles in the database"); PrintToServer(error); return; }
 	
 	char staff_name[64], staff_auth[64];
@@ -628,7 +655,9 @@ public HandleCase(int client, int case_id)
 	// Execute statement
 	if (!SQL_Execute(insert_handles)) { PrintToServer("SQL Execute Failed..."); return; }
 
-	DBStatement rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error))
+	if (global_statement_rdm_instance == INVALID_HANDLE)
+		global_statement_rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error));
+	DBStatement rdm_instance = global_statement_rdm_instance;
 	if (rdm_instance == null) {
 		PrintToServer(error);
 		return;
@@ -714,10 +743,14 @@ public Action Command_Verdict(int client, int args) {
 	if (attacker_id != -1) {attacker_clientid = GetClientOfUserId(attacker_id);}
 	
 	char error[255];
-	DBStatement update_handled = SQL_PrepareQuery(db, "UPDATE deaths SET verdict=? WHERE death_index=?;", error, sizeof(error));
+	if (global_statement_update_handled == INVALID_HANDLE)
+		global_statement_update_handled = SQL_PrepareQuery(db, "UPDATE deaths SET verdict=? WHERE death_index=?;", error, sizeof(error));
+	DBStatement update_handled = global_statement_update_handled;
 	if (update_handled == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
 	
-	DBStatement handled_handles = SQL_PrepareQuery(db, "UPDATE handles SET verdict=? WHERE death_index=?;", error, sizeof(error));
+	if (global_statement_update_handles == INVALID_HANDLE)
+		global_statement_update_handles = SQL_PrepareQuery(db, "UPDATE handles SET verdict=? WHERE death_index=?;", error, sizeof(error));
+	DBStatement handled_handles = global_statement_update_handles;
 	if (handled_handles == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
 	
 	
@@ -805,7 +838,9 @@ public Action Command_Damage(int client, int args) {
 	int death_index = short_ids[target_id];
 
 	char error[255];
-	DBStatement rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error))
+	if (global_statement_rdm_instance == INVALID_HANDLE)
+		global_statement_rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error));
+	DBStatement rdm_instance = global_statement_rdm_instance;
 	if (rdm_instance == null) {
 		PrintToServer(error);
 		return Plugin_Handled;
@@ -822,8 +857,9 @@ public Action Command_Damage(int client, int args) {
 		SQL_FetchString(rdm_instance, 7, attacker_auth, sizeof(attacker_auth));
 		round_number = SQL_FetchInt(rdm_instance, 13);
 	}
-
-	DBStatement damage_log = SQL_PrepareQuery(db, "SELECT * FROM `damage` WHERE `round_no`=? AND (`victim_auth`=? OR `victim_auth`=? OR `attacker_auth`=? OR `attacker_auth`=?);", error, sizeof(error))
+	if (global_statements_damage_log == INVALID_HANDLE)
+		global_statements_damage_log = SQL_PrepareQuery(db, "SELECT * FROM `damage` WHERE `round_no`=? AND (`victim_auth`=? OR `victim_auth`=? OR `attacker_auth`=? OR `attacker_auth`=?);", error, sizeof(error));
+	DBStatement damage_log = global_statements_damage_log;
 	if (damage_log == null) {
 		PrintToServer(error);
 		return Plugin_Handled;
@@ -867,7 +903,9 @@ public Action Command_Damage(int client, int args) {
 
 public Display_Information(int client, int death_index) {
 	char error[255];
-	DBStatement rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error))
+	if (global_statement_rdm_instance == INVALID_HANDLE)
+		global_statement_rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error));
+	DBStatement rdm_instance = global_statement_rdm_instance;
 	if (rdm_instance == null) { PrintToServer(error); return; }
 	SQL_BindParamInt(rdm_instance, 0, death_index, false);
 	
