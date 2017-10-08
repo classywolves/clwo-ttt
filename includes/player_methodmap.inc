@@ -380,6 +380,7 @@ public void check_level(Player player) {
 		char auth[255], query[255];
 		player.get_auth(AuthId_SteamID64, auth);
 		FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = %s", new_level, auth);
+		PrintToServer("Running query: %s", query);
 		SQL_FastQuery(database_ttt, query);
 	}
 }
