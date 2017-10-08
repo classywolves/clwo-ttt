@@ -3,7 +3,7 @@
 #include <halflife>
 
 // Define a free upgrade_id to this plugin.
-#define upgrade_id 3
+#define upgrade_id 21
 // Define the maximum points allowed.
 #define max_points 2
 // Define the sound file location.

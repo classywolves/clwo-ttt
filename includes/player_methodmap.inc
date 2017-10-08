@@ -184,7 +184,7 @@ methodmap Player {
 	}
 
 	property int level_up_experience {
-		public get() { return RoundToFloor(this.level + 300 * Pow(2.0, (float(this.level) / 4.0))); }
+		public get() { return RoundToFloor(this.level + 600 * Pow(2.0, (float(this.level) / 2.0))); }
 	}
 
 	property int karma {
