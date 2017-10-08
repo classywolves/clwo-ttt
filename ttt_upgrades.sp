@@ -11,6 +11,7 @@ typedef NativeCall = function int (Handle plugin, int numParams);
 public void OnPluginStart() {
 	RegAdminCmd("sm_experience", command_display_experience, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_setexperience", command_experience, ADMFLAG_ROOT);
+	RegAdminCmd("sm_setlevel", command_level, ADMFLAG_ROOT);
 	RegAdminCmd("sm_update_info", command_update_info, ADMFLAG_ROOT);
 	RegAdminCmd("sm_display_upgrades", command_display_upgrades, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_session", command_get_session, ADMFLAG_ROOT);
@@ -178,6 +179,29 @@ public Action command_experience(int client, int args) {
 	Player(target_player).experience = experience;
 
 	CPrintToChat(client, "{purple}[TTT] {yellow}Set experience on %N to %d.", target_player, experience);
+
+	return Plugin_Handled;
+}
+
+public Action command_level(int client, int args) {
+	if (args != 2) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /setlevel <target> <level>");
+		return Plugin_Handled;
+	}
+
+	char target[128], level_string[128];
+	GetCmdArg(1, target, sizeof(target));
+	GetCmdArg(2, level_string, sizeof(level_string));
+
+	int target_player = Player(client).target_one(target);
+	if (target_player == -1) return Plugin_Handled;
+
+	int level = StringToInt(level_string);
+	if (level == 0) level = 0;
+
+	Player(target_player).level = level;
+
+	CPrintToChat(client, "{purple}[TTT] {yellow}Set experience on %N to %d.", target_player, level);
 
 	return Plugin_Handled;
 }
