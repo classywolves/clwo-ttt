@@ -36,7 +36,7 @@ public void OnPluginStart() {
 
 	HookEvent("round_start", OnRoundStart);
 	HookEvent("round_end", OnRoundEnd, EventHookMode_PostNoCopy);
-	HookEvent("player_death", OnPlayerDeathPre, EventHookMode_Pre);
+	//HookEvent("player_death", OnPlayerDeathPre, EventHookMode_Pre);
 	HookEvent("player_death", OnPlayerDeath);
 	HookEvent("player_say", OnPlayerSay);
 
@@ -75,40 +75,48 @@ public Action OnPlayerSay(Event event, const char[] name, bool dontBroadcast) {
 	}
 }
 
-public Action OnPlayerDeathPre(Event event, const char[] name, bool dontBroadcast) {
+//public Action OnPlayerDeathPre(Event event, const char[] name, bool dontBroadcast) {
+//	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+//	player_beacon[client] = false;
+//	third_person[client] = false;
+
+//	// For all players, see if they're within x units.
+//	float dead_position[3];
+//	GetClientEyePosition(client, dead_position)
+
+//	LoopAliveClients(i) {
+//		if (i != client) {
+//			float alive_position[3];
+//			GetClientEyePosition(i, alive_position);
+//			float distance = GetVectorDistance(dead_position, alive_position, true);
+//			if (distance < 3.0) {
+//				// Person died too close to another person.  Remove body.
+//				CPrintToChatAdmins(ADMFLAG_GENERIC, "Someone died close to a player (%f).", distance);
+//				// BlockBody(client);
+//			}
+//		}
+//	}
+
+//	float ent_position[3];
+//	int entity = -1;
+//	while ((entity = FindEntityByClassname(entity, "prop_ragdoll")) != INVALID_ENT_REFERENCE) {
+//		// Entity is a reference.
+//		GetEntPropVector(entity, Prop_Send, "m_vecOrigin", ent_position);
+//		float distance = GetVectorDistance(dead_position, ent_position, true);
+//		if (distance < 3.0) {
+//			// Person died too close to a body.  Remove body.
+//			CPrintToChatAdmins(ADMFLAG_GENERIC, "Someone died close to an ent (%f).", distance);
+//			// BlockBody(client);
+//		}
+//	}
+
+//	return Plugin_Continue;
+//}
+
+public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	player_beacon[client] = false;
 	third_person[client] = false;
-
-	// For all players, see if they're within x units.
-	float dead_position[3];
-	GetClientEyePosition(client, dead_position)
-
-	LoopAliveClients(i) {
-		if (i != client) {
-			float alive_position[3];
-			GetClientEyePosition(i, alive_position);
-			if (GetVectorDistance(dead_position, alive_position, true) > 3.0) {
-				// Person died too close to another person.  Remove body.
-			}
-		}
-	}
-
-	float ent_position[3];
-	int entity = -1;
-	while ((entity = FindEntityByClassname(entity, "prop_ragdoll")) != INVALID_ENT_REFERENCE) {
-		// Entity is a reference.
-		GetEntPropvector(entity, Prop_Send, "m_vecOrigin", ent_position);
-		if (GetVectorDistance(dead_position, ent_position, true) > 3.0) {
-			// Person died too close to a body.  Remove body.
-		}
-	}
-
-	return Plugin_Continue;
-}
-
-public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
-
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {

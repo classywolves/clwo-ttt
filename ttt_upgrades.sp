@@ -130,6 +130,8 @@ public Action command_display_upgrades(int client, int args) {
 		GetCmdArg(1, target, sizeof(target));
 	}
 
+	//CPrintToChat(client, "{purple}[TTT] {orchid}I hate life, seriously, I do.");
+
 	int target_client;
 
 	if (StringToInt(target) == 0) {
@@ -137,10 +139,10 @@ public Action command_display_upgrades(int client, int args) {
 		if (target_client == -1) return Plugin_Handled;
 	} else {
 		target_client = StringToInt(target);
-		CPrintToChat(client, "{purple}[TTT] {yellow}Upgrades for {green}%d {yellow}printed in console.", target_client);
+		CPrintToChat(client, "{purple}[TTT] {yellow}Upgrades for {green}%d {yellow}have been printed in console.", target_client);
 
 		for (int upgrade_id = 0; upgrade_id < 31; upgrade_id++) {
-			PrintToConsole(client, "%d: %d", upgrade_id, upg_points[target_client][upgrade_id]);
+			PrintToConsole(client, "Upgrade %d: %d", upgrade_id, upg_points[target_client][upgrade_id]);
 		}
 
 		return Plugin_Handled;
@@ -151,7 +153,7 @@ public Action command_display_upgrades(int client, int args) {
 	CPrintToChat(client, "{purple}[TTT] {yellow}Upgrades for {green}%N {yellow}printed in console.", target_player.id);
 
 	for (int upgrade_id = 0; upgrade_id < 31; upgrade_id++) {
-		PrintToConsole(client, "%d: %d", upgrade_id, target_player.has_upgrade(upgrade_id));
+		PrintToConsole(client, "Upgrade %d: %d", upgrade_id, target_player.has_upgrade(upgrade_id));
 	}
 
 	return Plugin_Handled;
@@ -221,7 +223,12 @@ public Action command_populate(int client, int args) {
 public Action command_skills(int client, int args) {
 	char auth[255];
 	Player(client).get_auth(AuthId_Steam2, auth);
-	if (!StrEqual(auth, "STEAM_1:1:206820868") && !StrEqual(auth, "STEAM_1:0:39463079") && !StrEqual(auth, "STEAM_1:0:46721510")) {
+	if (!StrEqual(auth, "STEAM_1:1:206820868") 
+		&& !StrEqual(auth, "STEAM_1:0:39463079") 
+		&& !StrEqual(auth, "STEAM_1:0:46721510")
+		&& !StrEqual(auth, "STEAM_1:0:98095439")
+		&& !StrEqual(auth, "STEAM_1:1:43937779")
+	) {
 		CPrintToChat(client, "{purple}[TTT] {orchid}You are not authorised to use this command.");
 		return Plugin_Handled;
 	}

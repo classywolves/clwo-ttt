@@ -5,7 +5,7 @@
 // Define a free upgrade_id to this plugin.
 #define upgrade_id 3
 // Define the maximum points allowed.
-#define max_points 4
+#define max_points 2
 // Define the sound file location.
 #define bury_sound "sound/ttt_necrophilia_bury.mp3"
 
@@ -66,8 +66,7 @@ public Action TTT_OnBodyChecked(int client, int[] iRagdollC)
 
 	Player client_player = Player(client);
 
-	if (client_player.armour < 100 && (client_player.has_upgrade(upgrade_id) > 0 && client_player.has_upgrade(upgrade_id) <= max_points) && !StrEqual(iRagdollC[Weaponused], "Necrophilia", false)
-		&& iRagdollC[Found]) {
+	if (client_player.armour < 100 && client_player.has_upgrade(upgrade_id) == max_points && !StrEqual(iRagdollC[Weaponused], "Necrophilia", false) && iRagdollC[Found]) {
 		// Set the Weaponused state, used to prevent duplicate uses.
 		Format(iRagdollC[Weaponused], MAX_NAME_LENGTH, "Necrophilia");
 		// Write data to the DataPack.

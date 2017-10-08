@@ -6,10 +6,10 @@
 #include <ttt_helpers>
 #include <player_methodmap>
 
-#define upgrade_id 4
+#define upgrade_id 8
 
 int initial_fov[MAXPLAYERS + 1];
-int zoom_level[MAXPLAYERS + 1];
+int zoom_level[MAXPLAYERS + 1] = {0, ...};
 
 public void OnPluginStart() {
 	RegConsoleCmd("sm_binoculars", command_binoculars);
@@ -21,7 +21,7 @@ public void OnPluginStart() {
 public Action command_binoculars(int client, int args) {
 	Player player = Player(client);
 	if (player.has_upgrade(upgrade_id) <= 3) {
-		CPrintToChat(client, "{purple}[TTT] {orchid}You do not have three skill point in this skill.");
+		CPrintToChat(client, "{purple}[TTT] {orchid}You do not have five skill points in this skill.");
 		return Plugin_Handled;
 	}
 
@@ -30,12 +30,12 @@ public Action command_binoculars(int client, int args) {
 		return Plugin_Handled;
 	}
 
-	zoom_level[client]++;
 	if (zoom_level[client] > 2) zoom_level[client] = 0;
 
 	if (zoom_level[client] == 0) SetEntProp(client, Prop_Send, "m_iFOV", 40);
 	if (zoom_level[client] == 1) SetEntProp(client, Prop_Send, "m_iFOV", 10);
 	if (zoom_level[client] == 2) SetEntProp(client, Prop_Send, "m_iFOV", 0);
+	zoom_level[client]++;
 
 	return Plugin_Handled;
 }

@@ -223,9 +223,8 @@ methodmap Player {
 		if (!SQL_Execute(player_skill_points)) { PrintToServer("User Skills grab failed."); return; }
 		if (SQL_FetchRow(player_skill_points)) {
 			int latest_value;
-			for (int entry = 1; entry < 32; entry++) {
-				int upgrade_id = entry - 1
-				latest_value = SQL_FetchInt(player_skill_points, entry);
+			for (int upgrade_id = 1; upgrade_id < 32; upgrade_id++) {
+				latest_value = SQL_FetchInt(player_skill_points, upgrade_id);
 				this.set_upgrade(upgrade_id, latest_value);
 			}
 		}
@@ -374,14 +373,14 @@ methodmap Player {
 public void check_level(Player player) {
 	if (player.experience > player.level_up_experience) {
 		player.experience -= player.level_up_experience;
-		player.level++;
-		CPrintToChat(player.id, "{purple}[TTT] {green}Congratulations!  You've levelled up to level %d", player.level);
+		int new_level = player.level + 1;
+		player.level = new_level;
+		CPrintToChat(player.id, "{purple}[TTT] {green}Congratulations!  You've levelled up to level %d", new_level);
 
 		char auth[255], query[255];
 		player.get_auth(AuthId_SteamID64, auth);
-		FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = %s", player.skill_points, auth);
-		SQL_FastQuery(database_ttt, query)
-		check_level(player);
+		FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = %s", new_level, auth);
+		SQL_FastQuery(database_ttt, query);
 	}
 }
 
