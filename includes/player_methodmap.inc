@@ -184,7 +184,10 @@ methodmap Player {
 	}
 
 	property int level_up_experience {
-		public get() { return RoundToFloor(this.level + 600 * Pow(2.0, (float(this.level) / 2.0))); }
+		public get() {
+			PrintToServer("Level: %d", this.level);
+			return RoundToFloor(this.level + 600 * Pow(2.0, (float(this.level) / 4.0)));
+		}
 	}
 
 	property int karma {
@@ -377,6 +380,7 @@ methodmap Player {
 }
 
 public void check_level(Player player) {
+	PrintToServer("Check level called on %N: %d > %d", player.id, player.experience, player.level_up_experience)
 	if (player.experience > player.level_up_experience) {
 		player.experience -= player.level_up_experience;
 		int new_level = player.level + 1;
