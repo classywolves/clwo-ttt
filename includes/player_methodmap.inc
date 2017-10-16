@@ -65,6 +65,10 @@ methodmap Player {
 		public get() { return IsPlayerAlive(that); }
 	}
 
+	public void pos(float loc[3]) {
+		GetClientAbsOrigin(that, loc);
+	}
+
 	property int armour {
 		public get() { return GetEntProp(that, Prop_Data, "m_ArmorValue"); }
 		public set(int armour) { SetEntProp(that, Prop_Data, "m_ArmorValue", armour, 1); }
@@ -186,6 +190,7 @@ methodmap Player {
 	property int level_up_experience {
 		public get() {
 			PrintToServer("Level: %d", this.level);
+			//return this.level * 1000;
 			return RoundToFloor(this.level + 600 * Pow(2.0, (float(this.level) / 4.0)));
 		}
 	}
@@ -376,6 +381,14 @@ methodmap Player {
 		CPrintToChat(that, "┃ ");
 		CPrintToChat(that, "┃ ");
 		CPrintToChat(that, "┗━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
+	}
+
+	public void reset_skills() {
+		char auth[255], query[255];
+		this.get_auth(AuthId_SteamID64, auth);
+		FormatEx(query, sizeof(query), "DELETE FROM `sessions` WHERE `steam_id`=\"%s\"", auth);
+		PrintToServer("Running query: %s", query);
+		SQL_FastQuery(database_ttt, query);
 	}
 }
 

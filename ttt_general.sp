@@ -16,6 +16,7 @@ char urls[6][3][512] = {
 
 public void OnPluginStart() {
 	RegAdminCmd("sm_cbeacon", command_toggle_beacon, ADMFLAG_GENERIC);
+	RegAdminCmd("sm_teleport", command_teleport, ADMFLAG_GENERIC);
 	//RegAdminCmd("sm_volume", command_volume, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_profile", command_profile, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_tp", command_toggle_third_person, ADMFLAG_CHEATS);
@@ -172,6 +173,36 @@ public Action command_toggle_beacon(int client, int args) {
 		}
 	}
 	
+	return Plugin_Handled;
+}
+
+public Action command_teleport(int client, int args) {
+	if (args != 2) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /teleport <player> <target_player>");
+		return Plugin_Handled;
+	}
+
+	char from[128], target[128];
+	GetCmdArg(1, from, sizeof(from));
+	GetCmdArg(2, target, sizeof(target));
+
+	int player_from_int = Player(client).target_one(from);
+	int player_target_int = Player(client).target_one(target);
+	if (player_from_int == -1 || player_target_int == -1) return Plugin_Handled;
+
+	Player player_from = Player(player_from_int);
+	Player player_target = Player(player_target_int);
+
+	if (!player_from.alive || !player_target.alive) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}This plugin requires both players to be alive.");
+		return Plugin_Handled;
+	}
+
+	float pos[3];
+	player_target.pos(pos);
+	pos[2] += 73;
+
+	TeleportEntity(player_from.id, pos, NULL_VECTOR, NULL_VECTOR);
 	return Plugin_Handled;
 }
 

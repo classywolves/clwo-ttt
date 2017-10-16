@@ -18,6 +18,7 @@ public void OnPluginStart() {
 	RegConsoleCmd("sm_skills", command_skills, "Opens the skill menu");
 	RegConsoleCmd("sm_skill", command_skills, "Opens the skill menu");
 	RegConsoleCmd("sm_populate", command_populate, "Populates upgrades");
+	RegConsoleCmd("sm_reset_skills", command_reset_skills, "Reset all skills");
 
 	cookie_player_experience = RegClientCookie("player_experience", "Current experience player has.", CookieAccess_Private);
 	cookie_player_level = RegClientCookie("player_level", "Current player level.", CookieAccess_Private);
@@ -260,5 +261,10 @@ public Action command_skills(int client, int args) {
 	Player player = Player(client);
 	player.display_skills_page();
 
+	return Plugin_Handled;
+}
+
+public Action command_reset_skills(int client, int args) {
+	Player(client).reset_skills();
 	return Plugin_Handled;
 }
