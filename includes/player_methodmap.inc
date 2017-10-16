@@ -404,7 +404,12 @@ public void check_level(Player player) {
 		player.get_auth(AuthId_SteamID64, auth);
 		FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = %s", new_level, auth);
 		PrintToServer("Running query: %s", query);
-		SQL_FastQuery(database_ttt, query);
+		if (!SQL_FastQuery(database_ttt, query))
+		{
+			char error[255];
+			SQL_GetError(db, error, sizeof(error));
+			PrintToServer("Failed to query (error: %s)", error);
+		}
 	}
 }
 
