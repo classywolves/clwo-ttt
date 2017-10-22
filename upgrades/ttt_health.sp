@@ -9,33 +9,6 @@
 // This is an example plugin layout.  It includes a timer and
 // increases health every (10 - 2 * skill_point) seconds.
 
-// We start by defining an array to hold a timer for each player.
-Handle health_timers[MAXPLAYERS + 1];
-
-public void OnPluginStart() {
-	// When a player dies or when the round ends, we want to destroy all
-	// connected timers.
-	HookEvent("round_end", OnRoundEnd);
-	HookEvent("player_death", OnPlayerDeath);
-}
-
-// Kill single timer.
-public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	if (health_timers[client] != INVALID_HANDLE) {
-		KillTimer(health_timers[client]);
-	}
-}
-
-// Kill all alive timers.
-public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
-	LoopClients(client) {
-		if (health_timers[client] != INVALID_HANDLE) {
-			KillTimer(health_timers[client]);
-		}
-	}
-}
-
 public void TTT_OnRoundStart(int innocents, int traitors, int detectives) {
 	// We loop through each player, assigning them a repeating timer
 	// that will regenerate their health.
@@ -43,8 +16,7 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detectives) {
 		Player player = Player(client);
 		int upgrade_level = Maths().min(player.has_upgrade(upgrade_id), max_upgrade)
 		if (upgrade_level) {
-			if (health_timers[client] != INVALID_HANDLE) { KillTimer(health_timers[client]); }
-			health_timers[client] = CreateTimer(10.0 - upgrade_level * 2.0, health_regen, client, TIMER_REPEAT);
+			CreateTimer(10.0 - upgrade_level * 2.0, health_regen, client)
 		}
 	}
 
@@ -58,4 +30,11 @@ public Action health_regen(Handle timer, int client) {
 	if (player.health < 100) {
 		player.health++;
 	}
+
+	if (player.health > 0 && TTT_IsRoundActive()) {
+		int upgrade_level = Maths().min(player.has_upgrade(upgrade_id), max_upgrade);
+		CreateTimer(10.0 - upgrade_level * 2.0, health_regen, client);
+	}
+
+	return Plugin_Handled;
 }

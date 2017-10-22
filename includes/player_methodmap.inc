@@ -402,12 +402,12 @@ public void check_level(Player player) {
 
 		char auth[255], query[255];
 		player.get_auth(AuthId_SteamID64, auth);
-		FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = %s", new_level, auth);
+		FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = \"%s\"", new_level, auth);
 		PrintToServer("Running query: %s", query);
 		if (!SQL_FastQuery(database_ttt, query))
 		{
 			char error[255];
-			SQL_GetError(db, error, sizeof(error));
+			SQL_GetError(database_ttt, error, sizeof(error));
 			PrintToServer("Failed to query (error: %s)", error);
 		}
 	}
