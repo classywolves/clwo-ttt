@@ -407,7 +407,7 @@ public void check_level(Player player) {
 		if (!SQL_FastQuery(database_ttt, query))
 		{
 			char error[255];
-			SQL_GetError(db, error, sizeof(error));
+			SQL_GetError(database_ttt, error, sizeof(error));
 			PrintToServer("Failed to query (error: %s)", error);
 		}
 	}
