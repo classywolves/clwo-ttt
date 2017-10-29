@@ -464,7 +464,7 @@ stock char g_sUserTypes[MAX_USER_TYPES][MAX_USER_TYPES_CATEGORIES][64] =
 	{"inilo_staff_checker_guardian"			,"1"		,"1"				,"Guardian"			,"Guardian"			,"Guardian"			,"G"		,"guardian"},
 	{"inilo_staff_checker_admin"			,"1"		,"1"				,"Admin"			,"Admin"			,"Admin"			,"A"		,"admin"},
 	{"inilo_staff_checker_senioradmin"		,"1"		,"1"				,"Senior Admin"		,"Senior Admin"		,"Sen. Admin"		,"SA"		,"senadmin"},
-	{"inilo_staff_checker_senator"			,"1"		,"1"				,"Senator"			,"Senator"			,"Senator"			,"Sen"		,"senator"},
+	{"inilo_staff_checker_senator"			,"1"		,"1"				,"Senator"			,"Senator"			,"Senator"			,"S"		,"senator"},
 };
 
 char g_cStaffChatPrefix[] = "\x01[\x09STAFF\x01]";

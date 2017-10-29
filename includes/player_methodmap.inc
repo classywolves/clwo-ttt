@@ -399,6 +399,7 @@ public void check_level(Player player) {
 		int new_level = player.level + 1;
 		player.level = new_level;
 		CPrintToChat(player.id, "{purple}[TTT] {green}Congratulations!  You've levelled up to level %d", new_level);
+		ClientCommand(player.id, "play */ttt_clwo/ttt_levelup.mp3");
 
 		char auth[255], query[255];
 		player.get_auth(AuthId_SteamID64, auth);

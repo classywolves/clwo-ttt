@@ -43,8 +43,10 @@ public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float
 			fAttackerOrigin[2] -= 10.0;
 			fVictimOrigin[2] -= 10.0;
 
-			TE_SetupBeamPoints(fAttackerOrigin, fVictimOrigin, sprite_beam, sprite_halo, 0, 66, 0.2, 1.0, 20.0, 1, 0.0, colour_red, 5);
-			TE_SendToAll();
+			if (GetRandomInt(0, 100) > (100 - 10 * upgrade_level)) {
+				TE_SetupBeamPoints(fAttackerOrigin, fVictimOrigin, sprite_beam, sprite_halo, 0, 66, 0.2, 1.0, 20.0, 1, 0.0, colour_red, 5);
+				TE_SendToAll();
+			}
 
 			CPrintToChat(player_attacker.id, "Vampirism!  Set health to %d", new_health);
 		}

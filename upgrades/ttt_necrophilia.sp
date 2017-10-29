@@ -7,7 +7,15 @@
 // Define the maximum points allowed.
 #define max_points 2
 // Define the sound file location.
-#define bury_sound "sound/ttt_necrophilia_bury.mp3"
+#define bury_sound "ttt_clwo/ttt_necrophilia_bury.mp3"
+#define bury_location "sound/ttt_clwo/ttt_necrophilia_bury.mp3"
+
+public void OnPluginStart() {
+	// Prepare the sound file for use.
+	if (!IsSoundPrecached(bury_location)) {
+		PrecacheSound(bury_sound, true);
+	}
+}
 
 /**
 * A global forward from sourcemod, gets called after map load and all cvars initialised.
@@ -15,8 +23,10 @@
 public void OnConfigsExecuted()
 {
 	// Prepare the sound file for use.
-	PrecacheSound(bury_sound);
-	AddFileToDownloadsTable(bury_sound);
+	if (!IsSoundPrecached(bury_location)) {
+		PrecacheSound(bury_sound, true);
+	}
+	AddFileToDownloadsTable(bury_location);
 }
 
 /**
@@ -37,12 +47,12 @@ public Action Dissolve_Timer(Handle timer, DataPack Data) {
 		SetEntProp(ragdoll_ent, Prop_Data, "m_nSolidType", SOLID_VPHYSICS); 
 		SetEntProp(ragdoll_ent, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);  
 		// Begin the dissolve process for the ragdoll.
-		Effect_DissolveEntity(ragdoll_ent, DISSOLVE_ELECTRICAL,-1);
+		Effect_DissolveEntity(ragdoll_ent, DISSOLVE_ELECTRICAL, -1);
 		// Fetch the position of the ragdoll.
 		float position[3];
 		GetEntPropVector(ragdoll_ent, Prop_Send, "m_vecOrigin", position);
 		// Play a sound for the dissolving effect
-		EmitAmbientSound(bury_sound, position, ragdoll_ent, SNDLEVEL_CONVO);
+		EmitAmbientSound(bury_sound, position, ragdoll_ent, 200);
 	}
 
 	// Calculate the random armour amount.
@@ -51,7 +61,7 @@ public Action Dissolve_Timer(Handle timer, DataPack Data) {
 	random_armour = (15 < random_armour) ? random_armour : 15
 	client_player.armour += random_armour;
 
-	CPrintToChat(client_player.id, "Necrophilia!  Gained %d armour!", random_armour);
+	CPrintToChat(client_player.id, "{purple}[TTT] {yellow}You've gained {green}%d {yellow}armour from Necrophilia!", random_armour);
 }
 
 /**
@@ -66,16 +76,22 @@ public Action TTT_OnBodyChecked(int client, int[] iRagdollC)
 
 	Player client_player = Player(client);
 
-	if (client_player.armour < 100 && client_player.has_upgrade(upgrade_id) == max_points && !StrEqual(iRagdollC[Weaponused], "Necrophilia", false) && iRagdollC[Found]) {
-		// Set the Weaponused state, used to prevent duplicate uses.
-		Format(iRagdollC[Weaponused], MAX_NAME_LENGTH, "Necrophilia");
-		// Write data to the DataPack.
-		DataPack Data = CreateDataPack();
-		Data.WriteCell(client);
-		Data.WriteCell(iRagdollC[Ent]);
-		Data.Reset();
-		// Delay the time to harvest a body.
-		CreateTimer(2.0, Dissolve_Timer, Data);
+	if (client_player.armour < 100) {
+		if (client_player.has_upgrade(upgrade_id) == max_points) {
+			if (!StrEqual(iRagdollC[Weaponused], "Necrophilia", false)) {
+				//if (iRagdollC[Found]) {
+					// Set the Weaponused state, used to prevent duplicate uses.
+					Format(iRagdollC[Weaponused], MAX_NAME_LENGTH, "Necrophilia");
+					// Write data to the DataPack.
+					DataPack Data = CreateDataPack();
+					Data.WriteCell(client);
+					Data.WriteCell(iRagdollC[Ent]);
+					Data.Reset();
+					// Delay the time to harvest a body.
+					CreateTimer(2.0, Dissolve_Timer, Data);
+				//}
+			}
+		}
 	}
 
 	return Plugin_Continue;

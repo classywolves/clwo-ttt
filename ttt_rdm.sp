@@ -2,7 +2,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <colorvariables>
-#include <imod>
+#include <imod_mini>
 #include <ttt>
 #include <general>
 #include <cstrike>

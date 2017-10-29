@@ -42,6 +42,6 @@ public Action Hook_OnTakeDamage(int victim, int &attacker, int &inflictor, float
 	float old_damage = damage;
 	damage -= damage * reduce_percent;
 
-	CPrintToChat(player.id, "{purple}[TTT] {yellow}Feather falling reduced your damage from %.0f to %.0f.", old_damage, damage);
+	CPrintToChat(player.id, "{purple}[TTT] {yellow}Feather falling reduced your damage from {green}%.0f {yellow}to {green}%.0f{yellow}.", old_damage, damage);
 	return Plugin_Changed;
 }
