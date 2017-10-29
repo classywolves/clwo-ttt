@@ -103,14 +103,16 @@ public Action OnPlayerMessage(Event event, const char[] name, bool dontBroadcast
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
-	TestArmour();
+	//TestArmour();
 	Timers[1] = CreateTimer(210.0, BeaconAfterTime);
 	return Plugin_Continue;
 }
 
 public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
-	KillTimer(Timers[1]);
+	if (Timers[1] != INVALID_HANDLE) {
+		KillTimer(Timers[1]);
+	}
 	return Plugin_Continue;
 }
 

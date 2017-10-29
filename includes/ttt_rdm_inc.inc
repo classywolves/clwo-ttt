@@ -147,6 +147,9 @@ methodmap Player {
 	public void get_name(char output[255]) {
 		GetClientName(view_as<int>(this), output, sizeof(output));
 	}
+	public void execute(char command[255]) {
+		ClientCommand(view_as<int>(this), command);
+	}
 	public void get_auth(AuthIdType auth_id_type , char output[255]) {
 		GetClientAuthId(view_as<int>(this), auth_id_type, output, sizeof(output));
 	}
