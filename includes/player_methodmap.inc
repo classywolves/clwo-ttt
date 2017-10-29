@@ -355,7 +355,7 @@ methodmap Player {
 		public set(int experience) {
 			this.set_cookie_int(cookie_player_experience, experience);
 			check_level(this);
-			/*show_experience_bar(this);*/
+			show_experience_bar(this);
 		}
 	}
 

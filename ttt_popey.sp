@@ -2,7 +2,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <colorvariables>
-#include <imod>
+#include <imod_mini>
 #include <general>
 #include <cstrike>
 
@@ -64,6 +64,7 @@ public void RegisterCmds()
 	RegConsoleCmd("sm_ct", Command_Counter_Terrorist, "Move Player to CT");
 	RegConsoleCmd("sm_bantimes", Command_BanTimes, "List Common Time Lengths");
 	RegAdminCmd("sm_reloadttt", Command_Reload_TTT, ADMFLAG_ROOT,  "Reload the TTT Plugin");
+	RegAdminCmd("sm_aspectator", Command_Admin_Spectator, ADMFLAG_ROOT, "Move a player to spectator");
 }
 
 public void HookEvents()
@@ -317,3 +318,23 @@ public Action Command_Counter_Terrorist(int client, int args) {
 	ChangeClientTeam(client, CS_TEAM_CT);
 	return Plugin_Handled;
 }
+
+public Action Command_Admin_Spectator(int client, int args) {
+	if (args == 0) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid usage, /aspectator <player>")
+	} else if (args == 1) {
+		char target[128];
+
+		GetCmdArg(1, target, sizeof(target));
+		int target_index = FindTarget(client, target, true, false);
+
+		if (target_index == -1) {
+			CPrintToChat(client, "{purple}[TTT] {orchid}No targets were found.");
+			return Plugin_Handled;
+		}
+
+		ChangeClientTeam(target_index, CS_TEAM_SPECTATOR);
+	}
+
+	return Plugin_Handled;
+}z

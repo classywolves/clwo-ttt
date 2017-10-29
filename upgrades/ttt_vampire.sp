@@ -30,7 +30,7 @@ public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float
 
 		if(!player_attacker.valid_client) return;
 
-		float health_gain = damage * 0.075 * upgrade_level;
+		float health_gain = damage * 0.0375 * upgrade_level;
 
 		if (player_attacker.health != player_attacker.max_health) {
 			int new_health = RoundFloat(player_attacker.health + health_gain);
@@ -43,7 +43,7 @@ public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float
 			fAttackerOrigin[2] -= 10.0;
 			fVictimOrigin[2] -= 10.0;
 
-			if (GetRandomInt(0, 100) > (100 - 10 * upgrade_level)) {
+			if (GetRandomInt(0, 100) > (100 - 6 * upgrade_level)) {
 				TE_SetupBeamPoints(fAttackerOrigin, fVictimOrigin, sprite_beam, sprite_halo, 0, 66, 0.2, 1.0, 20.0, 1, 0.0, colour_red, 5);
 				TE_SendToAll();
 			}
