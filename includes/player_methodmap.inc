@@ -5,12 +5,23 @@
 
 #define that view_as<int>(this)
 
+/* User Type */
+#define USER_TYPE_COMMAND      0
+#define USER_TYPE_IS_STAFF     1
+#define USER_TYPE_BROADCAST    2
+#define USER_TYPE_GROUPNAME    3
+#define USER_TYPE_FULLNAME     4
+#define USER_TYPE_SCORENAME    5
+#define USER_TYPE_CHATNAME     6
+#define USER_TYPE_MULTI_TARGET 7
+
 #include <sourcemod> 			// Default Sourcemod Includes
 #include <sdktools>				// ┫
 #include <clientprefs>			// ┛
 #include <general>				// General Definitions
 #include <ttt>					// Interact with TTT
 #include <smlib>				// Larger Standard Library
+#include <imod>
 
 Handle cookie_player_volume;
 Handle cookie_player_experience;
@@ -291,6 +302,14 @@ methodmap Player {
 		}
 
 		return response;
+	}
+
+	public bool has_informer_block() {
+		char name[200];
+		iMod_GetUserTypeString(iMod_GetUserType(that), USER_TYPE_FULLNAME, name, sizeof(name));
+		if (!StrEqual(name, "Informer")) return false;
+		if (!Count_Staff(false)) return false;
+		return true;
 	}
 
 	public int target_one(char target[128]) {

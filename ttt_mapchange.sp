@@ -34,6 +34,11 @@ public bool Is_Overloaded() {
 }
 
 public Action command_force_rtv(int client, int args) {
+	if (Player(client).has_informer_block()) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}Not enough permissions.")
+		return Plugin_Handled;
+	}
+
 	if (!Is_Overloaded()) {
 		CPrintToChat(client, "{purple}[TTT] {orchid}This map is not overloaded, you are not permitted to force an RTV.");
 		return Plugin_Handled;

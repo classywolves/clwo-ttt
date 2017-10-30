@@ -62,6 +62,8 @@ public void RegisterCmds()
 	RegConsoleCmd("sm_afk", Command_Spectator, "Move Player to Spec");
 	RegConsoleCmd("sm_terrorist", Command_Terrorist, "Move Player to T");
 	RegConsoleCmd("sm_ct", Command_Counter_Terrorist, "Move Player to CT");
+	RegConsoleCmd("sm_ws", Command_Banned);
+	RegConsoleCmd("sm_knife", Command_Banned);
 	RegConsoleCmd("sm_bantimes", Command_BanTimes, "List Common Time Lengths");
 	RegAdminCmd("sm_reloadttt", Command_Reload_TTT, ADMFLAG_ROOT,  "Reload the TTT Plugin");
 	RegAdminCmd("sm_aspectator", Command_Admin_Spectator, ADMFLAG_ROOT, "Move a player to spectator");
@@ -337,4 +339,9 @@ public Action Command_Admin_Spectator(int client, int args) {
 	}
 
 	return Plugin_Handled;
-}z
+}
+
+public Action Command_Banned(int client, int args) {
+	CPrintToChat(client, "{purple}[TTT] {orchid}This command is not available on this server due to it being banned by Valve's ToS.")
+	return Plugin_Handled;
+}

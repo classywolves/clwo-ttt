@@ -177,6 +177,11 @@ public Action command_toggle_beacon(int client, int args) {
 }
 
 public Action command_teleport(int client, int args) {
+	if (Player(client).has_informer_block()) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}Not enough permissions.")
+		return Plugin_Handled;
+	}
+
 	if (args != 2) {
 		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /teleport <player> <target_player>");
 		return Plugin_Handled;
@@ -230,6 +235,11 @@ public Action command_volume(int client, int args) {
 }
 
 public Action command_toggle_third_person(int client, int args) {
+	if (Player(client).has_informer_block()) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}Not enough permissions.")
+		return Plugin_Handled;
+	}
+
 	if (args == 0) {
 		Player(client).toggle_third_person();
 	} else if (args == 1) {

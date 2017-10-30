@@ -14,7 +14,7 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_setlevel", command_level, ADMFLAG_ROOT);
 	RegAdminCmd("sm_update_info", command_update_info, ADMFLAG_ROOT);
 	RegAdminCmd("sm_display_upgrades", command_display_upgrades, ADMFLAG_GENERIC);
-	RegAdminCmd("sm_session", command_get_session, ADMFLAG_ROOT);
+	RegConsoleCmd("sm_session", command_get_session);
 	RegConsoleCmd("sm_skills", command_skills, "Opens the skill menu");
 	RegConsoleCmd("sm_skill", command_skills, "Opens the skill menu");
 	RegConsoleCmd("sm_populate", command_populate, "Populates upgrades");

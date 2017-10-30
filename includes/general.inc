@@ -5,6 +5,7 @@
 
 #include <colorvariables>
 #include <imod_mini>
+#include <informer_check>
 
 /* User Type */
 #define USER_TYPE_COMMAND      0
@@ -83,18 +84,22 @@ stock void CPrintToStaff(char[] message) {
 	for (int client = 1; client <= MaxClients; client++) {
 		if(IsValidClient(client)) {
 			if(iMod_IsStaff(client)) {
-				CPrintToChat(client, message);
+				if (!should_informer_block(client)) {
+					CPrintToChat(client, message);
+				}
 			}
 		}
 	}
 }
 
-stock int Count_Staff() {
+stock int Count_Staff(bool include_informers = true) {
 	int counted_mods = 0;
 	for (int player = 1; player <= MaxClients; player++) {
 		if(IsValidClient(player)) {
 			if(iMod_IsStaff(player)) {
-				counted_mods++;
+				char name[256];
+				iMod_GetUserTypeString(iMod_GetUserType(player), USER_TYPE_FULLNAME, name, sizeof(name));
+				if (include_informers || !StrEqual(name, "Informer")) counted_mods++;
 			}
 		}
 	}
