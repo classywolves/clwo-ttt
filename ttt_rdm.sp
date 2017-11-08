@@ -277,20 +277,11 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	
 	char victim_name[64], attacker_name[64];
 	char victim_auth[32], attacker_auth[32];
-	GetClientName(victim, victim_name, sizeof(victim_name));
-	GetClientName(attacker, attacker_name, sizeof(attacker_name));
-	GetClientAuthId(victim, AuthId_Steam2, victim_auth, sizeof(victim_auth));
-	GetClientAuthId(attacker, AuthId_Steam2, attacker_auth, sizeof(attacker_auth));
-	
 	// Determine whether RDM
 	int victim_role = TTT_GetClientRole(victim);
 	int attacker_role = TTT_GetClientRole(attacker);
-
-	PrintToServer("%i attacked %i (traitor is %i)", victim_role, attacker_role, TRAITOR);
-	if (victim_role == TRAITOR && attacker_role == TRAITOR) {
-		PrintToServer("We blocked the damage.");
-		return Plugin_Handled;
-	}
+	
+	
 
 	// Prepare a SQL statement for the insertion
 	char error[255];
@@ -303,6 +294,28 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	insert_damage = global_statement_insert_damage;
 	if (insert_damage == null) { PrintToServer("Error templating damage in the database"); PrintToServer(error); return Plugin_Continue; }
 	
+	if (!attacker)
+	{
+		attacker_name = "Console";
+		attacker_auth = "STEAM:1:0:0"
+		attacker_role = 0
+	}
+	else
+	{
+		
+
+		PrintToServer("%i attacked %i (traitor is %i)", victim_role, attacker_role, TRAITOR);
+		if (victim_role == TRAITOR && attacker_role == TRAITOR) {
+			PrintToServer("We blocked the damage.");
+			return Plugin_Handled;
+		}
+
+		GetClientName(victim, victim_name, sizeof(victim_name));
+		GetClientName(attacker, attacker_name, sizeof(attacker_name));
+		GetClientAuthId(victim, AuthId_Steam2, victim_auth, sizeof(victim_auth));
+		GetClientAuthId(attacker, AuthId_Steam2, attacker_auth, sizeof(attacker_auth));
+	}
+
 	SQL_BindParamInt(insert_damage, 0, max_round, false);
 	SQL_BindParamString(insert_damage, 1, victim_name, false);
 	SQL_BindParamString(insert_damage, 2, victim_auth, false);
@@ -343,7 +356,7 @@ public Action Timer_60(Handle timer) {
 		if (short_ids[i] == 0) {
 			continue;
 		}
-		if (handled_by[i] == 0) {
+		if (handled_by[i] == 0 && (GetClientOfUserId(case_accuser[i]) && GetClientOfUserId(case_accused[i])) {
 			char message[255];
 			Format(message, sizeof(message), "{purple}[RDM] {red}No-one has handled case %d yet.", i);
 			CPrintToStaff(message);
@@ -559,13 +572,16 @@ public Action Command_Handle(int client, int args) {
 		bool run = false;
 		for (int i = 0; i < 500; i++) {
 			if (short_ids[i]) {
-				if (handled_by[i] == 0) {
+				if (handled_by[i] == 0 ) {
 					run = true;
 					char message[255];
 					Format(message, sizeof(message), "%d", i);
 					char index[64];
 					Format(index, sizeof(index), "%d", i);
-					menu.AddItem(index, message);
+					if (!GetClientOfUserId(case_accuser[i]) || !GetClientOfUserId(case_accused[i]))
+						menu.AddItem(index, message, ITEMDRAW_DISABLED);
+					else
+						menu.AddItem(index, message);
 				}
 			}
 		}
