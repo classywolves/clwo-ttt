@@ -19,6 +19,7 @@ public void OnPluginStart() {
 	RegAdminCmd("sm_teleport", command_teleport, ADMFLAG_GENERIC);
 	//RegAdminCmd("sm_volume", command_volume, ADMFLAG_GENERIC);
 	RegConsoleCmd("sm_profile", command_profile);
+	RegConsoleCmd("sm_list", command_list);
 	RegAdminCmd("sm_tp", command_toggle_third_person, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_reload", command_reload_plugin, ADMFLAG_CHEATS);
 
@@ -299,6 +300,36 @@ public Action command_profile(int client, int args) {
 	}
 	
 	return Plugin_Handled;
+}
+
+public Action command_list(int client, int args) {
+	int player_array[MAXPLAYERS + 1][5];
+	LoopValidClients(i) {
+		Player player = Player(i)
+		int actions[2];
+		player.get_actions(actions);
+		player_array[i][0] = player.karma
+		player_array[i][1] = player.level
+		//player_array[i][2] = actions[0]
+		//player_array[i][3] = actions[1]
+		player_array[i][4] = i
+	}
+
+	SortCustom2D(player_array, MAXPLAYERS + 1, SortPlayerItems);
+
+	for (int i = 0; i < MAXPLAYERS + 1; i++) {
+		if (player_array[i][0] != 0) {
+			PrintToConsole(client, "%d %d %d %d %N", player_array[i][0], player_array[i][1], player_array[i][2], player_array[i][3], player_array[i][4])
+		}
+	}
+	
+	return Plugin_Handled;
+}
+
+public SortPlayerItems(int[] a, int[] b, const int[][] array, Handle hndl) {
+	if (b[0] == a[0]) return 0;
+	if (b[0] > a[0]) return 1;
+	return -1;
 }
 
 public Action command_open_url(int client, int args) {

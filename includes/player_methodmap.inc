@@ -38,6 +38,8 @@ bool website_payload[MAXPLAYERS + 1];
 Database database_ttt;
 Database database_player_analytics;
 
+char chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
+
 native int get_upgrade_points(int client_id, int upgrade_id);
 native set_upgrade_points(int client_id, int upgrade_id, int points);
 
@@ -200,7 +202,6 @@ methodmap Player {
 
 	property int level_up_experience {
 		public get() {
-			PrintToServer("Level: %d", this.level);
 			//return this.level * 1000;
 			return RoundToFloor(this.level + 600 * Pow(2.0, (float(this.level) / 4.0)));
 		}
@@ -348,11 +349,11 @@ methodmap Player {
 			SQL_FetchString(statement, 2, hash, sizeof(hash));
 		} else {
 			// A row was not found.  Generate the session and insert it into the DB.
-			int session_number = GetRandomInt(10000, 1000000000)
-			IntToString(session_number, string, sizeof(string))
+			char session_string[62]
+			generate_session(session_string)
 			DBStatement insert_statement = PrepareStatement(database_ttt, "INSERT INTO sessions (steam_id, session_id, skill_hash, skill_points) VALUES (?, ?, \"\", ?);");
 			SQL_BindParamString(insert_statement, 0, auth, false);
-			SQL_BindParamString(insert_statement, 1, string, false);
+			SQL_BindParamString(insert_statement, 1, session_string, false);
 			SQL_BindParamInt(insert_statement, 2, this.skill_points, false);
 			if (!SQL_Execute(insert_statement)) { PrintToServer("SQL Execute Failed..."); return; }
 		}
@@ -412,7 +413,7 @@ methodmap Player {
 }
 
 public void check_level(Player player) {
-	PrintToServer("Check level called on %N: %d > %d", player.id, player.experience, player.level_up_experience)
+	//PrintToServer("Check level called on %N: %d > %d", player.id, player.experience, player.level_up_experience)
 	if (player.experience > player.level_up_experience) {
 		player.experience -= player.level_up_experience;
 		int new_level = player.level + 1;
@@ -441,6 +442,13 @@ public void show_experience_bar(Player player)
 	SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 0, 0.0, 0.0, 0.0);
 	ShowSyncHudText(player.id, hHudText, unicode_bar);
 	CloseHandle(hHudText);
+}
+
+public void generate_session(char session[62]) {
+	for (int i = 0; i < 61; i++) {
+		int random_int = GetRandomInt(0, 61);
+		StrCat(session, sizeof(session), chars[random_int])
+	}
 }
 
 public void get_experience_bar(Player player, char unicode_bar[80]) {

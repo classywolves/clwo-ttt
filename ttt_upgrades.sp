@@ -36,8 +36,9 @@ public void OnPluginStart() {
 public void OnClientPutInServer(int client) {
 	Player player = Player(client);
 	char string[63], hash[127];
-	player.session_and_hash(string, hash)
+	player.session_and_hash(string, hash);
 	player.populate();
+	CreateTimer(1800.0, GiveExperience, GetClientSerial(client), TIMER_REPEAT);
 }
 
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max)
@@ -269,4 +270,31 @@ public Action command_skills(int client, int args) {
 public Action command_reset_skills(int client, int args) {
 	Player(client).reset_skills();
 	return Plugin_Handled;
+}
+
+public Action GiveExperience(Handle timer, any serial)
+{
+	int client = GetClientFromSerial(serial); // Validate the client serial
+ 
+	if (client == 0) // The serial is no longer valid, the player must have disconnected
+	{
+		return Plugin_Stop;
+	}
+
+	int experience = 25;
+	int team = GetClientTeam(client);
+
+	if (team == CS_TEAM_T || team == CS_TEAM_CT) {
+		experience = 50;
+	}
+ 	
+
+	CPrintToChat(client, "{purple}[TTT] {yellow}Thanks for playing, you've gained %d experience!", experience);
+
+	Player player = Player(client);
+	player.experience += experience;
+
+	PrintToConsole(client, "Welcome to the server!");
+
+	return Plugin_Continue;
 }

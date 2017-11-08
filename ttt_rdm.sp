@@ -139,7 +139,7 @@ public HookEvents() {
 	HookEvent("player_death", OnPlayerDeath);
 	HookEvent("player_disconnect", OnPlayerDisconnect);
 	HookEvent("weapon_fire", OnWeaponFire);
-	HookEvent("player_hurt", OnPlayerHurt);
+	HookEvent("player_hurt", OnPlayerHurt, EventHookMode_Pre);
 	HookEvent("player_spawned", OnPlayerSpawned);
 }
 
@@ -187,8 +187,8 @@ public Action OnPlayerDisconnect(Event event, const char[] name, bool dontBroadc
 	if (last_handled[client] > 0)
 	{
 		last_handled[client] = -1;
-	}
-
+	
+}
 	slay_count[client] = 0;	
 	
 	return Plugin_Continue;
@@ -285,6 +285,12 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	// Determine whether RDM
 	int victim_role = TTT_GetClientRole(victim);
 	int attacker_role = TTT_GetClientRole(attacker);
+
+	PrintToServer("%i attacked %i (traitor is %i)", victim_role, attacker_role, TRAITOR);
+	if (victim_role == TRAITOR && attacker_role == TRAITOR) {
+		PrintToServer("We blocked the damage.");
+		return Plugin_Handled;
+	}
 
 	// Prepare a SQL statement for the insertion
 	char error[255];
