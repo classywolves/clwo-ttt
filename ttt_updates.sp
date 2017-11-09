@@ -31,8 +31,8 @@ public void UpdateStandingCallback(Database db, DBResultSet results, const char[
 
 	} else {
 		// EXISTING USER
-		if (SQL_FetchRow(query)) {
-			int current_player_update = SQL_FetchInt(query, 0)
+		if (SQL_FetchRow(results)) {
+			int current_player_update = SQL_FetchInt(results, 0)
 			PrintToConsole(client, "Heyo, got %d", current_player_update)
 
 			if (current_update != current_player_update) {

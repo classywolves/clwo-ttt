@@ -216,14 +216,14 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	
 	// Determine whether RDM
 	int victim_role = TTT_GetClientRole(victim);
-	int attacker_role = TTT_GetClientRole(attacker);
+	int attacker_role = attacker == 0 ? TTT_GetClientRole(attacker) : INNOCENT;
 	
 	// Determine karma
 	int victim_karma = TTT_GetClientKarma(victim);
-	int attacker_karma = TTT_GetClientKarma(attacker);
+	int attacker_karma = attacker == 0 ? TTT_GetClientKarma(attacker) : 0;
 
 	// Determine is the kill was a bad action or not
-	int bad_action = BadAction(victim_role, attacker_role);
+	int bad_action = attacker == 0 ? BadAction(victim_role, attacker_role) : 0;
 
 	if (bad_action == 1 && victim != attacker) {
 		Handle hHudText = CreateHudSynchronizer();
