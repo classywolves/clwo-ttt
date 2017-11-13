@@ -2,6 +2,10 @@
 #include <ttt_helpers>
 #include <player_methodmap>
 
+public OnPluginStart() {
+	database_ttt = ConnectDatabase("ttt", "ttt");
+}
+
 public void TTT_OnRoundStart(int innocents, int traitors, int detective) {
 	if (innocents + traitors > 12) {
 		int to_swap = innocents + traitors - 12
@@ -13,6 +17,7 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective) {
 			if (player.team == CS_TEAM_T) {
 				innocent_clients[index][0] = player.karma;
 				innocent_clients[index][1] = client;
+				PrintToServer("%d %d", innocent_clients[index][0], innocent_clients[index][1])
 				index++;
 			}
 		}
@@ -21,6 +26,7 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective) {
 
 		for (int i = 0; i < to_swap; i++) {
 				Player player = Player(innocent_clients[to_swap][1]);
+				ChangeClientTeam(client, CS_TEAM_CT)
 				player.team = CS_TEAM_CT;
 		}
 	}

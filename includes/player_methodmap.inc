@@ -26,6 +26,7 @@
 Handle cookie_player_volume;
 Handle cookie_player_experience;
 Handle cookie_player_level;
+Handle cookie_player_slaynr;
 
 int sprite_beam = -1;
 int sprite_halo = -1;
@@ -161,6 +162,11 @@ methodmap Player {
 	property int level {
 		public get() { return this.get_cookie_int(cookie_player_level, 1); }
 		public set(int level) { this.set_cookie_int(cookie_player_level, level); }
+	}
+
+	property int slaynr {
+		public get() { return this.get_cookie_int(cookie_player_slaynr, 1); }
+		public set(int slaynr) { this.set_cookie_int(cookie_player_slaynr, slaynr); }
 	}
 
 	property int skill_points {
@@ -341,7 +347,7 @@ methodmap Player {
 		this.get_auth(AuthId_SteamID64, auth);
 		DBStatement statement = PrepareStatement(database_ttt, "SELECT * FROM sessions WHERE steam_id=?");
 		SQL_BindParamString(statement, 0, auth, false);
-		if (!SQL_Execute(statement)) { PrintToServer("SQL Execute Failed..."); return; }
+		if (!SQL_Execute(statement)) { PrintToServer("Session Search SQL Execute Failed..."); return; }
 
 		if (SQL_FetchRow(statement)) {
 			// A row was found!  Return the session.
@@ -349,13 +355,13 @@ methodmap Player {
 			SQL_FetchString(statement, 2, hash, sizeof(hash));
 		} else {
 			// A row was not found.  Generate the session and insert it into the DB.
-			char session_string[62]
-			generate_session(session_string)
+			char session_string[62];
+			generate_session(session_string);
 			DBStatement insert_statement = PrepareStatement(database_ttt, "INSERT INTO sessions (steam_id, session_id, skill_hash, skill_points) VALUES (?, ?, \"\", ?);");
 			SQL_BindParamString(insert_statement, 0, auth, false);
 			SQL_BindParamString(insert_statement, 1, session_string, false);
 			SQL_BindParamInt(insert_statement, 2, this.skill_points, false);
-			if (!SQL_Execute(insert_statement)) { PrintToServer("SQL Execute Failed..."); return; }
+			if (!SQL_Execute(insert_statement)) { PrintToServer("Session Set SQL Execute Failed..."); return; }
 		}
 
 		return;
@@ -437,17 +443,19 @@ public void check_level(Player player) {
 public void show_experience_bar(Player player)
 {
 	char unicode_bar[80];
+	char introduction[100] = "Exp: ";
 	get_experience_bar(player, unicode_bar);
+	StrCat(introduction, sizeof(introduction), unicode_bar);
 	Handle hHudText = CreateHudSynchronizer();
 	SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 0, 0.0, 0.0, 0.0);
-	ShowSyncHudText(player.id, hHudText, unicode_bar);
+	ShowSyncHudText(player.id, hHudText, introduction);
 	CloseHandle(hHudText);
 }
 
-public void generate_session(char session[62]) {
-	for (int i = 0; i < 61; i++) {
+public void generate_session(char session_string[62]) {
+	for (int i = 0; i < 60; i++) {
 		int random_int = GetRandomInt(0, 61);
-		StrCat(session, sizeof(session), chars[random_int])
+		Format(session_string, sizeof(session_string), "%s%c", session_string, chars[random_int])
 	}
 }
 

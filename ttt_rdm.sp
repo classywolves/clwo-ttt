@@ -6,6 +6,7 @@
 #include <ttt>
 #include <general>
 #include <cstrike>
+#include <player_methodmap>
 
 DBStatement global_statement_insert_death;
 DBStatement global_statement_insert_damage;
@@ -216,14 +217,14 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	
 	// Determine whether RDM
 	int victim_role = TTT_GetClientRole(victim);
-	int attacker_role = attacker == 0 ? TTT_GetClientRole(attacker) : INNOCENT;
+	int attacker_role = attacker == 0 ? INNOCENT : TTT_GetClientRole(attacker);
 	
 	// Determine karma
 	int victim_karma = TTT_GetClientKarma(victim);
-	int attacker_karma = attacker == 0 ? TTT_GetClientKarma(attacker) : 0;
+	int attacker_karma = attacker == 0 ? 0 : TTT_GetClientKarma(attacker);
 
 	// Determine is the kill was a bad action or not
-	int bad_action = attacker == 0 ? BadAction(victim_role, attacker_role) : 0;
+	int bad_action = attacker == 0 ? 0 : BadAction(victim_role, attacker_role);
 
 	if (bad_action == 1 && victim != attacker) {
 		Handle hHudText = CreateHudSynchronizer();
@@ -302,8 +303,6 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	}
 	else
 	{
-		
-
 		PrintToServer("%i attacked %i (traitor is %i)", victim_role, attacker_role, TRAITOR);
 		if (victim_role == TRAITOR && attacker_role == TRAITOR) {
 			PrintToServer("We blocked the damage.");
@@ -356,7 +355,10 @@ public Action Timer_60(Handle timer) {
 		if (short_ids[i] == 0) {
 			continue;
 		}
-		if (handled_by[i] == 0 && (GetClientOfUserId(case_accuser[i]) && GetClientOfUserId(case_accused[i])) {
+		if (
+			handled_by[i] == 0 && 
+			(GetClientOfUserId(case_accuser[i]) && GetClientOfUserId(case_accused[i]))
+		) {
 			char message[255];
 			Format(message, sizeof(message), "{purple}[RDM] {red}No-one has handled case %d yet.", i);
 			CPrintToStaff(message);
@@ -369,6 +371,7 @@ public Action Command_aRDM(int client, int args) {
 }
 
 public Action Command_RDM(int client, int args) {
+	PrintToServer("%N just used Command_RDM", client);
 	bool admin = false;
 	if (args == 1) {
 		char target_string[32];
@@ -449,6 +452,7 @@ public Action Command_RDM(int client, int args) {
 
 public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 {
+	PrintToServer("%N just used RDM_Menu_Callback", client);
 	if (action == MenuAction_Select) {
 		char info[32];
 		char message_slain[32];
@@ -471,6 +475,7 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 
 public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 {
+	PrintToServer("%N just used RDM_SlayMenu_Callback", client);
 	if (action == MenuAction_Select) {
 		char to_explode[32];
 		menu.GetItem(item, to_explode, sizeof(to_explode));
@@ -536,6 +541,7 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 }
 
 public Action Command_Info(int client, int args) {
+	PrintToServer("%N just used Command_Info", client);
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}At this moment in time, this function expects a case number.  Future versions may change this.");
 		return Plugin_Handled;
@@ -560,12 +566,14 @@ public Action Command_Info(int client, int args) {
 
 public Handle_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 {
+	PrintToServer("%N just used Handle_Menu_Callback", client);
 	if (action == MenuAction_Select) {
 		
 	}
 }
 
 public Action Command_Handle(int client, int args) {
+	PrintToServer("%N just used Command_Handle", client);
 	if (args == 0) {
 		Menu menu = new Menu(Handle_Menu_Callback);
 		menu.SetTitle("Unhandled Cases");
@@ -607,6 +615,7 @@ public Action Command_Handle(int client, int args) {
 }
 
 public Action Command_HandleNext(int client, int args) {
+	PrintToServer("%N just used Command_HandleNext", client);
 	if (args == 0) {
 		bool run = true;
 		int first_unhandled = 0;
@@ -635,6 +644,7 @@ public Action Command_HandleNext(int client, int args) {
 
 public HandleCase(int client, int case_id)
 {
+	PrintToServer("%N just used HandleCase", client);
 	
 	if (short_ids[case_id] == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}The given case_id is either invalid or not distributed yet.");
@@ -725,6 +735,7 @@ L 09/05/2017 - 04:59:24: --------------------------------------
 */
 
 public Action Command_Verdict(int client, int args) {
+	PrintToServer("%N just used Command_Verdict", client);
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Expected an argument, but got none.)");
 		return Plugin_Handled;
@@ -842,6 +853,7 @@ public Action Command_Verdict(int client, int args) {
 }
 
 public Action Command_Damage(int client, int args) {
+	PrintToServer("%N just used Command_Damage", client);
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}At this moment in time, this function expects a case number.  Future versions may change this.");
 		return Plugin_Handled;
@@ -924,6 +936,7 @@ public Action Command_Damage(int client, int args) {
 }
 
 public Display_Information(int client, int death_index) {
+	PrintToServer("%N just used Display_Information", client);
 	char error[255];
 	if (global_statement_rdm_instance == INVALID_HANDLE)
 		global_statement_rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error));
@@ -1023,6 +1036,7 @@ public Display_Information(int client, int death_index) {
 }
 
 public Action Command_SlayNR(int client, int args) {
+	PrintToServer("%N just used Command_SlayNR", client);
 	// Ensure target provided
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Invalid usage, expects /slaynr <player>.");
@@ -1060,6 +1074,7 @@ public Action Command_SlayNR(int client, int args) {
 }
 
 public Action Command_UnSlayNR(int client, int args) {
+	PrintToServer("%N just used Command_UnSlayNR", client);
 	// Ensure target provided
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Invalid usage, expects /unslaynr <player>.");
@@ -1105,12 +1120,37 @@ public void TTT_OnClientGetRole(int client, int role)
 			}
 			CPrintToStaff(message);
 			CPrintToChat(client, "{purple}[Slay] {orchid}You were slain by %s.  Please read /rules.", slay_admins[client]);
+
+			char title[100], slayed_by[100];
+			Format(title, 64, "TTT Slayer");
+			Format(slayed_by, 64, "Slain By: %s", slay_admins[client])
+			
+			ReplaceString(message, 192, "\\n", "\n");
+			
+			Panel mSayPanel = new Panel();
+			mSayPanel.SetTitle(title);
+			mSayPanel.DrawItem("", ITEMDRAW_SPACER);
+			mSayPanel.DrawText(slayed_by);
+			mSayPanel.DrawText("Please consider reading !rules / !new");
+			mSayPanel.DrawItem("", ITEMDRAW_SPACER);
+
+			if(IsClientInGame(client) && !IsFakeClient(client)) {
+				mSayPanel.Send(client, Handler_DoNothing, 20);
+			}
+
+			delete mSayPanel;
+
 			ForcePlayerSuicide(client);
 			TTT_SetFoundStatus(client, true);
 		}
 		to_slay[client] = 0;
 		slay_admins[client] = "";
 	}
+}
+
+public int Handler_DoNothing(Menu menu, MenuAction action, int param1, int param2)
+{
+	/* Do nothing */
 }
 
 stock Format_Time(int time, int[] time_array) {

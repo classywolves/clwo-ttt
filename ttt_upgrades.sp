@@ -24,7 +24,7 @@ public void OnPluginStart() {
 	cookie_player_level = RegClientCookie("player_level", "Current player level.", CookieAccess_Private);
 
 	database_ttt = ConnectDatabase("ttt", "ttt");
-	database_player_analytics = ConnectDatabase("player_analytics", "P_A");
+	//database_player_analytics = ConnectDatabase("player_analytics", "P_A");
 
 	AddFileToDownloadsTable("sound/ttt_clwo/ttt_levelup.mp3");
 

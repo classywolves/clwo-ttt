@@ -28,7 +28,7 @@ public void UpdateStandingCallback(Database db, DBResultSet results, const char[
 		LogError("Query failed! %s", error);
 	} else if (results.RowCount == 0) {
 		// NEW USER
-
+		createUser(client)
 	} else {
 		// EXISTING USER
 		if (SQL_FetchRow(results)) {
@@ -36,14 +36,22 @@ public void UpdateStandingCallback(Database db, DBResultSet results, const char[
 			PrintToConsole(client, "Heyo, got %d", current_player_update)
 
 			if (current_update != current_player_update) {
-				if (!SQL_FastQuery(hDatabase, "UPDATE stats SET players = players + 1")) {
-					char error[255];
-					SQL_GetError(hDatabase, error, sizeof(error));
-					PrintToServer("Failed to query (error: %s)", error);
+				char query[255];
+				Format(query, sizeof(query), "UPDATE updates SET update = %d", current_update)
+				if (!SQL_FastQuery(hDatabase, query)) {
+					char error_update[255];
+					SQL_GetError(hDatabase, error_update, sizeof(error_update));
+					PrintToServer("Failed to query (error_update: %s)", error_update);
 				}
 			}
+		} else {
+			createUser(client)
 		}
 	}
+}
+
+public void createUser(int client) {
+
 }
  
 public void DBCallback(Database db, const char[] error, any data)

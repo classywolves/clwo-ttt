@@ -61,6 +61,8 @@ public Action Dissolve_Timer(Handle timer, DataPack Data) {
 	random_armour = (15 < random_armour) ? random_armour : 15
 	client_player.armour += random_armour;
 
+	if (client_player.armour > 100) client_player.armour = 100;
+
 	CPrintToChat(client_player.id, "{purple}[TTT] {yellow}You've gained {green}%d {yellow}armour from Necrophilia!", random_armour);
 }
 

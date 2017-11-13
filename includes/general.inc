@@ -40,6 +40,7 @@ stock int BadAction(int victim_role, int attacker_role) {
 	if (victim_role == DETECTIVE && attacker_role == TRAITOR) { bad_action = 0; }
 	if (victim_role == TRAITOR && attacker_role == INNOCENT) { bad_action = 0; }
 	if (victim_role == TRAITOR && attacker_role == DETECTIVE) { bad_action = 0; }
+	PrintToServer("victim: %d, attacker: %d, bad_action: %d", victim_role, attacker_role, bad_action);
 	return bad_action
 }
 
@@ -155,7 +156,7 @@ stock int Get_Playtime(Database database, int[] playtime, char[] steamid) {
 stock PrintPopey(const String:sMessage[], any:...)
 {
 	bool run = false;
-	int iClient = 1;
+	int iClient = -1;
 	for (iClient = 1; iClient <= MaxClients; iClient++) {
 		char auth[32];
 		GetClientAuthId(iClient, AuthId_Steam2, auth, sizeof(auth), true);
