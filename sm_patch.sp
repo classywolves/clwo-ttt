@@ -17,10 +17,6 @@
 #define USER_TYPE_CHATNAME     6
 #define USER_TYPE_MULTI_TARGET 7
 
-#define INNOCENT 1
-#define TRAITOR 2
-#define DETECTIVE 3
-
 /* Plugin Info */
 #define PLUGIN_NAME 			"SMPatch"
 #define PLUGIN_VERSION_M 		"0.0.2"

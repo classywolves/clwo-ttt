@@ -41,6 +41,7 @@ Database database_player_analytics;
 
 char chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
 
+native int GetActions(int client, int actions[2]);
 native int get_upgrade_points(int client_id, int upgrade_id);
 native set_upgrade_points(int client_id, int upgrade_id, int points);
 
@@ -330,16 +331,17 @@ methodmap Player {
 	}
 
 	public void get_actions(int actions[2]) {
-		char auth[255];
-		this.get_auth(AuthId_Steam2, auth);
+		GetActions(that, actions);
+		//char auth[255];
+		//this.get_auth(AuthId_Steam2, auth);
 
-		DBStatement player_actions = PrepareStatement(database_ttt, "SELECT bad_action,COUNT(*) AS count FROM `deaths` WHERE `killer_id`=? GROUP BY bad_action ORDER BY bad_action;");
-		SQL_BindParamString(player_actions, 0, auth, false);
-		if (!SQL_Execute(player_actions)) { PrintToServer("User Action Grab Failed."); return; }
+		//DBStatement player_actions = PrepareStatement(database_ttt, "SELECT bad_action,COUNT(*) AS count FROM `deaths` WHERE `killer_id`=? GROUP BY bad_action ORDER BY bad_action;");
+		//SQL_BindParamString(player_actions, 0, auth, false);
+		//if (!SQL_Execute(player_actions)) { PrintToServer("User Action Grab Failed."); return; }
 
-		while (SQL_FetchRow(player_actions)) {
-			actions[SQL_FetchInt(player_actions, 0)] = SQL_FetchInt(player_actions, 1);
-		}
+		//while (SQL_FetchRow(player_actions)) {
+		//	actions[SQL_FetchInt(player_actions, 0)] = SQL_FetchInt(player_actions, 1);
+		//}
 	}
 
 	public void session_and_hash(char string[63], char hash[127]) {

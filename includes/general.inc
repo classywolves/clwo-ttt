@@ -177,7 +177,7 @@ stock PrintPopey(const String:sMessage[], any:...)
 
 		decl String:sBuffer[_CV_MAX_MESSAGE_LENGTH];
 		SetGlobalTransTarget(iClient);
-		VFormat(sBuffer, sizeof(sBuffer), sMessage, 3);
+		VFormat(sBuffer, sizeof(sBuffer), sMessage, 2);
 		SendPlayerMessage(iClient, sBuffer);
 	}
 }
