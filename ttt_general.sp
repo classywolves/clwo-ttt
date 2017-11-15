@@ -5,13 +5,14 @@
 
 Handle timer_end_beacons;
 
-char urls[6][3][512] = {
+char urls[7][3][512] = {
 	{ "sm_rules", "https://clwo.eu/thread-1614-post-15525.html#pid15525", "Opens the rules page" },
 	{ "sm_clwo", "https://clwo.eu", "Opens the CLWO page" },
 	{ "sm_group", "https://steamcommunity.com/groups/ClassyWolves", "Opens the Steam group page" },
 	{ "sm_new", "https://clwo.eu/thread-2123-post-21215.html#pid21215", "Opens the new player page" },
 	{ "sm_google", "https://google.com", "Opens the Google search page" },
 	{ "sm_gametracker", "https://www.gametracker.com/server_info/ttt.clwo.eu:27015", "Opens the TTT Gametracker page" },
+	{ "sm_welcome" , "https://ttt.clwo.eu/fastdl/welcome.html", "Opens the welcome page for TTT" }
 }
 
 public void OnPluginStart() {
