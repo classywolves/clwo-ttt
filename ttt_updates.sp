@@ -68,7 +68,7 @@ public void createUser(int client) {
 		PrintToServer("Failed to insert current_update for %N (error_update: %s)", client, error_update);
 	}
 	// SHOW NEW USER SCREEN
-	
+	CreateTimer(30.0, displayNew, GetClientSerial(client));
 }
  
 public void DBCallback(Database db, const char[] error, any data)
@@ -77,4 +77,18 @@ public void DBCallback(Database db, const char[] error, any data)
 	else {
 		hDatabase = db;
 	}
+}
+
+public Action displayNew(Handle timer, any serial) {
+	int client = GetClientFromSerial(serial);
+	if (!client) return Plugin_Stop;
+
+	Player player = Player(client);
+	if (player.valid_client) {
+		player.display_url("https://ttt.clwo.eu/fastdl/welcome.html", false);
+	} else {
+		CreateTimer(30.0, displayNew, serial);
+	}
+
+	return Plugin_Stop;
 }

@@ -231,6 +231,19 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 		SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 2, 5.0, 0.5, 0.5);
 		ShowSyncHudText(attacker, hHudText, "WARNING: Please do not RDM.");
 		CloseHandle(hHudText);
+
+		char victim_colour[20], killer_colour[20], msg[256];
+		
+		if (victim_role == INNOCENT) { victim_colour = "{green}"; }
+		if (victim_role == TRAITOR) { victim_colour = "{red}"; }
+		if (victim_role == DETECTIVE) { victim_colour = "{blue}"; }
+		
+		if (attacker_role == INNOCENT) { killer_colour = "{green}"; }
+		if (attacker_role == TRAITOR) { killer_colour = "{red}"; }
+		if (attacker_role == DETECTIVE) { killer_colour = "{blue}"; }
+
+		Format(msg, sizeof(msg), "{purple}[TTT] {yellow}Bad Action: [{green}%.12N{yellow}] ({lightgreen}%d{yellow}) killed [{green}%.12N{yellow}] ({lightgreen}%d{yellow})", attacker, attacker_karma, victim, victim_karma);
+		CPrintToStaff(msg, true);
 	}
 	
 	// Identify permanent names for victim & attacker, plus grab weapon used to kill

@@ -81,12 +81,14 @@ stock bool IsValidClient(int client,bool allowconsole=false) {
 	return true;
 }
 
-stock void CPrintToStaff(char[] message) {
+stock void CPrintToStaff(char[] message, bool only_to_dead=false) {
 	for (int client = 1; client <= MaxClients; client++) {
 		if(IsValidClient(client)) {
 			if(iMod_IsStaff(client)) {
 				if (!should_informer_block(client)) {
-					CPrintToChat(client, message);
+					if (!only_to_dead || !IsPlayerAlive(client)) {
+						CPrintToChat(client, message);
+					}
 				}
 			}
 		}
