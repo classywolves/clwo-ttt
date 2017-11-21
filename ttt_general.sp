@@ -1,4 +1,5 @@
 #include <ttt_helpers>
+#include <basecomm>
 #include <player_methodmap>
 
 #include <general>
@@ -16,13 +17,15 @@ char urls[7][3][512] = {
 }
 
 public void OnPluginStart() {
+	RegConsoleCmd("sm_profile", command_profile);
+	RegConsoleCmd("sm_list", command_list);
+	RegConsoleCmd("sm_give", command_give);
 	RegAdminCmd("sm_cbeacon", command_toggle_beacon, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_teleport", command_teleport, ADMFLAG_GENERIC);
 	//RegAdminCmd("sm_volume", command_volume, ADMFLAG_GENERIC);
-	RegConsoleCmd("sm_profile", command_profile);
-	RegConsoleCmd("sm_list", command_list);
 	RegAdminCmd("sm_tp", command_toggle_third_person, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_reload", command_reload_plugin, ADMFLAG_CHEATS);
+	RegAdminCmd("sm_nuke", command_nuke, ADMFLAG_GENERIC);
 
 	LoadTranslations("common.phrases");
 
@@ -365,4 +368,69 @@ public Action timer_beacon_all(Handle Timer) {
 		//CPrintToChatAll("{purple}[TTT] {yellow}Debug: Enabled Beacon For: %N", client);
 		Player(client).beacon_enabled = true;
 	}
+}
+
+public Action command_nuke(int client, int args) {
+	char string_time[128];
+	GetCmdArg(1, string_time, sizeof(string_time));
+	int time = StringToInt(string_time)
+
+	if (time < 2 || time > 30) {
+		time = 10;
+	}
+
+	LoopValidClients(i) {
+		if (!Player(i).staff) {
+			BaseComm_SetClientMute(i, true);
+		}
+	}
+
+	CPrintToChatAll("{purple}[TTT] {green}You have been muted by {blue}%N {green} for {blue}%d{green} seconds.", client, time);
+
+	CreateTimer(float(time), timer_unnuke);
+}
+
+public Action timer_unnuke(Handle timer) {
+	LoopValidClients(i) {
+		BaseComm_SetClientMute(i, false);
+	}
+
+	CPrintToChatAll("{purple}[TTT] {green}Your mute has expired.");
+}
+public Action command_give(int client, int args) {
+	if (args < 2) {
+		CPrintToChat(client, "{purple}[TTT] {red}Invalid arguments, usage: /give <player> <amount>");
+		return Plugin_Handled;
+	}
+
+	char target_argument[128], amount_argument[64];
+	GetCmdArg(1, target_argument, sizeof(target_argument));
+	GetCmdArg(2, amount_argument, sizeof(amount_argument));
+
+	int amount = StringToInt(amount_argument);
+
+	if (amount == 0) {
+		CPrintToChat(client, "{purple}[TTT] {red}Invalid amount, must be a number.");
+		return Plugin_Handled;
+	}
+
+	Player player = Player(client);
+	
+	int target_client = Player(client).target_one(target_argument);
+	if (target_client == -1) return Plugin_Handled;
+
+	Player target = Player(target_client);
+
+	if (player.credits < amount) {
+		CPrintToChat(client, "{purple}[TTT] {red}You don't have enough credits!");
+		return Plugin_Handled;
+	}
+
+	player.credits -= amount;
+	target.credits += amount;
+
+	CPrintToChat(client, "{purple}[TTT] {yellow}You have given {blue}%d{yellow} credits to {blue}%N{yellow}.", amount, target_client);
+	CPrintToChat(target_client, "{purple}[TTT] {yellow}You have received {blue}%d{yellow} credits from {blue}%N{yellow}.", amount, client);
+
+	return Plugin_Handled;	
 }

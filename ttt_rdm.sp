@@ -58,11 +58,9 @@ int case_accused[500];
 int case_accuser[500];
 
 // Lists clients to slay (1 = slay, 0 = don't slay)
-int to_slay[MAXPLAYERS + 1];
 int last_handled[MAXPLAYERS + 1];	// Store a staff's last handled case id.
 int case_slay[500];					// Store a 1 if case wants the other person slain, 2 if to warn.
 
-char slay_admins[MAXPLAYERS + 1][255];
 char _victim_name[500][255];
 char _killer_name[500][255];
 
@@ -101,6 +99,9 @@ public InitialiseVariables() {
 		max_round = SQL_FetchInt(max_round_query, 0);
 		max_round++;
 	}
+
+	cookie_player_slaynr = RegClientCookie("player_slaynr", "Whether to slay this player next round.", CookieAccess_Private);
+	cookie_player_slayed_by = RegClientCookie("player_slayed_by", "Who last set this person to slay.", CookieAccess_Private);
 }
 
 public SetCVARS() {
@@ -176,15 +177,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
 
 public Action OnPlayerDisconnect(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
-	
-	if (to_slay[client] == 1) {
-		char message[256];
-		Format(message, sizeof(message), "{purple}[RDM] {yellow}Player %N left before his slay took place.", client);
-		CPrintToStaff(message);
-		to_slay[client] = 0;
-		slay_admins[client] = "";
-	}
-	
+
 	if (last_handled[client] > 0)
 	{
 		last_handled[client] = -1;
@@ -201,7 +194,7 @@ public Action OnWeaponFire(Event event, const char[] name, bool dontBroadcast) {
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
-	if (!TTT_IsRoundActive()) { return Plugin_Continue; }
+	// if (!TTT_IsRoundActive()) { return Plugin_Continue; }
 	// A player died in round, we need to update the MySQL table.
 	
 	// Identify victim & attacker ids
@@ -249,15 +242,18 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	// Identify permanent names for victim & attacker, plus grab weapon used to kill
 	char weapon[100];
 	char victim_id[100];
-	char attacker_id[100];
+	char attacker_id[100] = "CONSOLE";
 	char victim_name[100];
-	char attacker_name[100];
+	char attacker_name[100] = "CONSOLE";
 	
 	GetClientAuthId(victim, AuthId_Steam2, victim_id, sizeof(victim_id), true);
-	GetClientAuthId(attacker, AuthId_Steam2, attacker_id, sizeof(attacker_id), true);
 	GetClientName(victim, victim_name, sizeof(victim_name));
-	GetClientName(attacker, attacker_name, sizeof(attacker_name));
 	GetEventString(event, "weapon", weapon, sizeof(weapon), "Unknown");
+
+	if (attacker) {
+		GetClientAuthId(attacker, AuthId_Steam2, attacker_id, sizeof(attacker_id), true);
+		GetClientName(attacker, attacker_name, sizeof(attacker_name));
+	}
 	
 	// Bind parameters to query
 	SQL_BindParamInt(insert_death, 0, max_index, false);
@@ -1067,21 +1063,25 @@ public Action Command_SlayNR(int client, int args) {
 		return Plugin_Handled;
 	}
 
+	Player player = Player(target_client);
+
 	// Format slay message and send to recipients
 	char message[256];
-	if (to_slay[target_client] == 1) {
-		Format(message, sizeof(message), "{purple}[RDM] {yellow}%N was already set to slay by %s.", target_client, slay_admins[client]);
+	if (player.slaynr == 1) {
+		char slay_admin[256];
+		player.slayed_by(target_client, slay_admin);
+		Format(message, sizeof(message), "{purple}[RDM] {yellow}%N was already set to slay by %s.", target_client, slay_admin);
 		CPrintToChat(client, message);
 	} else {
 		char string_slay_admin[255];
-		Format(string_slay_admin, sizeof(string_slay_admin), "%N", client)
-		slay_admins[client] = string_slay_admin;
-		Format(message, sizeof(message), "{purple}[RDM] {yellow}Slaying %N next round by request from %s.", target_client, slay_admins[client]);
+		Format(string_slay_admin, sizeof(string_slay_admin), "%N", client);
+		player.set_slayed_by(target_client, string_slay_admin);
+		Format(message, sizeof(message), "{purple}[RDM] {yellow}Slaying %N next round by request from %s.", target_client, string_slay_admin);
 		CPrintToStaff(message);
 	}
 	
 	// Set target to slay
-	to_slay[target_client] = 1;
+	player.slaynr = 1;
 
 	return Plugin_Handled
 }
@@ -1105,9 +1105,10 @@ public Action Command_UnSlayNR(int client, int args) {
 		return Plugin_Handled;
 	}
 	
+	Player player = Player(target_client);
+
 	// Set target to slay
-	to_slay[target_client] = 0;
-	slay_admins[target_client] = "";
+	player.slaynr = 0;
 	
 	// Display slay message to staff
 	char message[256];
@@ -1120,7 +1121,8 @@ public Action Command_UnSlayNR(int client, int args) {
 public void TTT_OnClientGetRole(int client, int role)
 {
 	last_gun_fire[client] = -1;
-	if (to_slay[client] == 1)
+	Player player = Player(client)
+	if (player.slaynr == 1)
 	{
 		if (IsValidClient(client) && IsPlayerAlive(client))
 		{
@@ -1132,11 +1134,13 @@ public void TTT_OnClientGetRole(int client, int role)
 				Format(message, sizeof(message), "{purple}[RDM] {yellow}%N has been slain (no. %d).", client, slay_count[client]);
 			}
 			CPrintToStaff(message);
-			CPrintToChat(client, "{purple}[Slay] {orchid}You were slain by %s.  Please read /rules.", slay_admins[client]);
+			char slay_admin[256];
+			player.slayed_by(client, slay_admin);
+			CPrintToChat(client, "{purple}[Slay] {orchid}You were slain by %s.  Please read /rules.", slay_admin);
 
 			char title[100], slayed_by[100];
 			Format(title, 64, "TTT Slayer");
-			Format(slayed_by, 64, "Slain By: %s", slay_admins[client])
+			Format(slayed_by, 64, "Slain By: %s", slay_admin)
 			
 			ReplaceString(message, 192, "\\n", "\n");
 			
@@ -1156,8 +1160,7 @@ public void TTT_OnClientGetRole(int client, int role)
 			ForcePlayerSuicide(client);
 			TTT_SetFoundStatus(client, true);
 		}
-		to_slay[client] = 0;
-		slay_admins[client] = "";
+		player.slaynr = 0;
 	}
 }
 

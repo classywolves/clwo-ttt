@@ -20,6 +20,7 @@
 #include <clientprefs>			// ┛
 #include <general>				// General Definitions
 #include <ttt>					// Interact with TTT
+#include <ttt_shop>				// Interact with TTT Shop
 #include <smlib>				// Larger Standard Library
 #include <imod>
 
@@ -27,6 +28,7 @@ Handle cookie_player_volume;
 Handle cookie_player_experience;
 Handle cookie_player_level;
 Handle cookie_player_slaynr;
+Handle cookie_player_slayed_by;
 
 int sprite_beam = -1;
 int sprite_halo = -1;
@@ -63,6 +65,14 @@ methodmap Player {
 	}
 	public void get_auth(AuthIdType auth_id_type , char output[255]) {
 		GetClientAuthId(view_as<int>(this), auth_id_type, output, sizeof(output));
+	}
+
+	public void slayed_by(int client, char admin_name[256]) {
+		GetClientCookie(client, cookie_player_slayed_by, admin_name, sizeof(admin_name));
+	}
+
+	public void set_slayed_by(int client, char admin_name[256]) {
+		SetClientCookie(client, cookie_player_slayed_by, admin_name);
 	}
 
 	property bool beacon_enabled {
@@ -160,13 +170,18 @@ methodmap Player {
 		SetClientCookie(that, cookie, cookie_value);
 	}
 
+	property int credits {
+		public get() { return TTT_GetClientCredits(that); }
+		public set(int amount) { TTT_SetClientCredits(that, amount); }
+	}
+
 	property int level {
 		public get() { return this.get_cookie_int(cookie_player_level, 1); }
 		public set(int level) { this.set_cookie_int(cookie_player_level, level); }
 	}
 
 	property int slaynr {
-		public get() { return this.get_cookie_int(cookie_player_slaynr, 1); }
+		public get() { return this.get_cookie_int(cookie_player_slaynr, 0); }
 		public set(int slaynr) { this.set_cookie_int(cookie_player_slaynr, slaynr); }
 	}
 

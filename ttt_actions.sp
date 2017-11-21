@@ -1,4 +1,8 @@
 #include <ttt_helpers>
+#include <player_methodmap>
+#include <sourcemod>
+#include <sdktools>
+#include <cstrike>
 
 typedef NativeCall = function int (Handle plugin, int numParams);
 
@@ -8,20 +12,13 @@ Database hDatabase = null;
 
 public OnPluginStart() {
 	Database.Connect(DBCallback, "ttt");
-	LoopValidClients(client) OnClientPutInServer(client);
+	CreateTimer(20.0, LoadAllActionData, _, TIMER_REPEAT);
 }
 
 public void DBCallback(Database db, const char[] error, any data)
 {
 	if (db == null) LogError("Database failure: %s", error);
 	else hDatabase = db;
-}
-
-OnClientPutInServer(int client) {
-	// Load action data
-	int serial = GetClientSerial(client);
-	//LoadActionData(INVALID_HANDLE, serial);
-	CreateTimer(10.0, LoadActionData, serial, TIMER_REPEAT);
 }
 
 OnClientDisconnect(int client) {
@@ -36,12 +33,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 // Called with (int client, int[2] actions)
 public int Native_GetActions(Handle plugin, int numParams) {
 	int client = GetNativeCell(1);
-	int serial = GetClientSerial(client);
 
 	if (refresh_time[client] < GetTime() - 60) {
 		PrintToServer("%N has out of date data it appears, time: %d", client, refresh_time[client]);
-		LoadActionData(INVALID_HANDLE, serial);
-		CreateTimer(10.0, LoadActionData, serial, TIMER_REPEAT);
 	}
 
 	PrintToServer("Grabbing action array for %N %d %d", client, action_cache[client][0], action_cache[client][1])
@@ -54,18 +48,23 @@ public int Native_GetActions(Handle plugin, int numParams) {
 	return 0;
 }
 
-public Action LoadActionData(Handle timer, any serial) {
-	int serial_proof = serial
+public void LoadActionData(int serial) {
 	int client = GetClientFromSerial(serial);
-	if (client == 0) return Plugin_Stop;
+	if (client == 0) return;
 
 	char query[256], steam_id[64];
 	GetClientAuthId(client, AuthId_Steam2, steam_id, sizeof(steam_id));
 	Format(query, sizeof(query), "SELECT bad_action,COUNT(*) AS count FROM `deaths` WHERE `killer_id`='%s' GROUP BY bad_action ORDER BY bad_action;", steam_id)
 	//PrintToServer(query);
-	hDatabase.Query(GetActionCallback, query, serial_proof); 
+	hDatabase.Query(GetActionCallback, query, serial); 
 	//PrintToServer("Hey, we got below hDatabase.Query within ttt_actions")
-	return Plugin_Handled;
+	return;
+}
+
+public Action LoadAllActionData(Handle timer) {
+	LoopValidClients(client) {
+		LoadActionData(GetClientSerial(client));
+	}
 }
 
 public void GetActionCallback(Database db, DBResultSet results, const char[] error, any serial) {
