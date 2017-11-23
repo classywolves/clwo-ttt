@@ -415,6 +415,11 @@ public Action command_give(int client, int args) {
 	}
 
 	Player player = Player(client);
+
+	if (!player.alive) {
+		CPrintToChat(client, "{purple}[TTT] {red}You must be alive to give credits.");
+		return Plugin_Handled;
+	}
 	
 	int target_client = Player(client).target_one(target_argument);
 	if (target_client == -1) return Plugin_Handled;
@@ -423,6 +428,11 @@ public Action command_give(int client, int args) {
 
 	if (player.credits < amount) {
 		CPrintToChat(client, "{purple}[TTT] {red}You don't have enough credits!");
+		return Plugin_Handled;
+	}
+
+	if (amount < 0) {
+		CPrintToChat(client, "{purple}[TTT] {red}Don't try to steal other players credits!");
 		return Plugin_Handled;
 	}
 

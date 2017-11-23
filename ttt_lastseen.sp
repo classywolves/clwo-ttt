@@ -83,7 +83,7 @@ methodmap Player {
 public OnPluginStart()
 {
 	CreateConVar("lastseen_version", PLUGIN_VERSION_M, "LastSeen Plugin Version");
-	RegConsoleCmd("sm_visible", Command_Visible, "Prints all players that are visible");
+	RegAdminCmd("sm_visible", Command_Visible, ADMFLAG_CHEATS, "Prints all players that are visible");
 	
 	g_hCvar_OffsetHead = CreateConVar("lseen_offset_head", "10", "Sets the offset.");
 	g_hCvar_OffsetFeet = CreateConVar("lseen_offset_feet", "10", "Sets the offset.");
