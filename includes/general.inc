@@ -85,11 +85,11 @@ stock void CPrintToStaff(char[] message, bool only_to_dead=false) {
 	for (int client = 1; client <= MaxClients; client++) {
 		if(IsValidClient(client)) {
 			if(iMod_IsStaff(client)) {
-				if (!should_informer_block(client)) {
+				//if (!should_informer_block(client)) {
 					if (!only_to_dead || !IsPlayerAlive(client)) {
 						CPrintToChat(client, message);
 					}
-				}
+				//}
 			}
 		}
 	}

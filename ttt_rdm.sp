@@ -272,7 +272,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	SQL_BindParamInt(insert_death, 13, max_round, true);
 	
 	// Execute statement
-	if (!SQL_Execute(insert_death)) { PrintToServer("SQL Execute Failed..."); return Plugin_Continue; }
+	if (!SQL_Execute(insert_death)) { SQL_GetError(insert_death, error, sizeof(error)); PrintToServer("SQL Execute Failed Insert Death: %s", error); return Plugin_Continue; }
 	max_index++;
 	return Plugin_Continue;
 }
@@ -337,7 +337,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	SQL_BindParamString(insert_damage, 10, weapon, false);
 	
 	// Execute statement
-	if (!SQL_Execute(insert_damage)) { PrintToServer("SQL Execute Failed..."); return Plugin_Continue; }
+	if (!SQL_Execute(insert_damage)) { SQL_GetError(insert_damage, error, sizeof(error)); PrintToServer("SQL Execute Failed Insert Damage: %s", error); return Plugin_Continue; }
 	max_index++;
 	return Plugin_Continue;
 }
@@ -1053,8 +1053,24 @@ public Action Command_SlayNR(int client, int args) {
 	}
 	
 	// Get target
-	char target_string[32];
-	GetCmdArg(1, target_string, sizeof(target_string));
+	char target_string[128];
+	GetCmdArgString(target_string, sizeof(target_string));
+
+	PrintToConsole(client, "%s: %d %d", target_string, StrContains(target_string, "STEAM_1:", false), args)
+	if (StrContains(target_string, "STEAM_1:", false) == 0) {
+		// Targetting an offline player.
+		char admin_name[128];
+		CPrintToChat(client, "{purple}[RDM] {yellow}Targetting '%s' via SteamID", target_string);
+		GetClientName(client, admin_name, sizeof(admin_name));
+		SetAuthIdCookie(target_string, cookie_player_slaynr, "1");
+		SetAuthIdCookie(target_string, cookie_player_slayed_by, admin_name);
+
+		char message[256];
+		Format(message, sizeof(message), "{purple}[RDM] {yellow}Slaying %s next round by request from %s.", target_string, admin_name);
+		CPrintToStaff(message);
+
+		return Plugin_Handled;
+	}
 	
 	// Ensure target exists 
 	int target_client = FindTarget(client, target_string, true, false);
@@ -1097,6 +1113,21 @@ public Action Command_UnSlayNR(int client, int args) {
 	// Get target
 	char target_string[32];
 	GetCmdArg(1, target_string, sizeof(target_string));
+
+	if (StrContains(target_string, "STEAM_1:0:", false) == 0) {
+		// Targetting an offline player.
+		char admin_name[128];
+		CPrintToChat(client, "{purple}[RDM] {yellow}Targetting '%s' via SteamID", target_string);
+		GetClientName(client, admin_name, sizeof(admin_name));
+		SetAuthIdCookie(target_string, cookie_player_slaynr, "0");
+		SetAuthIdCookie(target_string, cookie_player_slayed_by, admin_name);
+
+		char message[256];
+		Format(message, sizeof(message), "{purple}[RDM] {yellow}No longer slaying %s next round by request of %s.", target_string, admin_name);
+		CPrintToStaff(message);
+
+		return Plugin_Handled;
+	}
 	
 	// Ensure target exists 
 	int target_client = FindTarget(client, target_string, true, false);

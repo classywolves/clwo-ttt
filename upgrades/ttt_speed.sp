@@ -40,7 +40,7 @@ public Action OnPlayerRunCmd(client, &buttons, &impulse, Float:vel[3], Float:ang
 		PrintToConsole(client, "pressed 'use_key' current %f last %f", current_time, last_time[client]);
 		
 		if (last_time[client] > current_time - 0.5) {
-			if (!IsPlayerAlive(client)) return Plugin_Handled;
+			if (!IsPlayerAlive(client) || !TTT_IsRoundActive()) return Plugin_Handled;
 
 			// Double press!
 			Player player = Player(client);
