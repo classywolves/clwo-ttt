@@ -814,16 +814,17 @@ public Action Command_Verdict(int client, int args) {
 			CPrintToChat(client, "{purple}[RDM] {red}Case closed, slaying %s next round!", _killer_name[case_id]);
 			CPrintToChat(client, "{purple}[RDM] {orchid}Please message %s and explain your evidence.", _killer_name[case_id]);
 		}
+		else if (victim_id != -1)
+		{
+			// CPrintToChat(victim_clientid, "{purple}[RDM] {green}%s was found guilty and will be slain next round!", _killer_name[case_id]);
+			CPrintToChat(client, "{purple}[RDM] {orchid}Case closed, please message %s and explain your evidence.", _killer_name[case_id]);
+		}
 		else
 		{
 			// Accused left
 			// TODO: Handle this to auto-slay when they next join.
-			CPrintToChat(client, "{purple}[RDM] {orchid}Case closed, please message %s and explain your evidence.", _killer_name[case_id]);
-		}
-		
-		if (victim_id != -1)
-		{
-			CPrintToChat(victim_clientid, "{purple}[RDM] {green}%s was found guilty and will be slain next round!", _killer_name[case_id]);
+			// CPrintToChat(client, "{purple}[RDM] {orchid}Case closed, %s has left before the verdict was given", _killer_name[case_id]);
+			CPrintToChat(client, "{purple}[RDM] {green} %s {yellow} has left before the verdict was given.", _killer_name[case_id]);
 		}
 		
 	}
