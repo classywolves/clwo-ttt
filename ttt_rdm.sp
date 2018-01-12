@@ -1017,8 +1017,16 @@ public Display_Information(int client, int death_index) {
 	int killer_actions[2];
 	Get_Actions_Count(db, killer_actions, killer_id);
 	
+	// Formula explanation: Divide good action by total action.
+	// Problem: If total action < 1, then unexpected things will happen. (Since cannot have 0 in the denominator)
+	// Solution: If total action is < 1 then set percentage to 50.
+	
 	int victim_percentage = RoundFloat(float(victim_actions[0]) * 100 / float(victim_actions[0] + victim_actions[1]))
 	int killer_percentage = RoundFloat(float(killer_actions[0]) * 100 / float(killer_actions[0] + killer_actions[1]))
+	
+	// Implementation of solution to fix bug where 0 total actions causes percentage of -2147483648%
+	if (victim_actions[0] + victim_actions[1] < 1) { victim_percentage = 50; }
+	if (killer_actions[0] + killer_actions[1] < 1) { killer_percentage = 50; }
 	
 	char victim_percentage_colour[20];
 	char killer_percentage_colour[20];
