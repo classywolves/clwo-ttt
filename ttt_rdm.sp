@@ -22,7 +22,7 @@ DBStatement global_statement_update_handles;
 
 /* Plugin Info */
 #define PLUGIN_NAME 			"TTT RDM"
-#define PLUGIN_VERSION_M 		"0.0.6"
+#define PLUGIN_VERSION_M 		"0.0.7"
 #define PLUGIN_AUTHOR 			"Popey"
 #define PLUGIN_DESCRIPTION		"Handles TTT RDMs."
 #define PLUGIN_URL				"https://sinisterheavens.com"
@@ -461,6 +461,10 @@ public Action Command_RDM(int client, int args) {
 
 public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 {
+	if (client < 0 || client > MaxClients) {
+		PrintToServer("Invalid client id (%d) in RDM_Menu_Callback", client);
+		return;
+	}
 	PrintToServer("%N just used RDM_Menu_Callback", client);
 	if (action == MenuAction_Select) {
 		char info[32];
@@ -778,10 +782,10 @@ public Action Command_Verdict(int client, int args) {
 	
 	int attacker_id = case_accused[case_id];
 	int victim_id = case_accuser[case_id];
-	int victim_clientid = 0;
+	//int victim_clientid = 0;
 	int attacker_clientid = 0;
 	
-	if (victim_id != -1) {victim_clientid = GetClientOfUserId(victim_id);}
+	//if (victim_id != -1) {victim_clientid = GetClientOfUserId(victim_id);}
 	if (attacker_id != -1) {attacker_clientid = GetClientOfUserId(attacker_id);}
 	
 	char error[255];
