@@ -22,7 +22,7 @@ public Action OnPlayerDisconnect(Handle event, char[] name, bool dont_broadcast)
 
 	if (!StrContains(steam_id, "STEAM_1:", false)) {
 		// LOG LOG LOG
-		LogToFile("log_ttt_dcd.txt", "[Curent_Pos %d] [player_names[cp-1] %s]",current_pos, player_names[current_pos - 1]);
+		LogToFile("log_ttt_dcd.txt", "[Curent_Pos %d]",current_pos);
 		// LOG LOG LOG
 		if (!player_isset[0] || 
 			(strcmp(steam_id, player_names[current_pos - 1], false) &&
@@ -35,7 +35,7 @@ public Action OnPlayerDisconnect(Handle event, char[] name, bool dont_broadcast)
 			player_isset[current_pos] = true;
 
 			current_pos++;
-			if (current_pos >= ENTRIES - 1) current_pos = 0;
+			if (current_pos >= ENTRIES - 1) current_pos = 1;
 		}
 	}
 
