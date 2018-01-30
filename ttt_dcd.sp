@@ -21,7 +21,13 @@ public Action OnPlayerDisconnect(Handle event, char[] name, bool dont_broadcast)
 	GetEventString(event, "networkid", steam_id, sizeof(steam_id));
 
 	if (!StrContains(steam_id, "STEAM_1:", false)) {
-		if (!player_isset[0] || (strcmp(steam_id, player_names[current_pos - 1], false) && GetTime() != player_times[current_pos - 1] )) {
+		// LOG LOG LOG
+		LogToFile("log_ttt_dcd.txt", "[Curent_Pos %d] [player_names[cp-1] %s]",current_pos, player_names[current_pos - 1]);
+		// LOG LOG LOG
+		if (!player_isset[0] || 
+			(strcmp(steam_id, player_names[current_pos - 1], false) &&
+			 GetTime() != player_times[current_pos - 1] )) {
+
 			// It's a real SteamID.
 			player_auths[current_pos] = steam_id;
 			GetEventString(event, "name", player_names[current_pos], sizeof(player_names[]));
