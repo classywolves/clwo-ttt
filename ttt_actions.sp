@@ -25,6 +25,10 @@ OnClientDisconnect(int client) {
 	int action_cache[client] = { 0, 0 };
 }
 
+OnClientConnect(int client) {
+	LoadActionData(GetClientSerial(client));
+}
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
 	CreateNative("GetActions", Native_GetActions);
 	return APLRes_Success;

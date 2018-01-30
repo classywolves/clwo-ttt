@@ -68,7 +68,9 @@ char _killer_name[500][255];
 int slay_count[MAXPLAYERS + 1];
 
 // Prevent spamming of rdm command
-int rdm_cooldown[MAXPLAYERS + 1];
+int rdm_report_cooldown[MAXPLAYERS + 1];
+int rdm_call_cooldown[MAXPLAYERS + 1];
+
 
 // Array of last time players fired guns
 int last_gun_fire[MAXPLAYERS + 1];
@@ -398,7 +400,14 @@ public Action Command_RDM(int client, int args) {
 	char target_string[32];
 	GetCmdArg(1, target_string, sizeof(target_string));
 
-	if (GetTime() - rdm_cooldown[client] < 15) {
+	if (GetTime() - rdm_call_cooldown[client] < 2) {
+		CPrintToChat(client, "{purple}[RDM] {darkred}Please do not spam this command...")
+		return Plugin_Handled; // 15 seconds hasn't passed yet, don't allow
+	}
+
+	rdm_call_cooldown[client] = GetTime();
+
+	if (GetTime() - rdm_report_cooldown[client] < 15) {
 		CPrintToChat(client, "{purple}[RDM] {darkred}Please do not spam this command...")
 		return Plugin_Handled; // 15 seconds hasn't passed yet, don't allow
 	}
@@ -495,7 +504,7 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 		short_ids[current_short_id] = StringToInt(buffers[1]);
 		current_short_id++;
 
-		rdm_cooldown[client] = GetTime();
+		rdm_report_cooldown[client] = GetTime();
 		
 		int death_index = StringToInt(buffers[1]);
 		
