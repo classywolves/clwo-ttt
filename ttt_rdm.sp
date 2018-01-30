@@ -22,7 +22,7 @@ DBStatement global_statement_update_handles;
 
 /* Plugin Info */
 #define PLUGIN_NAME 			"TTT RDM"
-#define PLUGIN_VERSION_M 		"0.0.6"
+#define PLUGIN_VERSION_M 		"0.0.7"
 #define PLUGIN_AUTHOR 			"Popey"
 #define PLUGIN_DESCRIPTION		"Handles TTT RDMs."
 #define PLUGIN_URL				"https://sinisterheavens.com"
@@ -470,6 +470,10 @@ public Action Command_RDM(int client, int args) {
 
 public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 {
+	if (client < 0 || client > MaxClients) {
+		PrintToServer("Invalid client id (%d) in RDM_Menu_Callback", client);
+		return;
+	}
 	PrintToServer("%N just used RDM_Menu_Callback", client);
 	if (action == MenuAction_Select) {
 		char info[32];
@@ -787,10 +791,10 @@ public Action Command_Verdict(int client, int args) {
 	
 	int attacker_id = case_accused[case_id];
 	int victim_id = case_accuser[case_id];
-	int victim_clientid = 0;
+	//int victim_clientid = 0;
 	int attacker_clientid = 0;
 	
-	if (victim_id != -1) {victim_clientid = GetClientOfUserId(victim_id);}
+	//if (victim_id != -1) {victim_clientid = GetClientOfUserId(victim_id);}
 	if (attacker_id != -1) {attacker_clientid = GetClientOfUserId(attacker_id);}
 	
 	char error[255];
@@ -1026,8 +1030,16 @@ public Display_Information(int client, int death_index) {
 	int killer_actions[2];
 	Get_Actions_Count(db, killer_actions, killer_id);
 	
+	// Formula explanation: Divide good action by total action.
+	// Problem: If total action < 1, then unexpected things will happen. (Since cannot have 0 in the denominator)
+	// Solution: If total action is < 1 then set percentage to 50.
+	
 	int victim_percentage = RoundFloat(float(victim_actions[0]) * 100 / float(victim_actions[0] + victim_actions[1]))
 	int killer_percentage = RoundFloat(float(killer_actions[0]) * 100 / float(killer_actions[0] + killer_actions[1]))
+	
+	// Implementation of solution to fix bug where 0 total actions causes percentage of -2147483648%
+	if (victim_actions[0] + victim_actions[1] < 1) { victim_percentage = 50; }
+	if (killer_actions[0] + killer_actions[1] < 1) { killer_percentage = 50; }
 	
 	char victim_percentage_colour[20];
 	char killer_percentage_colour[20];

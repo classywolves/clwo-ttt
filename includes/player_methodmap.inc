@@ -412,6 +412,8 @@ methodmap Player {
 		get_experience_bar(player, exp_bar);
 
 		int good_action_percentage = RoundFloat(float(actions[0]) * 100 / float(actions[0] + actions[1]));
+		// Fix for azure's report where having a 0 in the total actions will cause a very large negative percentage.
+		if (actions[0] + actions[1] < 1) { good_action_percentage = 50; }
 		char good_action_colour[32] = "{GREEN}";
 
 		// We have nine lines to work with...
