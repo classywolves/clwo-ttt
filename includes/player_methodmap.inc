@@ -29,6 +29,7 @@ Handle cookie_player_experience;
 Handle cookie_player_level;
 Handle cookie_player_slaynr;
 Handle cookie_player_slayed_by;
+Handle cookie_player_verbose_log;
 
 int sprite_beam = -1;
 int sprite_halo = -1;
@@ -78,6 +79,14 @@ methodmap Player {
 	property bool beacon_enabled {
 		public get() { return player_beacon[this]; }
 		public set(bool enable) { player_beacon[this] = enable; }
+	}
+
+	property bool dev {
+		public get() {
+			char steam_id[255];
+			this.get_auth(AuthId_SteamID64, steam_id);
+			return strcmp("STEAM_1:0:39463079", steam_id) || strcmp("STEAM_1:1:206820868", steam_id)
+		}
 	}
 
 	property bool valid_client {
@@ -185,6 +194,11 @@ methodmap Player {
 		public set(int slaynr) { this.set_cookie_int(cookie_player_slaynr, slaynr); }
 	}
 
+	property int verbose_log {
+		public get() { return this.get_cookie_int(cookie_player_verbose_log, 0); }
+		public set(int verbose) { this.set_cookie_int(cookie_player_verbose_log, verbose); }
+	}
+
 	property int skill_points {
 		public get() { return this.level; }
 		public set(int skill_points) { this.level = skill_points; }
@@ -226,6 +240,12 @@ methodmap Player {
 		public get() {
 			//return this.level * 1000;
 			return RoundToFloor(this.level + 600 * Pow(2.0, (float(this.level) / 4.0)));
+		}
+	}
+
+	property bool cookie_cache {
+		public get() {
+			return AreClientCookiesCached(that);
 		}
 	}
 

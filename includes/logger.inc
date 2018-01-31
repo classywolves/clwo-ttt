@@ -3,11 +3,17 @@
 #endif
 #define _log_processor_included
 
+#include <player_methodmap>
+#include <ttt_helpers>
+
 ConVar g_debug;
 ConVar g_logLevel;
 Handle g_LogForward;
-char moduleName[256];
-char logName[256];
+
+char ourName[256];
+char debugName[256];
+
+bool init = false;
 
 enum LogLevels {
    Info,
@@ -18,8 +24,10 @@ enum LogLevels {
  
 // Forward usage: Action OnLog(char[] name, int level, int client, const char[] message)
 
-public void OnPluginStart()
+public void LogOnPluginStart()
 {
+   cookie_player_verbose_log = RegClientCookie("player_verbose_log", "Log verbose to chat.", CookieAccess_Public);
+   SetCookiePrefabMenu(cookie_player_verbose_log, CookieMenu_OnOff_Int, "Log verbose to chat.");
    g_LogForward = CreateGlobalForward("OnLog", ET_Event, Param_String, Param_Cell, Param_Cell, Param_String);
    g_logLevel = CreateConVar("sm_debug_logLevel", "0", "Set debug log level");
    g_debug = CreateConVar("sm_debug", "", "Set which plugin we are debugging");
@@ -35,7 +43,7 @@ public void OnLevelChange(ConVar convar, char[] oldValue, char[] newValue) {
 }
 
 public void OnNameChange(ConVar convar, char[] oldValue, char[] newValue) {
-   strcopy(moduleName, sizeof(moduleName), oldValue);
+   strcopy(debugName, sizeof(debugName), oldValue);
 }
  
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max)
@@ -43,32 +51,45 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max
    RegPluginLibrary("logger");
 }
 
-public void setLogSource(char name[50]) {
-   moduleName = name
+public void setLogSource(char[] name) {
+   strcopy(ourName, sizeof(ourName), name);
+   LogOnPluginStart();
+   init = true;
 }
 
-public Action log(int level, int client, char[] message, any ...) {
+public Action log(LogLevels level, int client, char[] message, any ...) {
    // Format message
    int len = strlen(message) + 255;
    char[] fmtMessage = new char[len];
    VFormat(fmtMessage, len, message, 4);
 
-   char strLevel[5];
+   char strLevel[5], strColour[20];
    switch (level) {
-      case Info: { strLevel = "🔍"; }
-      case Success: { strLevel = "√"; }
-      case Warn: { strLevel = "‼"; }
-      case Error: { strLevel = "×"; }
+      case Info: { strLevel = "i"; strColour = "{grey}"; }
+      case Success: { strLevel = "√"; strColour = "{green}"; }
+      case Warn: { strLevel = "‼"; strColour = "{yellow}"; }
+      case Error: { strLevel = "×"; strColour = "{red}"; }
    }
    // Current debug module
-   char time[16], layout[512];
-   FormatTime(time, strlen(time), "%T");
-   Format(layout, strlen(layout), "[%s] [%7s] %s %s", time, strLevel, fmtMessage);
+   char time[16], layout[512], clayout[768];
+   FormatTime(time, sizeof(time), "%T");
+
+   Format(layout, sizeof(layout), "[%s] [%7s] %s %s", time, ourName, strLevel, fmtMessage);
+   if (level != Warn) {
+      Format(clayout, sizeof(clayout), "{purple}[%7s] %s%s %s", ourName, strColour, strLevel, fmtMessage);
+   } else {
+      Format(clayout, sizeof(clayout), "{purple}[%7s] %s! %s", ourName, strColour, fmtMessage);
+   }
+
+   if (!init) {
+      PrintToServer("Error, you have not initialised this instance of logger, message: %s", layout);
+      return Plugin_Handled;
+   }
 
    Action result;
 
    Call_StartForward(g_LogForward);
-   Call_PushString(moduleName);
+   Call_PushString(ourName);
    Call_PushCell(level);
    Call_PushCell(client);
    Call_PushString(fmtMessage);
@@ -78,17 +99,26 @@ public Action log(int level, int client, char[] message, any ...) {
       return result;
    }
 
-   // If level is above minimum level log and we're logging this module, log to developers.
-   if (level >= g_logLevel.IntValue && strcmp(logName, moduleName, false)) {
-      // etc.
-   }
+   // Print to file.
+   // TODO: PRINT TO FILE CODE
 
-   if (strcmp(logName, moduleName, false)) {
-      // Log all messages to console.
+   if (strcmp(ourName, debugName, false) || level >= Warn) {
+      // Log every level to the server.
       PrintToServer(layout);
-   }
 
-   // Always log to file.
+      if (view_as<int>(level) >= g_logLevel.IntValue) {
+         // Log to clients consoles.
+         LoopValidClients(i) {
+            if (Player(i).dev) {
+               PrintToConsole(i, layout);
+
+               if (Player(i).cookie_cache && Player(i).verbose_log) {
+                  CPrintToChat(i, clayout);
+               }
+            }
+         }
+      }
+   }
 
    return result;
 }
