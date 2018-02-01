@@ -13,6 +13,8 @@ Handle g_LogForward;
 char ourName[256];
 char debugName[256];
 
+Handle logFile;
+
 bool init = false;
 
 enum LogLevels {
@@ -26,6 +28,12 @@ enum LogLevels {
 
 public void LogOnPluginStart()
 {
+   char folder[1024];
+   BuildPath(Path_SM, folder, PLATFORM_MAX_PATH, "/logs/modules");
+   if (!DirExists(folder)) {
+      CreateDirectory(folder, 493);
+   }
+
    cookie_player_verbose_log = RegClientCookie("player_verbose_log", "Log verbose to chat.", CookieAccess_Public);
    SetCookiePrefabMenu(cookie_player_verbose_log, CookieMenu_OnOff_Int, "Log verbose to chat.");
    g_LogForward = CreateGlobalForward("OnLog", ET_Event, Param_String, Param_Cell, Param_Cell, Param_String);
@@ -54,6 +62,11 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max
 public void setLogSource(char[] name) {
    strcopy(ourName, sizeof(ourName), name);
    LogOnPluginStart();
+
+   char file[1024];
+   BuildPath(Path_SM, file, PLATFORM_MAX_PATH, "/logs/modules/%s", name);
+   logFile = OpenFile(file, "a");
+
    init = true;
 }
 
@@ -71,10 +84,12 @@ public Action log(LogLevels level, int client, char[] message, any ...) {
       case Error: { strLevel = "×"; strColour = "{red}"; }
    }
    // Current debug module
-   char time[16], layout[512], clayout[768];
+   char time[16], ltime[48], layout[512], clayout[768], flayout[768];
    FormatTime(time, sizeof(time), "%T");
+   FormatTime(ltime, sizeof(ltime), "%F %T")
 
    Format(layout, sizeof(layout), "[%s] [%7s] %s %s", time, ourName, strLevel, fmtMessage);
+   Format(flayout, sizeof(flayout), "%s - %s - %s - %s", ltime, ourName, strLevel, fmtMessage);
    if (level != Warn) {
       Format(clayout, sizeof(clayout), "{purple}[%7s] %s%s %s", ourName, strColour, strLevel, fmtMessage);
    } else {
@@ -100,7 +115,7 @@ public Action log(LogLevels level, int client, char[] message, any ...) {
    }
 
    // Print to file.
-   // TODO: PRINT TO FILE CODE
+   WriteFileLine(logFile, flayout);
 
    if (strcmp(ourName, debugName, false) || level >= Warn) {
       // Log every level to the server.
