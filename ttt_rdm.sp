@@ -157,12 +157,12 @@ public OnPluginStart() {
 	SetCommands();
 	HookEvents();
 	ResetShorts();
-	PrintToServer("[RDM] Has Loaded Succcessfully!");
+	log(Success, "Plugin loaded successfully!");
 }
 
 public OnPluginEnd() {
 	// Alert Unload Success
-	PrintToServer("[RDM] Has Unloaded Successfully!");
+	log(Success, "Plugin unloaded successfully!");
 }
 
 public OnMapStart() {
@@ -210,7 +210,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	if (global_statement_insert_death == INVALID_HANDLE)
 		global_statement_insert_death = SQL_PrepareQuery(db, "INSERT INTO deaths (death_index, death_time, victim_name, victim_id, victim_role, victim_karma, killer_name, killer_id, killer_role, killer_karma, weapon, bad_action, last_gun_fire, round_no) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
 	DBStatement insert_death = global_statement_insert_death;
-	if (insert_death == null) { PrintToServer("Error templating death in the database"); PrintToServer(error); return Plugin_Continue; }
+	if (insert_death == null) { log(Error, "Error templating death in the database"); log(Error, error); return Plugin_Continue; }
 	
 	// Determine whether RDM
 	int victim_role = TTT_GetClientRole(victim);
@@ -276,7 +276,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	SQL_BindParamInt(insert_death, 13, max_round, true);
 	
 	// Execute statement
-	if (!SQL_Execute(insert_death)) { SQL_GetError(insert_death, error, sizeof(error)); PrintToServer("SQL Execute Failed Insert Death: %s", error); return Plugin_Continue; }
+	if (!SQL_Execute(insert_death)) { SQL_GetError(insert_death, error, sizeof(error)); log(Error, "SQL Execute Failed Insert Death: %s", error); return Plugin_Continue; }
 	max_index++;
 	return Plugin_Continue;
 }
@@ -304,7 +304,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 		global_statement_insert_damage = SQL_PrepareQuery(db, "INSERT INTO damage (round_no, victim_name, victim_auth, victim_role, attacker_name, attacker_auth, attacker_role, damage_done, health_left, round_time, weapon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
 	}
 	insert_damage = global_statement_insert_damage;
-	if (insert_damage == null || insert_damage == INVALID_HANDLE) { PrintToServer("Error templating damage in the database"); PrintToServer(error); return Plugin_Continue; }
+	if (insert_damage == null || insert_damage == INVALID_HANDLE) { log(Error, "Error templating damage in the database"); log(Error, error); return Plugin_Continue; }
 	
 	if (!attacker)
 	{
@@ -314,9 +314,9 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	}
 	else
 	{
-		PrintToServer("%i attacked %i (traitor is %i)", victim_role, attacker_role, TRAITOR);
+		//log(Info, "%i attacked %i (traitor is %i)", victim_role, attacker_role, TRAITOR);
 		if (victim_role == TRAITOR && attacker_role == TRAITOR) {
-			PrintToServer("We blocked the damage.");
+			log(Info, "We blocked the damage.");
 			return Plugin_Handled;
 		}
 
@@ -339,7 +339,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	SQL_BindParamString(insert_damage, 10, weapon, false);
 
 	// Execute statement
-	if (!SQL_Execute(insert_damage)) { SQL_GetError(insert_damage, error, sizeof(error)); PrintToServer("SQL Execute Failed Insert Damage: %s", error); return Plugin_Continue; }
+	if (!SQL_Execute(insert_damage)) { SQL_GetError(insert_damage, error, sizeof(error)); log(Error, "SQL Execute Failed Insert Damage: %s", error); return Plugin_Continue; }
 	max_index++;
 	return Plugin_Continue;
 }
@@ -382,7 +382,7 @@ public Action Command_aRDM(int client, int args) {
 }
 
 public Action Command_RDM(int client, int args) {
-	PrintToServer("%N just used Command_RDM", client);
+	log(Info, "%N just used Command_RDM", client);
 	bool admin = false;
 	if (args == 1) {
 		char target_string[32];
@@ -432,7 +432,7 @@ public Action Command_RDM(int client, int args) {
 		SQL_BindParamString(rdm_statement, 1, time, false);
 	}
 	
-	if (!SQL_Execute(rdm_statement)) { PrintToServer("SQL Execute Failed..."); return Plugin_Continue; }
+	if (!SQL_Execute(rdm_statement)) { log(Error, "SQL Execute Failed..."); return Plugin_Continue; }
 	
 	Menu menu = new Menu(RDM_Menu_Callback);
 	bool ran = false;
@@ -471,10 +471,10 @@ public Action Command_RDM(int client, int args) {
 public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 {
 	if (client < 0 || client > MaxClients) {
-		PrintToServer("Invalid client id (%d) in RDM_Menu_Callback", client);
+		log(Warn, "Invalid client id (%d) in RDM_Menu_Callback", client);
 		return;
 	}
-	PrintToServer("%N just used RDM_Menu_Callback", client);
+	log(Info, "%N just used RDM_Menu_Callback", client);
 	if (action == MenuAction_Select) {
 		char info[32];
 		char message_slain[32];
@@ -497,7 +497,7 @@ public RDM_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 
 public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 {
-	PrintToServer("%N just used RDM_SlayMenu_Callback", client);
+	log(Info, "%N just used RDM_SlayMenu_Callback", client);
 	if (action == MenuAction_Select) {
 		char to_explode[32];
 		menu.GetItem(item, to_explode, sizeof(to_explode));
@@ -517,12 +517,12 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 			global_statement_rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error));
 		DBStatement rdm_instance = global_statement_rdm_instance;
 		if (rdm_instance == null) {
-			PrintToServer(error);
+			log(Error, error);
 			return;
 		}
 		SQL_BindParamInt(rdm_instance, 0, death_index, false);
 		
-		if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return; }
+		if (!SQL_Execute(rdm_instance)) { log(Error, "SQL Execute Failed..."); return; }
 		
 		// Only Expecting 1 row, changed while to if.
 		if (SQL_FetchRow(rdm_instance)) {
@@ -563,7 +563,7 @@ public RDM_SlayMenu_Callback(Menu menu, MenuAction action, int client, int item)
 }
 
 public Action Command_Info(int client, int args) {
-	PrintToServer("%N just used Command_Info", client);
+	log(Info, "%N just used Command_Info", client);
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}At this moment in time, this function expects a case number.  Future versions may change this.");
 		return Plugin_Handled;
@@ -588,14 +588,14 @@ public Action Command_Info(int client, int args) {
 
 public Handle_Menu_Callback(Menu menu, MenuAction action, int client, int item)
 {
-	PrintToServer("%N just used Handle_Menu_Callback", client);
+	log(Info, "%N just used Handle_Menu_Callback", client);
 	if (action == MenuAction_Select) {
-		
+		log(Info, "%N just cliced %i", client, item);
 	}
 }
 
 public Action Command_Handle(int client, int args) {
-	PrintToServer("%N just used Command_Handle", client);
+	log(Info, "%N just used Command_Handle", client);
 	if (args == 0) {
 		Menu menu = new Menu(Handle_Menu_Callback);
 		menu.SetTitle("Unhandled Cases");
@@ -637,7 +637,7 @@ public Action Command_Handle(int client, int args) {
 }
 
 public Action Command_HandleNext(int client, int args) {
-	PrintToServer("%N just used Command_HandleNext", client);
+	log(Info, "%N just used Command_HandleNext", client);
 	if (args == 0) {
 		bool run = true;
 		int first_unhandled = 0;
@@ -666,7 +666,7 @@ public Action Command_HandleNext(int client, int args) {
 
 public HandleCase(int client, int case_id)
 {
-	PrintToServer("%N just used HandleCase", client);
+	log(Info, "%N just used HandleCase", client);
 	
 	if (short_ids[case_id] == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}The given case_id is either invalid or not distributed yet.");
@@ -696,7 +696,7 @@ public HandleCase(int client, int case_id)
 	if (global_statement_insert_handles == INVALID_HANDLE)
 		global_statement_insert_handles = SQL_PrepareQuery(db, "INSERT INTO handles (death_index, staff_name, staff_auth) VALUES (?, ?, ?);", error, sizeof(error));
 	DBStatement insert_handles = global_statement_insert_handles;
-	if (insert_handles == null) { PrintToServer("Error templating handles in the database"); PrintToServer(error); return; }
+	if (insert_handles == null) { log(Error, "Error templating handles in the database"); log(Error, error); return; }
 	
 	char staff_name[64], staff_auth[64];
 	GetClientAuthId(client, AuthId_Steam2, staff_auth, sizeof(staff_auth), true);
@@ -707,18 +707,18 @@ public HandleCase(int client, int case_id)
 	SQL_BindParamString(insert_handles, 2, staff_auth, false);
 	
 	// Execute statement
-	if (!SQL_Execute(insert_handles)) { PrintToServer("SQL Execute Failed..."); return; }
+	if (!SQL_Execute(insert_handles)) { log(Error, "SQL Execute Failed..."); return; }
 
 	if (global_statement_rdm_instance == INVALID_HANDLE)
 		global_statement_rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error));
 	DBStatement rdm_instance = global_statement_rdm_instance;
 	if (rdm_instance == null) {
-		PrintToServer(error);
+		log(Error, error);
 		return;
 	}
 	SQL_BindParamInt(rdm_instance, 0, death_index, false);
 	
-	if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return; }
+	if (!SQL_Execute(rdm_instance)) { log(Error, "SQL Execute Failed..."); return; }
 	
 	char victim_name[100];
 	char victim_id[100];
@@ -757,7 +757,7 @@ L 09/05/2017 - 04:59:24: --------------------------------------
 */
 
 public Action Command_Verdict(int client, int args) {
-	PrintToServer("%N just used Command_Verdict", client);
+	log(Error, "%N just used Command_Verdict", client);
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Expected an argument, but got none.)");
 		return Plugin_Handled;
@@ -801,12 +801,12 @@ public Action Command_Verdict(int client, int args) {
 	if (global_statement_update_handled == INVALID_HANDLE)
 		global_statement_update_handled = SQL_PrepareQuery(db, "UPDATE deaths SET verdict=? WHERE death_index=?;", error, sizeof(error));
 	DBStatement update_handled = global_statement_update_handled;
-	if (update_handled == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
+	if (update_handled == null) { log(Error, "Error templating update_handled in the database"); log(Error, error); return Plugin_Handled; }
 	
 	if (global_statement_update_handles == INVALID_HANDLE)
 		global_statement_update_handles = SQL_PrepareQuery(db, "UPDATE handles SET verdict=? WHERE death_index=?;", error, sizeof(error));
 	DBStatement handled_handles = global_statement_update_handles;
-	if (handled_handles == null) { PrintToServer("Error templating update_handled in the database"); PrintToServer(error); return Plugin_Handled; }
+	if (handled_handles == null) { log(Error, "Error templating update_handled in the database"); log(Error, error); return Plugin_Handled; }
 	
 	
 	
@@ -818,8 +818,8 @@ public Action Command_Verdict(int client, int args) {
 		SQL_BindParamInt(handled_handles, 0, 2, false);
 		SQL_BindParamInt(handled_handles, 1, short_ids[case_id], false);
 		
-		if (!SQL_Execute(update_handled)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
-		if (!SQL_Execute(handled_handles)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
+		if (!SQL_Execute(update_handled)) { log(Error, "SQL Execute Failed..."); return Plugin_Handled; }
+		if (!SQL_Execute(handled_handles)) { log(Error, "SQL Execute Failed..."); return Plugin_Handled; }
 		
 		if ( (case_slay[case_id] == should_slay) && (attacker_id != -1) )
 		{
@@ -849,8 +849,8 @@ public Action Command_Verdict(int client, int args) {
 		SQL_BindParamInt(handled_handles, 0, 1, false);
 		SQL_BindParamInt(handled_handles, 1, short_ids[case_id], false);
 		
-		if (!SQL_Execute(update_handled)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
-		if (!SQL_Execute(handled_handles)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
+		if (!SQL_Execute(update_handled)) { log(Error, "SQL Execute Failed..."); return Plugin_Handled; }
+		if (!SQL_Execute(handled_handles)) { log(Error, "SQL Execute Failed..."); return Plugin_Handled; }
 		
 		if (victim_id == -1)
 		{
@@ -876,7 +876,7 @@ public Action Command_Verdict(int client, int args) {
 }
 
 public Action Command_Damage(int client, int args) {
-	PrintToServer("%N just used Command_Damage", client);
+	log(Info, "%N just used Command_Damage", client);
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}At this moment in time, this function expects a case number.  Future versions may change this.");
 		return Plugin_Handled;
@@ -899,12 +899,12 @@ public Action Command_Damage(int client, int args) {
 		global_statement_rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error));
 	DBStatement rdm_instance = global_statement_rdm_instance;
 	if (rdm_instance == null) {
-		PrintToServer(error);
+		log(Error, error);
 		return Plugin_Handled;
 	}
 	SQL_BindParamInt(rdm_instance, 0, death_index, false);
 	
-	if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
+	if (!SQL_Execute(rdm_instance)) { log(Error, "SQL Execute Failed..."); return Plugin_Handled; }
 	
 	char attacker_auth[100];
 	char victim_auth[100];
@@ -918,7 +918,7 @@ public Action Command_Damage(int client, int args) {
 		global_statements_damage_log = SQL_PrepareQuery(db, "SELECT * FROM `damage` WHERE `round_no`=? AND (`victim_auth`=? OR `victim_auth`=? OR `attacker_auth`=? OR `attacker_auth`=?);", error, sizeof(error));
 	DBStatement damage_log = global_statements_damage_log;
 	if (damage_log == null) {
-		PrintToServer(error);
+		log(Error, error);
 		return Plugin_Handled;
 	}
 	SQL_BindParamInt(damage_log, 0, round_number, false);
@@ -927,7 +927,7 @@ public Action Command_Damage(int client, int args) {
 	SQL_BindParamString(damage_log, 3, attacker_auth, false);
 	SQL_BindParamString(damage_log, 4, victim_auth, false);
 	
-	if (!SQL_Execute(damage_log)) { PrintToServer("SQL Execute Failed..."); return Plugin_Handled; }
+	if (!SQL_Execute(damage_log)) { log(Error, "SQL Execute Failed..."); return Plugin_Handled; }
 	
 	PrintToConsole(client, "========================== Round %d ==========================", round_number)
 	
@@ -959,15 +959,15 @@ public Action Command_Damage(int client, int args) {
 }
 
 public Display_Information(int client, int death_index) {
-	PrintToServer("%N just used Display_Information", client);
+	log(Info, "%N just used Display_Information", client);
 	char error[255];
 	if (global_statement_rdm_instance == INVALID_HANDLE)
 		global_statement_rdm_instance = SQL_PrepareQuery(db, "SELECT * FROM `deaths` WHERE death_index=? LIMIT 1;", error, sizeof(error));
 	DBStatement rdm_instance = global_statement_rdm_instance;
-	if (rdm_instance == null) { PrintToServer(error); return; }
+	if (rdm_instance == null) { log(Error, error); return; }
 	SQL_BindParamInt(rdm_instance, 0, death_index, false);
 	
-	if (!SQL_Execute(rdm_instance)) { PrintToServer("SQL Execute Failed..."); return; }
+	if (!SQL_Execute(rdm_instance)) { log(Error, "SQL Execute Failed..."); return; }
 	
 	int death_time;
 
@@ -1067,7 +1067,7 @@ public Display_Information(int client, int death_index) {
 }
 
 public Action Command_SlayNR(int client, int args) {
-	PrintToServer("%N just used Command_SlayNR", client);
+	log(Info, "%N just used Command_SlayNR", client);
 	// Ensure target provided
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Invalid usage, expects /slaynr <player>.");
@@ -1125,7 +1125,7 @@ public Action Command_SlayNR(int client, int args) {
 }
 
 public Action Command_UnSlayNR(int client, int args) {
-	PrintToServer("%N just used Command_UnSlayNR", client);
+	log(Info, "%N just used Command_UnSlayNR", client);
 	// Ensure target provided
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Invalid usage, expects /unslaynr <player>.");

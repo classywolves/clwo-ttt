@@ -36,7 +36,7 @@ public void LogOnPluginStart()
 
    cookie_player_verbose_log = RegClientCookie("player_verbose_log", "Log verbose to chat.", CookieAccess_Public);
    SetCookiePrefabMenu(cookie_player_verbose_log, CookieMenu_OnOff_Int, "Log verbose to chat.");
-   g_LogForward = CreateGlobalForward("OnLog", ET_Event, Param_String, Param_Cell, Param_Cell, Param_String);
+   g_LogForward = CreateGlobalForward("OnLog", ET_Event, Param_String, Param_Cell, Param_String);
    g_logLevel = CreateConVar("sm_debug_logLevel", "0", "Set debug log level");
    g_debug = CreateConVar("sm_debug", "", "Set which plugin we are debugging");
 
@@ -71,11 +71,11 @@ public void setLogSource(char[] name) {
    init = true;
 }
 
-public Action log(LogLevels level, int client, char[] message, any ...) {
+public Action log(LogLevels level, char[] message, any ...) {
    // Format message
    int len = strlen(message) + 255;
    char[] fmtMessage = new char[len];
-   VFormat(fmtMessage, len, message, 4);
+   VFormat(fmtMessage, len, message, 3);
 
    char strLevel[5], strColour[20], wordLevel[32];
    switch (level) {
@@ -92,9 +92,9 @@ public Action log(LogLevels level, int client, char[] message, any ...) {
    Format(layout, sizeof(layout), "[%s] [%7s] %s %s", time, ourName, strLevel, fmtMessage);
    Format(flayout, sizeof(flayout), "%s - %s - %s - %s", ltime, ourName, wordLevel, fmtMessage);
    if (level != Warn) {
-      Format(clayout, sizeof(clayout), "{purple}[%7s] %s%s %s", ourName, strColour, strLevel, fmtMessage);
+      Format(clayout, sizeof(clayout), "{purple}[%s] %s%s %s", ourName, strColour, strLevel, fmtMessage);
    } else {
-      Format(clayout, sizeof(clayout), "{purple}[%7s] %s! %s", ourName, strColour, fmtMessage);
+      Format(clayout, sizeof(clayout), "{purple}[%s] %s! %s", ourName, strColour, fmtMessage);
    }
 
    if (!init) {
@@ -107,7 +107,6 @@ public Action log(LogLevels level, int client, char[] message, any ...) {
    Call_StartForward(g_LogForward);
    Call_PushString(ourName);
    Call_PushCell(level);
-   Call_PushCell(client);
    Call_PushString(fmtMessage);
    Call_Finish(result);
 
