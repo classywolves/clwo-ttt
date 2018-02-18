@@ -65,6 +65,7 @@ public void setLogSource(char[] name) {
 
    char file[1024];
    BuildPath(Path_SM, file, PLATFORM_MAX_PATH, "/logs/modules/%s", name);
+   if (init) { logFile.Close(); }
    logFile = OpenFile(file, "a");
 
    init = true;
@@ -76,12 +77,12 @@ public Action log(LogLevels level, int client, char[] message, any ...) {
    char[] fmtMessage = new char[len];
    VFormat(fmtMessage, len, message, 4);
 
-   char strLevel[5], strColour[20];
+   char strLevel[5], strColour[20], wordLevel[32];
    switch (level) {
-      case Info: { strLevel = "i"; strColour = "{grey}"; }
-      case Success: { strLevel = "√"; strColour = "{green}"; }
-      case Warn: { strLevel = "‼"; strColour = "{yellow}"; }
-      case Error: { strLevel = "×"; strColour = "{red}"; }
+      case Info: { strLevel = "i"; strColour = "{grey}"; wordLevel = "6"; }
+      case Success: { strLevel = "√"; strColour = "{green}"; wordLevel = "5"; }
+      case Warn: { strLevel = "‼"; strColour = "{yellow}"; wordLevel = "4"; }
+      case Error: { strLevel = "×"; strColour = "{red}"; wordLevel = "3"; }
    }
    // Current debug module
    char time[16], ltime[48], layout[512], clayout[768], flayout[768];
@@ -89,7 +90,7 @@ public Action log(LogLevels level, int client, char[] message, any ...) {
    FormatTime(ltime, sizeof(ltime), "%F %T")
 
    Format(layout, sizeof(layout), "[%s] [%7s] %s %s", time, ourName, strLevel, fmtMessage);
-   Format(flayout, sizeof(flayout), "%s - %s - %s - %s", ltime, ourName, strLevel, fmtMessage);
+   Format(flayout, sizeof(flayout), "%s - %s - %s - %s", ltime, ourName, wordLevel, fmtMessage);
    if (level != Warn) {
       Format(clayout, sizeof(clayout), "{purple}[%7s] %s%s %s", ourName, strColour, strLevel, fmtMessage);
    } else {

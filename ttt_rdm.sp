@@ -7,6 +7,7 @@
 #include <general>
 #include <cstrike>
 #include <player_methodmap>
+#include <logger>
 
 DBStatement global_statement_insert_death;
 DBStatement global_statement_insert_damage;
@@ -148,6 +149,7 @@ public HookEvents() {
 }
 
 public OnPluginStart() {
+	setLogSource("rdm");
 	LoadTranslations("common.phrases");
 	StartTimers();
 	InitialiseVariables();
@@ -292,8 +294,6 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	// Determine whether RDM
 	int victim_role = TTT_GetClientRole(victim);
 	int attacker_role = TTT_GetClientRole(attacker);
-	
-	
 
 	// Prepare a SQL statement for the insertion
 	char error[255];
@@ -304,7 +304,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 		global_statement_insert_damage = SQL_PrepareQuery(db, "INSERT INTO damage (round_no, victim_name, victim_auth, victim_role, attacker_name, attacker_auth, attacker_role, damage_done, health_left, round_time, weapon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);", error, sizeof(error));
 	}
 	insert_damage = global_statement_insert_damage;
-	if (insert_damage == null) { PrintToServer("Error templating damage in the database"); PrintToServer(error); return Plugin_Continue; }
+	if (insert_damage == null || insert_damage == INVALID_HANDLE) { PrintToServer("Error templating damage in the database"); PrintToServer(error); return Plugin_Continue; }
 	
 	if (!attacker)
 	{
@@ -337,7 +337,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	SQL_BindParamInt(insert_damage, 8, health_left, false);
 	SQL_BindParamInt(insert_damage, 9, round_time, false);
 	SQL_BindParamString(insert_damage, 10, weapon, false);
-	
+
 	// Execute statement
 	if (!SQL_Execute(insert_damage)) { SQL_GetError(insert_damage, error, sizeof(error)); PrintToServer("SQL Execute Failed Insert Damage: %s", error); return Plugin_Continue; }
 	max_index++;
@@ -1136,7 +1136,7 @@ public Action Command_UnSlayNR(int client, int args) {
 	char target_string[32];
 	GetCmdArg(1, target_string, sizeof(target_string));
 
-	if (StrContains(target_string, "STEAM_1:0:", false) == 0) {
+	if (StrContains(target_string, "STEAM_1:", false) == 0) {
 		// Targetting an offline player.
 		char admin_name[128];
 		CPrintToChat(client, "{purple}[RDM] {yellow}Targetting '%s' via SteamID", target_string);
