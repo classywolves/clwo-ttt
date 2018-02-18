@@ -1170,50 +1170,52 @@ public Action Command_UnSlayNR(int client, int args) {
 	return Plugin_Handled
 }
 
-
-public void TTT_OnClientGetRole(int client, int role)
+public Action TTT_OnRoundStart_Pre()
 {
-	last_gun_fire[client] = -1;
-	Player player = Player(client)
-	if (player.slaynr == 1)
+	LoopValidClients(client)
 	{
-		if (IsValidClient(client) && IsPlayerAlive(client))
+		last_gun_fire[client] = -1;
+		Player player = Player(client);
+		if (player.slaynr == 1)
 		{
-			slay_count[client]++;
-			char message[255];
-			if (slay_count[client] > 2) {
-				Format(message, sizeof(message), "{purple}[RDM] {red}%N has been slain %d times this map.  Consider a specban.", client, slay_count[client]);
-			} else {
-				Format(message, sizeof(message), "{purple}[RDM] {yellow}%N has been slain (no. %d).", client, slay_count[client]);
+			if (IsPlayerAlive(client))
+			{
+				slay_count[client]++;
+				char message[255];
+				if (slay_count[client] > 2) {
+					Format(message, sizeof(message), "{purple}[RDM] {red}%N has been slain %d times this map.  Consider a specban.", client, slay_count[client]);
+				} else {
+					Format(message, sizeof(message), "{purple}[RDM] {yellow}%N has been slain (no. %d).", client, slay_count[client]);
+				}
+				CPrintToStaff(message);
+				char slay_admin[256];
+				player.slayed_by(client, slay_admin);
+				CPrintToChat(client, "{purple}[Slay] {orchid}You were slain by %s.  Please read /rules.", slay_admin);
+
+				char title[100], slayed_by[100];
+				Format(title, 64, "TTT Slayer");
+				Format(slayed_by, 64, "Slain By: %s", slay_admin)
+				
+				ReplaceString(message, 192, "\\n", "\n");
+				
+				Panel mSayPanel = new Panel();
+				mSayPanel.SetTitle(title);
+				mSayPanel.DrawItem("", ITEMDRAW_SPACER);
+				mSayPanel.DrawText(slayed_by);
+				mSayPanel.DrawText("Please consider reading !rules / !new");
+				mSayPanel.DrawItem("", ITEMDRAW_SPACER);
+
+				if(IsClientInGame(client) && !IsFakeClient(client)) {
+					mSayPanel.Send(client, Handler_DoNothing, 20);
+				}
+
+				delete mSayPanel;
+
+				ForcePlayerSuicide(client);
+				TTT_SetFoundStatus(client, true);
 			}
-			CPrintToStaff(message);
-			char slay_admin[256];
-			player.slayed_by(client, slay_admin);
-			CPrintToChat(client, "{purple}[Slay] {orchid}You were slain by %s.  Please read /rules.", slay_admin);
-
-			char title[100], slayed_by[100];
-			Format(title, 64, "TTT Slayer");
-			Format(slayed_by, 64, "Slain By: %s", slay_admin)
-			
-			ReplaceString(message, 192, "\\n", "\n");
-			
-			Panel mSayPanel = new Panel();
-			mSayPanel.SetTitle(title);
-			mSayPanel.DrawItem("", ITEMDRAW_SPACER);
-			mSayPanel.DrawText(slayed_by);
-			mSayPanel.DrawText("Please consider reading !rules / !new");
-			mSayPanel.DrawItem("", ITEMDRAW_SPACER);
-
-			if(IsClientInGame(client) && !IsFakeClient(client)) {
-				mSayPanel.Send(client, Handler_DoNothing, 20);
-			}
-
-			delete mSayPanel;
-
-			ForcePlayerSuicide(client);
-			TTT_SetFoundStatus(client, true);
+			player.slaynr = 0;
 		}
-		player.slaynr = 0;
 	}
 }
 
