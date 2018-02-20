@@ -5,6 +5,7 @@
 #include <ttt>
 #include <cstrike>
 #include <general>
+#include <logger>
 
 /* Plugin Info */
 #define PLUGIN_NAME 			"TTT Bonuses"
@@ -23,6 +24,8 @@ public Plugin myinfo =
 };
 
 public OnPluginStart() {
+	setLogSource("bonuses");
+
 	// Register CVARS
 	// rdm_version = CreateConVar("ldb_version", PLUGIN_VERSION_M, "Leaderboard Plugin Version");
 	CreateConVar("ttt_bonuses", PLUGIN_VERSION_M, "TTT Plugin Version");
@@ -34,7 +37,7 @@ public OnPluginStart() {
 	HookEvent("round_end", OnRoundEnd, EventHookMode_PostNoCopy);
 
 	// Alert Load Success
-	PrintToServer("[URL] Has Loaded Succcessfully!");
+	log(Success, "[URL] Has Loaded Succcessfully!");
 }
 
 public Action TTT_OnRoundStart_Pre() {
@@ -55,5 +58,5 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 
 public OnPluginEnd() {
 	// Alert Unload Success
-	PrintToServer("[URL] Has Unloaded Successfully!");
+	log(Success, "[URL] Has Unloaded Successfully!");
 }

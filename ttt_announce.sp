@@ -1,10 +1,13 @@
 #include <general>
 #include <sourcemod>
 #include <geoip>
+#include <logger>
 
 Database ttt_db;
 
 public OnPluginStart() {
+	setLogSource("announce");
+
 	ttt_db = ConnectDatabase("ttt", "ANN");
 	HookEvent("player_team", OnPlayerTeam, EventHookMode_Pre);
 	HookEvent("player_disconnect", OnPlayerDisconnect, EventHookMode_Pre);
@@ -15,7 +18,7 @@ public Action OnPlayerTeam(Event event, const char[] name, bool dontBroadcast) {
 	return Plugin_Handled;
 }
 
-public OnClientAuthorized(client, const String:auth[]) {
+public void OnClientAuthorized(client, const String:auth[]) {
 	char player_name[64], country[3], ip[32];
 	int karma;
 
@@ -23,18 +26,19 @@ public OnClientAuthorized(client, const String:auth[]) {
 	GetClientIP(client, ip, sizeof(ip));
 	GeoipCode2(ip, country);
 
-	GetClientAuthId(client, AuthId_SteamID64, auth, strlen(auth));
+	char steam_id[64]; 
+  GetClientAuthId(client, AuthId_SteamID64, steam_id, strlen(steam_id), true); 
 
 	DBStatement get_karma = PrepareStatement(ttt_db, "SELECT `karma` FROM `ttt` WHERE communityid=?");
-	SQL_BindParamString(get_karma, 0, auth, false);	
-	if (!SQL_Execute(get_karma)) { PrintToServer("SQL Execute Failed..."); }
+	SQL_BindParamString(get_karma, 0, steam_id, false);	
+	if (!SQL_Execute(get_karma)) { log(Error, "SQL Execute Failed..."); }
 
 	while (SQL_FetchRow(get_karma)) {
 		karma = SQL_FetchInt(get_karma, 0);
 	}
 
 	CPrintToChatAll("{GREEN}[+] {BLUE}%s {DEFAULT}[{LIGHTGREEN}%s{DEFAULT} | {LIGHTGREEN}%d{DEFAULT}] {LIGHTGREEN}connected.", player_name, country, karma);
-	return Plugin_Handled;
+	return;
 }
 
 public Action OnPlayerDisconnect(Event event, const char[] name, bool dontBroadcast) {

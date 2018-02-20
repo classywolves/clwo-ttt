@@ -5,6 +5,7 @@
 #include <imod_mini>
 #include <general>
 #include <cstrike>
+#include <logger>
 
 /* Plugin Info */
 #define PLUGIN_NAME 			"Popey's TTT Stuff"
@@ -30,6 +31,8 @@ Database db_pa;
 
 public OnPluginStart()
 {
+	setLogSource("popey");
+
 	RegisterCvars();
 	RegisterCmds();
 	HookEvents();
@@ -37,13 +40,13 @@ public OnPluginStart()
 	db_pa = ConnectDatabase("player_analytics", "PA");
 	db_ttt = ConnectDatabase("ttt", "ttt")
 	
-	PrintToServer("[TTT Popey] Has Loaded Succcessfully!");
+	log(Success, "[TTT Popey] Has Loaded Succcessfully!");
 }
 
 public OnPluginEnd()
 {
 	//end commands here
-	PrintToServer("[TTT Popey] Has Unloaded Successfully!");
+	log(Success, "[TTT Popey] Has Unloaded Successfully!");
 }
 
 public void RegisterCvars()
@@ -194,7 +197,7 @@ public Action Command_Playtime(int client, int args) {
 	{
 		char error[512];
 		SQL_GetError(db_pa, error, sizeof(error));
-		PrintToServer("Failed to query (error: %s)", error);
+		log(Error, "Failed to query (error: %s)", error);
 	} else {
 		char timestr[15];
 		while (SQL_FetchRow(query))
@@ -238,7 +241,7 @@ public Action Command_Rank(int client, int args) {
 	{
 		char error[512];
 		SQL_GetError(db_ttt, error, sizeof(error));
-		PrintToServer("Failed to query (error: %s)", error);
+		log(Error, "Failed to query (error: %s)", error);
 	} else {
 		char rank[15];
 		char karma[15];

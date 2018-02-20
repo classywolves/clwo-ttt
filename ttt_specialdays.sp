@@ -6,6 +6,7 @@
 #include <ttt>
 #include <cstrike>
 #include <general>
+#include <logger>
 
 /* Plugin Info */
 #define PLUGIN_NAME 			"TTT Special Days"
@@ -27,6 +28,8 @@ public Plugin myinfo =
 };
 
 public OnPluginStart() {
+	setLogSource("specailDays");
+
 	// Register CVARS
 	// rdm_version = CreateConVar("ldb_version", PLUGIN_VERSION_M, "Leaderboard Plugin Version");
 	CreateConVar("url_version", PLUGIN_VERSION_M, "URL Plugin Version");
@@ -38,7 +41,7 @@ public OnPluginStart() {
 	HookEvent("round_end", OnRoundEnd, EventHookMode_PostNoCopy);
 
 	// Alert Load Success
-	PrintToServer("[URL] Has Loaded Succcessfully!");
+	log(Success, "[URL] Has Loaded Succcessfully!");
 }
 
 public Action TTT_OnRoundStart_Pre() {
@@ -109,7 +112,7 @@ public Maybe_Special_Day() {
 }
 
 public Gravity_Day() {
-	PrintToServer("It's a gravity day!  Setting players gravity.");
+	log(Info, "It's a gravity day!  Setting players gravity.");
 	is_gravity_day = true
 	CPrintToChatAll("{purple}[SD] {green}It's a gravity day!  Setting all players gravity to {yellow}0.3{green}.")
 	for (int client = 1; client <= MaxClients; client++) {
@@ -120,7 +123,7 @@ public Gravity_Day() {
 }
 
 public Third_Person() {
-	PrintToServer("It's a third person day!");
+	log(Info, "It's a third person day!");
 	is_tp_day = true
 	CPrintToChatAll("{purple}[SD] {green}It's a third person day!  Enabled {yellow}thirdperson{green} on all players.")
 	for (int client = 1; client <= MaxClients; client++) {
@@ -132,5 +135,5 @@ public Third_Person() {
 
 public OnPluginEnd() {
 	// Alert Unload Success
-	PrintToServer("[URL] Has Unloaded Successfully!");
+	log(Success, "[URL] Has Unloaded Successfully!");
 }
