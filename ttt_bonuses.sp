@@ -58,5 +58,5 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 
 public OnPluginEnd() {
 	// Alert Unload Success
-	log(Success, ("[URL] Has Unloaded Successfully!");
+	log(Success, "[URL] Has Unloaded Successfully!");
 }

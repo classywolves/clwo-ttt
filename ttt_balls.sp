@@ -50,7 +50,7 @@ public Action:Bola(client,args)
 { 
 	if(client == 0)
 	{
-		log(Info, "%t","Command is in-game only");
+		log(Info, "Command is in-game only");
 		return Plugin_Handled;
 	}
 
@@ -120,7 +120,7 @@ public Action:NoBola(client, args)
 { 
 	if(client == 0)
 	{
-		log(Info, "%t","Command is in-game only");
+		log(Info, "Command is in-game only");
 		return Plugin_Handled;
 	}
 

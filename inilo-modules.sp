@@ -11,6 +11,7 @@
 //#include <main>
 //#include <inilo>
 //#include <updater>
+//#include <logger>
 
 
 
@@ -39,6 +40,7 @@ public Plugin myinfo =
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
+	//setLogSource("iniloModules");
 
 	RegPluginLibrary("iMod");
 	CreateNative("iMod_GetUserType", Native_GetUserType);
@@ -820,7 +822,7 @@ stock int Internal_Access_GetUserTypeOfTargetString(const char[] targetstring)
 	ReplaceString(cLookupString,sizeof(cLookupString),"@","");
 	for(int i = 0; i < MAX_USER_TYPES ;i++)
 	{
-		//PrintToServer("g_sUserTypes[i][USER_TYPE_MULTI_TARGET] == %s || LOOKING FOR==%s",g_sUserTypes[i][USER_TYPE_MULTI_TARGET],cLookupString);
+		//log(Info, "g_sUserTypes[i][USER_TYPE_MULTI_TARGET] == %s || LOOKING FOR==%s",g_sUserTypes[i][USER_TYPE_MULTI_TARGET],cLookupString);
 		if(StrEqual(g_sUserTypes[i][USER_TYPE_MULTI_TARGET],cLookupString))
 		{
 			return i;
