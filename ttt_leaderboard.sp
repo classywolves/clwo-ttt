@@ -6,6 +6,7 @@
 //#include <imod>
 #include <ttt>
 #include <cstrike>
+#include <logger>
 
 /* User Type */
 #define USER_TYPE_COMMAND      0
@@ -51,16 +52,17 @@ public Plugin myinfo =
 
 public OnPluginStart()
 {
-
+	setLogSource("leaderboard");
+	
 	// Connect to Database
 	char error[255];
 	db_ttt = SQL_Connect("ttt", true, error, sizeof(error));
-	if (db_ttt == null) { PrintToServer("[LDB] Could not connect to TTT db: %s", error); }
-	else { PrintToServer("[LDB] Connected to TTT DB"); } 
+	if (db_ttt == null) { log(Error ,"[LDB] Could not connect to TTT db: %s", error); }
+	else { log(Success, "[LDB] Connected to TTT DB"); } 
 	
 	db_player_analytics = SQL_Connect("player_analytics", true, error, sizeof(error));
-	if (db_player_analytics == null) { PrintToServer("[LDB] Could not connect to Player Analytics db: %s", error); }
-	else { PrintToServer("[LDB] Connected to Player Analytics DB"); } 
+	if (db_player_analytics == null) { log(Error ,"[LDB] Could not connect to Player Analytics db: %s", error); }
+	else { log(Success, "[LDB] Connected to Player Analytics DB"); } 
 	
 	// Register CVARS
 	// rdm_version = CreateConVar("ldb_version", PLUGIN_VERSION_M, "Leaderboard Plugin Version");
@@ -77,7 +79,7 @@ public OnPluginStart()
 	update_menu();
 	
 	// Alert Load Success
-	PrintToServer("[LDB] Has Loaded Succcessfully!");
+	log(Success ,"[LDB] Has Loaded Succcessfully!");
 }
 
 public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
@@ -88,7 +90,7 @@ public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
 public OnPluginEnd()
 {
 	// Alert Unload Success
-	PrintToServer("[LDB] Has Unloaded Successfully!");
+	log(Success ,"[LDB] Has Unloaded Successfully!");
 }
 
 
@@ -102,10 +104,10 @@ public update_menu()
 	// Initiate the query statement
 	char error[255];
 	sql_karma = SQL_PrepareQuery(db_ttt, "SELECT * FROM ttt ORDER BY karma DESC LIMIT 60", error, sizeof(error))
-	if (sql_karma == null) { PrintToServer(error); return; }
+	if (sql_karma == null) { log(Error, error); return; }
 	
 	// Execute the command
-	if (!SQL_Execute(sql_karma)) { PrintToServer("[LDB] Karma - Failed Execute"); return; }
+	if (!SQL_Execute(sql_karma)) { log(Error ,"[LDB] Karma - Failed Execute"); return; }
 
 	// Loop over rows
 

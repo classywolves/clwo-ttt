@@ -10,6 +10,7 @@
 #include <imod>
 #include <ttt>
 #include <general>
+#include <logger>
 
 /* Plugin Info */
 #define PLUGIN_NAME 			"LastSeen Logger"
@@ -82,6 +83,8 @@ methodmap Player {
 
 public OnPluginStart()
 {
+	setLogSource("lastSeen");
+
 	CreateConVar("lastseen_version", PLUGIN_VERSION_M, "LastSeen Plugin Version");
 	RegAdminCmd("sm_visible", Command_Visible, ADMFLAG_CHEATS, "Prints all players that are visible");
 	
@@ -98,7 +101,7 @@ public OnPluginStart()
 	CreateTimer(1.0, Timer_1, _, TIMER_REPEAT);
 	
 	// CreateTimer(1.0, Timer_UpdateLastSeen, _, TIMER_FLAG_NO_MAPCHANGE);
-	PrintToServer("[LSeen] Has Loaded Succcessfully!");
+	log(Success, "[LSeen] Has Loaded Succcessfully!");
 }
 
 public void CvarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
@@ -114,7 +117,7 @@ public void CvarChanged(ConVar convar, const char[] oldValue, const char[] newVa
 }
 
 public OnPluginEnd() {
-	PrintToServer("[LSeen] Has Unloaded Successfully!");
+	log(Success, "[LSeen] Has Unloaded Successfully!");
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {

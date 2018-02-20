@@ -3,6 +3,7 @@
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
+#include <logger>
 
 typedef NativeCall = function int (Handle plugin, int numParams);
 
@@ -11,6 +12,7 @@ int refresh_time[MAXPLAYERS + 1];
 Database hDatabase = null;
 
 public OnPluginStart() {
+	setLogSource("actions");
 	Database.Connect(DBCallback, "ttt");
 	CreateTimer(20.0, LoadAllActionData, _, TIMER_REPEAT);
 }
@@ -39,10 +41,10 @@ public int Native_GetActions(Handle plugin, int numParams) {
 	int client = GetNativeCell(1);
 
 	if (refresh_time[client] < GetTime() - 60) {
-		PrintToServer("%N has out of date data it appears, time: %d", client, refresh_time[client]);
+		log(Warn, "%N has out of date data it appears, time: %d", client, refresh_time[client]);
 	}
 
-	PrintToServer("Grabbing action array for %N %d %d", client, action_cache[client][0], action_cache[client][1])
+	log(Info, "Grabbing action array for %N %d %d", client, action_cache[client][0], action_cache[client][1])
 
 	int temp_array[2];
 	temp_array[0] = action_cache[client][0];
@@ -59,9 +61,9 @@ public void LoadActionData(int serial) {
 	char query[256], steam_id[64];
 	GetClientAuthId(client, AuthId_Steam2, steam_id, sizeof(steam_id));
 	Format(query, sizeof(query), "SELECT bad_action,COUNT(*) AS count FROM `deaths` WHERE `killer_id`='%s' GROUP BY bad_action ORDER BY bad_action;", steam_id)
-	//PrintToServer(query);
+	//log(Info, query);
 	hDatabase.Query(GetActionCallback, query, serial); 
-	//PrintToServer("Hey, we got below hDatabase.Query within ttt_actions")
+	//log(Info, "Hey, we got below hDatabase.Query within ttt_actions")
 	return;
 }
 
@@ -72,21 +74,21 @@ public Action LoadAllActionData(Handle timer) {
 }
 
 public void GetActionCallback(Database db, DBResultSet results, const char[] error, any serial) {
-	//PrintToServer("Oh, hey, we got to the GetActionCallback")
+	//log(Info, "Oh, hey, we got to the GetActionCallback")
 	int client = GetClientFromSerial(serial);
 	if (client == 0) return;
 
-	//PrintToServer("Player is totally still online: %d, %N", serial, client);
+	//log("Player is totally still online: %d, %N", serial, client);
 
 	if (results == null) {
-		PrintToServer("Get Action Query failed! %s", error);
+		log(Error, "Get Action Query failed! %s", error);
 	} else {
 		while (SQL_FetchRow(results)) {
-			//PrintToServer("Oh hey, we got a row of results!  How exciting <3");
+			//log(Info, "Oh hey, we got a row of results!  How exciting <3");
 			int index = SQL_FetchInt(results, 0);
 			action_cache[client][index] = SQL_FetchInt(results, 1);
-			//PrintToServer("action set %d %d", SQL_FetchInt(results, 0),  SQL_FetchInt(results, 1));
-			//PrintToServer("Action log %d %d", action_cache[client][0], action_cache[client][1]);
+			//log(Info, "action set %d %d", SQL_FetchInt(results, 0),  SQL_FetchInt(results, 1));
+			//log(Info, "Action log %d %d", action_cache[client][0], action_cache[client][1]);
 		}
 		refresh_time[client] = GetTime();
 	}

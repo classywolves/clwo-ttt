@@ -3,6 +3,7 @@
 #include <sdktools_entinput>
 #include <sdktools_functions>
 #include <sdkhooks>
+#include <logger>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -31,6 +32,8 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
+	setLogSource("weaponSkins");
+
 	if (!HookOnGiveNamedItem())
 	{
 		SetFailState("Unable to hook GiveNamedItem using DHooks");
@@ -345,7 +348,7 @@ public Action OnPostWeaponEquip(int client, int weapon)
 	}
 	
 	if (s_bDebugMessages)
-		PrintToServer("[AWS] OnEntityClearedFromMapWeapons(entity=%d, classname=%s, mapweaponarraysize=%d)", weapon, classname, GetArraySize(s_hMapWeapons));
+		log(Info, "[AWS] OnEntityClearedFromMapWeapons(entity=%d, classname=%s, mapweaponarraysize=%d)", weapon, classname, GetArraySize(s_hMapWeapons));
 	
 	// Skip if previously owned
 	int m_hPrevOwner = GetEntProp(weapon, Prop_Send, "m_hPrevOwner");
@@ -433,13 +436,13 @@ public void OnEntityCreated(int entity, const char[] classname)
 	PushArrayCell(s_hMapWeapons, entity);
 	
 	if (s_bDebugMessages)
-		PrintToServer("[AWS] OnEntityCreated(entity=%d, classname=%s, itemdefinition=%d, mapweaponarraysize=%d)", entity, classname, itemdefinition, GetArraySize(s_hMapWeapons));
+		log(Info, "[AWS] OnEntityCreated(entity=%d, classname=%s, itemdefinition=%d, mapweaponarraysize=%d)", entity, classname, itemdefinition, GetArraySize(s_hMapWeapons));
 }
 
 public void OnEntityDestroyed(int entity)
 {
 	if (IsMapWeapon(entity, true) && s_bDebugMessages)
-		PrintToServer("[AWS] OnEntityDestroyed(entity=%d, mapweaponarraysize=%d)", entity, GetArraySize(s_hMapWeapons));
+		log(Info, "[AWS] OnEntityDestroyed(entity=%d, mapweaponarraysize=%d)", entity, GetArraySize(s_hMapWeapons));
 }
 
 /***************************************************

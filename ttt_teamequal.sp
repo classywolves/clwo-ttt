@@ -1,8 +1,10 @@
 #include <general>
 #include <ttt_helpers>
 #include <player_methodmap>
+#include <logger>
 
 public OnPluginStart() {
+	setLogSource("teamEqual");
 	database_ttt = ConnectDatabase("ttt", "ttt");
 }
 
@@ -17,7 +19,7 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective) {
 			if (player.team == CS_TEAM_T) {
 				innocent_clients[index][0] = player.karma;
 				innocent_clients[index][1] = client;
-				PrintToServer("%d %d", innocent_clients[index][0], innocent_clients[index][1])
+				log(Info, "%d %d", innocent_clients[index][0], innocent_clients[index][1])
 				index++;
 			}
 		}

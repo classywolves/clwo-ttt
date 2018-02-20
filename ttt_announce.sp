@@ -1,10 +1,13 @@
 #include <general>
 #include <sourcemod>
 #include <geoip>
+#include <logger>
 
 Database ttt_db;
 
 public OnPluginStart() {
+	setLogSource("announce");
+
 	ttt_db = ConnectDatabase("ttt", "ANN");
 	HookEvent("player_team", OnPlayerTeam, EventHookMode_Pre);
 	HookEvent("player_disconnect", OnPlayerDisconnect, EventHookMode_Pre);
@@ -27,7 +30,7 @@ public OnClientAuthorized(client, const String:auth[]) {
 
 	DBStatement get_karma = PrepareStatement(ttt_db, "SELECT `karma` FROM `ttt` WHERE communityid=?");
 	SQL_BindParamString(get_karma, 0, auth, false);	
-	if (!SQL_Execute(get_karma)) { PrintToServer("SQL Execute Failed..."); }
+	if (!SQL_Execute(get_karma)) { log(Error, "SQL Execute Failed..."); }
 
 	while (SQL_FetchRow(get_karma)) {
 		karma = SQL_FetchInt(get_karma, 0);

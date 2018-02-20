@@ -18,6 +18,7 @@
 #pragma semicolon 1
 #include <sourcemod>
 #include <sdktools>
+#include <logger>
 
 #define PLUGIN_VERSION "v1.2"
 
@@ -33,6 +34,8 @@ public Plugin:myinfo =
 
 public OnPluginStart()
 {
+	setLogSource("ball");
+
 	CreateConVar("sm_Soccer-Ball", PLUGIN_VERSION, "version del plugin", FCVAR_PLUGIN|FCVAR_SPONLY|FCVAR_NOTIFY);
 
         RegAdminCmd("sm_ball", Bola, ADMFLAG_ROOT);
@@ -47,7 +50,7 @@ public Action:Bola(client,args)
 { 
 	if(client == 0)
 	{
-		PrintToServer("%t","Command is in-game only");
+		log(Info, "%t","Command is in-game only");
 		return Plugin_Handled;
 	}
 
@@ -113,11 +116,11 @@ public OnMapStart()
 	PrecacheModel("models/forlix/soccer/soccerball.mdl");
 }
 
-public Action:NoBola(client,args)
+public Action:NoBola(client, args)
 { 
 	if(client == 0)
 	{
-		PrintToServer("%t","Command is in-game only");
+		log(Info, "%t","Command is in-game only");
 		return Plugin_Handled;
 	}
 

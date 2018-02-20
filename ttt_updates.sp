@@ -1,12 +1,14 @@
 #include <general>
 #include <ttt_helpers>
 #include <player_methodmap>
+#include <logger>
 
 Database hDatabase = null;
 
 int current_update = 1;
 
 public OnPluginStart() {
+	setLogSource("updates");
 	Database.Connect(DBCallback, "ttt");
 }
 
@@ -46,7 +48,7 @@ public void UpdateStandingCallback(Database db, DBResultSet results, const char[
 				if (!SQL_FastQuery(hDatabase, query)) {
 					char error_update[255];
 					SQL_GetError(hDatabase, error_update, sizeof(error_update));
-					PrintToServer("Failed to update current_update_version (error_update: %s)", error_update);
+					log(Error, "Failed to update current_update_version (error_update: %s)", error_update);
 				}
 			}
 		} else {
@@ -65,7 +67,7 @@ public void createUser(int client) {
 	if (!SQL_FastQuery(hDatabase, query)) {
 		char error_update[255];
 		SQL_GetError(hDatabase, error_update, sizeof(error_update));
-		PrintToServer("Failed to insert current_update for %N (error_update: %s)", client, error_update);
+		log(Error, "Failed to insert current_update for %N (error_update: %s)", client, error_update);
 	}
 	// SHOW NEW USER SCREEN
 	CreateTimer(30.0, displayNew, GetClientSerial(client));
