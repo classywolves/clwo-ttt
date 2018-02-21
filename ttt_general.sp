@@ -180,39 +180,86 @@ public Action command_toggle_beacon(int client, int args) {
 	return Plugin_Handled;
 }
 
-public Action command_teleport(int client, int args) {
-	if (Player(client).has_informer_block()) {
+public Action command_teleport(int client, int args)
+{
+	Player player = Player(client);
+
+	if (player.has_informer_block()) {
 		CPrintToChat(client, "{purple}[TTT] {orchid}Not enough permissions.")
 		return Plugin_Handled;
 	}
 
-	if (args != 2) {
-		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /teleport <player> <target_player>");
+	if (args < 1 || args > 2) {
+		CPrintToChat(client, "{purple}[TTT] {orchid}Invalid command usage, expects: /teleport <player> or /teleport <player> <target_player>");
 		return Plugin_Handled;
 	}
 
-	char from[128], target[128];
+	char from[128];
 	GetCmdArg(1, from, sizeof(from));
-	GetCmdArg(2, target, sizeof(target));
 
-	int player_from_int = Player(client).target_one(from);
-	int player_target_int = Player(client).target_one(target);
-	if (player_from_int == -1 || player_target_int == -1) return Plugin_Handled;
+	int player_from_int = player.target_one(from);
+	if (player_from_int == -1) return Plugin_Handled;
 
 	Player player_from = Player(player_from_int);
-	Player player_target = Player(player_target_int);
 
-	if (!player_from.alive || !player_target.alive) {
-		CPrintToChat(client, "{purple}[TTT] {orchid}This plugin requires both players to be alive.");
+	if (!player_from.alive) // only matters that the player being moved is alive, allows admins to tp whilst dead.
+	{
+		CPrintToChat(client, "{purple}[TTT] {orchid}The player being teleported must be alive.");
 		return Plugin_Handled;
 	}
-
+	
 	float pos[3];
-	player_target.pos(pos);
-	pos[2] += 73;
+	
+	if (args == 1)
+	{
+		if (rayTrace(client, pos) == 1)
+		{ 
+			CPrintToChat(client, "{purple}[TTT] {orchid}Please look at a valid location to teleport a player too.");
+			return Plugin_Handled;
+		}
+	}
+	else
+	{
+		char target[128];
+		GetCmdArg(2, target, sizeof(target));
+		int player_target_int = player.target_one(target);
+		
+		if (player_target_int == -1) return Plugin_Handled;
+		
+		Player player_target = Player(player_target_int);
+		player_target.pos(pos);
+	}
+	
+	pos[2] += 4;
 
 	TeleportEntity(player_from.id, pos, NULL_VECTOR, NULL_VECTOR);
 	return Plugin_Handled;
+}
+
+public int rayTrace(int client, float pos[3])
+{
+	float vOrigin[3], vAngles[3];
+	
+	GetClientEyePosition(client, vOrigin);
+	GetClientEyeAngles(client, vAngles);
+	
+	Handle trace = TR_TraceRayFilterEx(vOrigin, vAngles, MASK_SOLID, RayType_Infinite, TraceEntityFilterPlayer);
+	
+	if(TR_DidHit(trace))
+	{
+		TR_GetEndPosition(pos, trace);
+		CloseHandle(trace);
+		
+		return 0;
+	}
+	
+	CloseHandle(trace);
+	return 1;
+}
+
+public bool TraceEntityFilterPlayer(entity, contentsMask)
+{
+	return entity > MaxClients;
 }
 
 public Action command_volume(int client, int args) {
