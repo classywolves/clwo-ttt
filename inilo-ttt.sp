@@ -231,13 +231,16 @@ public Action Command_SpecBan(int client, int args)
 {
 	if(args < 1)
 	{
-		ReplyToCommand(client, "sm_specban <name or #userid or steamid> [time 0 - 60]")
+		ReplyToCommand(client, "sm_specban <name or #userid or steamid> [time 0 - 60] [reason]")
 	}
 	char arg1[65];
 	GetCmdArg(1, arg1, sizeof(arg1));
 
 	char arg2[65];
 	GetCmdArg(2, arg2, sizeof(arg2));
+
+	char arg3[65];
+	GetCmdArg(3, arg3, sizeof(arg3));
 
 	int value = 0;
 	if(args < 2)
@@ -261,9 +264,25 @@ public Action Command_SpecBan(int client, int args)
 		value = MAX_SPECBAN_TIME;
 	}
 
+	if(args < 3)
+	{
+		//no reason given, launch menu.
+		arg3 = "";
+	}
+	else if(strlen(arg3) > 0)
+	{
+		//custom reason given - do nothing
+	}
+	else
+	{
+		//Invalid reason given - handle this case just in case.
+		ReplyToCommand(client, " Bad reason parameter, length must be above 0");
+		return Plugin_Handled;
+	}
+
 
 	if (StrContains(arg1, "STEAM_1:", false) == 0) {
-		PerformBanAuth(client, arg1, value)
+		PerformBanAuth(client, arg1, value, arg3)
 	} else {
 		int target = FindTarget(client, arg1, true, true);
 		if (target == -1)
@@ -277,7 +296,7 @@ public Action Command_SpecBan(int client, int args)
 			ReplyToCommand(client, " [SM] This player is already spectator banned");
 			return Plugin_Continue;
 		}
-		PerformBan(client, target, value);
+		PerformBan(client, target, value, arg3);
 		VerifyPlayer(client, true);
 		ShowActivity2(client, " [SM] ","Specbanned '%N' for %i minutes", target, value);
 		LogAction(client, target, "\"%L\" Specbanned \"%L\" for %i minutes", client, target, value);
@@ -586,11 +605,11 @@ public bool PerformUnban(int client, int target)
 	return true;
 }
 
-public PerformBanAuth(int client, char[] authID, int time) {
+public PerformBanAuth(int client, char[] authID, int time, char[] reason) {
 	
 }
 
-public bool PerformBan(int client, int target, int time)
+public bool PerformBan(int client, int target, int time, char[] reason)
 {
 	char cTemp[64];
 	Format(cTemp, sizeof(cTemp), "%i", time);
@@ -602,17 +621,28 @@ public bool PerformBan(int client, int target, int time)
 	Format(cTemp, sizeof(cTemp), "%N", client);
 	SetClientCookie(target, g_hSpecBanByName, cTemp);
 
-	Format(cTemp, sizeof(cTemp), "%s" ,"#UNKNOWN#");
-	SetClientCookie(target, g_hSpecBanReason, cTemp);
-
-
+	if(strlen(reason) > 0)
+	{
+		//received custom reason
+		Format(cTemp, sizeof(cTemp), "%s" ,reason);
+		SetClientCookie(target, g_hSpecBanReason, cTemp);
+	}
+	else
+	{
+		Format(cTemp, sizeof(cTemp), "%s" ,"#UNKNOWN#");
+		SetClientCookie(target, g_hSpecBanReason, cTemp);
+	}
+	
 	char cValue[8];
 	GetClientCookie(client, g_hSpecBanCount, cValue, sizeof(cValue));
 	Format(cTemp, sizeof(cTemp), "%i", StringToInt(cValue) + 1);
 	SetClientCookie(target, g_hSpecBanCount, cTemp);
 	
-	//request the admin for a reason.
-	AskAdminReason(client, target);
+	if(strlen(reason) > 0)
+	{
+		//request the admin for a reason.
+		AskAdminReason(client, target);
+	}
 }
 
 public void SetSpecBanReason(int target, const char[] cReason)
