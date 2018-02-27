@@ -84,7 +84,7 @@ public void RegisterCmds()
 	RegConsoleCmd("sm_detective", Command_CT,"");
 	RegConsoleCmd("sm_spec", Command_Spec,"");
 	RegConsoleCmd("sm_specbans", Command_SpecBans,"");
-	RegAdminCmd("sm_specban", Command_SpecBan, ADMFLAG_BAN, "sm_specban <name or #userid> [time 0 - 360]");
+	RegAdminCmd("sm_specban", Command_SpecBan, ADMFLAG_BAN, "sm_specban <name or #userid or steamid> [time 0 - 360]");
 }
 public void HookEvents()
 {
@@ -231,7 +231,7 @@ public Action Command_SpecBan(int client, int args)
 {
 	if(args < 1)
 	{
-		ReplyToCommand(client, "sm_specban <name or #userid or steamid> [time 0 - 60] [reason]")
+		ReplyToCommand(client, "sm_specban <name or #userid or steam:id> [time 0 - 60] [reason]")
 	}
 	char arg1[65];
 	GetCmdArg(1, arg1, sizeof(arg1));
@@ -606,7 +606,43 @@ public bool PerformUnban(int client, int target)
 }
 
 public PerformBanAuth(int client, char[] authID, int time, char[] reason) {
+	char cTemp[64];
+	Format(cTemp, sizeof(cTemp), "%i", time);
+	SetAuthIdCookie(authID, g_hSpecBanTime, cTemp);
+
+	Format(cTemp, sizeof(cTemp), "%i", GetSteamAccountID(client));
+	SetAuthIdCookie(authID, g_hSpecBanBy, cTemp);
+
+	Format(cTemp, sizeof(cTemp), "%N", client);
+	SetAuthIdCookie(authID, g_hSpecBanByName, cTemp);
+
+	if(strlen(reason) > 0)
+	{
+		//received custom reason
+		Format(cTemp, sizeof(cTemp), "%s" ,reason);
+		SetAuthIdCookie(authID, g_hSpecBanReason, cTemp);
+	}
+	else
+	{
+		Format(cTemp, sizeof(cTemp), "%s" ,"#UNKNOWN#");
+		SetAuthIdCookie(authID, g_hSpecBanReason, cTemp);
+	}
 	
+	// Currently there is no GetAuthIdCookie and I know of no workaround.
+	/*
+	char cValue[8];
+	GetAuthIdCookie(authID, g_hSpecBanCount, cValue, sizeof(cValue));
+	Format(cTemp, sizeof(cTemp), "%i", StringToInt(cValue) + 1);
+	SetAuthIdCookie(authID, g_hSpecBanCount, cTemp);
+	*/
+	
+	/*
+	if(strlen(reason) > 0)
+	{
+		//request the admin for a reason.
+		AskAdminReason(client, authID);
+	}
+	*/
 }
 
 public bool PerformBan(int client, int target, int time, char[] reason)
@@ -634,7 +670,7 @@ public bool PerformBan(int client, int target, int time, char[] reason)
 	}
 	
 	char cValue[8];
-	GetClientCookie(client, g_hSpecBanCount, cValue, sizeof(cValue));
+	GetClientCookie(target, g_hSpecBanCount, cValue, sizeof(cValue));
 	Format(cTemp, sizeof(cTemp), "%i", StringToInt(cValue) + 1);
 	SetClientCookie(target, g_hSpecBanCount, cTemp);
 	
