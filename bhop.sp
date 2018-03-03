@@ -81,12 +81,12 @@ public OnPluginStart()
     RegConsoleCmd("mdx_test", Command_test, "mdx_test <#userid|name|@all>");
     
 }
-public Event_PlayerJump(Handle event, const char name[], bool dontBroadcast)
+public Event_PlayerJump(Handle event, const char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId(GetEventInt(event, "userid"));
     afAvgJumps[client] = ( afAvgJumps[client] * 9.0 + float(aiJumps[client]) ) / 10.0;
     
-    const float vec_vel[3];
+    float vec_vel[3];
     GetEntPropVector(client, Prop_Data, "m_vecVelocity", vec_vel);
     vec_vel[2] = 0.0;
     float speed = GetVectorLength(vec_vel);
@@ -106,7 +106,6 @@ public Event_PlayerJump(Handle event, const char name[], bool dontBroadcast)
             aiPatternhits[client]++;
             if ((aiPatternhits[client] > 15) && (!bBanFlagged[client]))
             {
-            	// CPrintToStaff
                 BanDelayed(client, "pat1");
                 bBanFlagged[client] = true;
             }
@@ -127,7 +126,7 @@ public Event_PlayerJump(Handle event, const char name[], bool dontBroadcast)
         aiAutojumps[client] = 0;
     }
     else if((afAvgJumps[client] <1.1) && (!bBanFlagged[client]))
-    {	
+    {   
         bSurfCheck[client] = true;
         if (aiIgnoreCount[client])
         {
@@ -210,7 +209,7 @@ public OnGameFrame()
         {
             int index = iTickCount / 1;
             if (bSurfCheck[index] && IsClientInGame(index) && IsPlayerAlive(index))
-            {	
+            {   
                 GetEntPropVector(index, Prop_Data, "m_vecVelocity", avVEL[index]);
                 if (avVEL[index][2] < -290)
                 {
@@ -223,12 +222,12 @@ public OnGameFrame()
     }
 }
 
-BanDelayed(client, const char type[])
+BanDelayed(client, const char[] type)
 {
-	char buffer[255];
-	FormatEx(buffer, sizeof(buffer), "[Anti-BHOP] %N is using %s", client, type )
-	
-	CPrintToStaff(buffer);
+    char buffer[255];
+    FormatEx(buffer, sizeof(buffer), "[Anti-BHOP] %N is using %s", client, type );
+    
+    CPrintToStaff(buffer);
     /*char uid[64];
     GetClientAuthString(client, uid, sizeof(uid));
     int Handle banfile = OpenFile(pathdat, "a+");
@@ -276,12 +275,12 @@ DoBans()
   //      #if defined DEBUG
   //      PrintToChatAll("banned %s", reader);
   //      #endif
-		//#if defined BAN_CMD
+        //#if defined BAN_CMD
   //      ServerCommand(BAN_CMD, reader);
-		//#endif      
-		//#if defined DELETE_CMD
-		//ServerCommand("%s %s", DELETE_CMD, reader); 
-		//#endif
+        //#endif      
+        //#if defined DELETE_CMD
+        //ServerCommand("%s %s", DELETE_CMD, reader); 
+        //#endif
   //  }
   //  CloseHandle(banfile);
   //  banfile = OpenFile(pathdat, "w");
@@ -300,11 +299,12 @@ public Action Command_Stats(client, args)
         return Plugin_Handled;
     }
     
-    const char arg[65];
+    char arg[65];
     GetCmdArg(1, arg, sizeof(arg));
     
-    const char target_name[MAX_TARGET_LENGTH];
-    const target_list[MAXPLAYERS], target_count, bool tn_is_ml;
+    char target_name[MAX_TARGET_LENGTH];
+    int target_list[MAXPLAYERS], target_count;
+    bool tn_is_ml;
     
     if ((target_count = ProcessTargetString(
                     arg,
@@ -344,11 +344,12 @@ public Action Command_test(client, args)
         return Plugin_Handled;
     }
     
-    const char arg[65];
+    char arg[65];
     GetCmdArg(1, arg, sizeof(arg));
     
-    const char target_name[MAX_TARGET_LENGTH];
-    const target_list[MAXPLAYERS], target_count, bool tn_is_ml;
+    char target_name[MAX_TARGET_LENGTH];
+    int target_list[MAXPLAYERS], target_count;
+    bool tn_is_ml;
     
     if ((target_count = ProcessTargetString(
                     arg,
@@ -378,7 +379,7 @@ PerformStats(client, target)
     GetClientStats(target, banstats, sizeof(banstats));
     PrintToConsole(client, "%d %s",bBanFlagged[target], banstats);
 }
-GetClientStats(client, char string[], length)
+GetClientStats(client, char[] string, length)
 {
     float origin[3];
     GetEntPropVector(client, Prop_Send, "m_vecOrigin", origin);
