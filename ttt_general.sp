@@ -217,6 +217,10 @@ public Action command_teleport(int client, int args)
 			CPrintToChat(client, "{purple}[TTT] {orchid}Please look at a valid location to teleport a player too.");
 			return Plugin_Handled;
 		}
+
+		char staff_message[512];
+		Format(staff_message, sizeof(staff_message), "{purple}[TP] {yellow}%N teleported %N to where he was looking", client, player_from_int);
+		CPrintToStaff(staff_message);
 	}
 	else
 	{
@@ -228,6 +232,9 @@ public Action command_teleport(int client, int args)
 		
 		Player player_target = Player(player_target_int);
 		player_target.pos(pos);
+		char staff_message[512];
+		Format(staff_message, sizeof(staff_message), "{purple}[TP] {yellow}%N teleported %N to %N", client, player_from_int, player_target_int);
+		CPrintToStaff(staff_message);
 	}
 	
 	pos[2] += 4;
