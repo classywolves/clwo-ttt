@@ -12,7 +12,7 @@ public OnPluginStart() {
 	Database.Connect(DBCallback, "ttt");
 }
 
-public void OnClientPutInServer(int client) {
+public void OnClientPostAdminCheck(int client) {
 	Player player = Player(client);
 	char query[255], auth[255];
 	player.get_auth(AuthId_Steam2, auth);
