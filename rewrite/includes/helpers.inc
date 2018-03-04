@@ -14,14 +14,14 @@
 #include <player_methodmap>
 
 stock int GetStaffArray(int staff[32] = {}) {
-	int staff_count = 0;
+	int staffCount = 0;
 
-	LoopStaff(i) {
+	LoopValidClients(i) {
 		if (Player(i).Staff) {
-			staff[staff_count] = i;
-			staff_count++;
+			staff[staffCount] = i;
+			staffCount++;
 		}
 	}
 
-	return staff_count;
+	return staffCount;
 }

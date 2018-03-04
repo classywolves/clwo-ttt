@@ -29,6 +29,14 @@ methodmap Player {
 		iMod_GetUserTypeString(iMod_GetUserType(that), USER_TYPE_FULLNAME, name, sizeof(name));
 	}
 
+	public void Auth(AuthIdType idType, char auth[64]) {
+		GetClientAuthId(view_as<int>(this), idType, auth, sizeof(auth));
+	}
+
+	public void Name(char name[64]) {
+		GetClientName(view_as<int>(this), name, sizeof(name))
+	}
+
 	property bool InformerBlock {
 		public get() {
 			return !!GetStaffArray()
@@ -37,11 +45,19 @@ methodmap Player {
 
 	property bool Staff {
 		public get() {
-			char name[64];
-			this.RankName(name);
-
-			if (StrEqual(name, "Informer")) return !this.InformerBlock;
 			return iMod_IsStaff(that);
+		}
+	}
+
+	property bool ValidClient {
+		public get() {
+			if(!IsValidClient(view_as<int>(this)))
+				return false;
+
+			if(!IsPlayerAlive(view_as<int>(this)))
+				return false;
+
+			return true;
 		}
 	}
 }
