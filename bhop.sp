@@ -228,6 +228,10 @@ BanDelayed(client, const char[] type)
     FormatEx(buffer, sizeof(buffer), "[Anti-BHOP] %N is using %s", client, type );
     
     CPrintToStaff(buffer);
+
+    FormatTime(buffer, sizeof(buffer), "%d/%m/%y %R");
+    FormatEx(buffer, sizeof(buffer), "[%s] %N is using %s", buffer, client, type );
+    LogToFile(path, "%s", buffer);
     /*char uid[64];
     GetClientAuthString(client, uid, sizeof(uid));
     int Handle banfile = OpenFile(pathdat, "a+");
