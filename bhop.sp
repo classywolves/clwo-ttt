@@ -31,6 +31,7 @@
 #include <sdktools>
 #include <general>
 #include <imod>
+#include <logger>
 
 public Plugin myinfo = 
 {
@@ -71,6 +72,7 @@ char debugid[32];
 
 public OnPluginStart()
 {   
+    setLogSource("Anti-Bhop");
     CreateConVar("macrodox_version", PLUGIN_VERSION, "macrodox version", FCVAR_PLUGIN|FCVAR_NOTIFY|FCVAR_REPLICATED);
     HookEvent("player_jump", Event_PlayerJump, EventHookMode_Post);
     BuildPath(Path_SM, path, sizeof(path), "logs/macrodox.log");
@@ -229,9 +231,10 @@ BanDelayed(client, const char[] type)
     
     CPrintToStaff(buffer);
 
-    FormatTime(buffer, sizeof(buffer), "%d/%m/%y %R");
-    FormatEx(buffer, sizeof(buffer), "[%s] %N is using %s", buffer, client, type );
-    LogToFile(path, "%s", buffer);
+    FormatEx(buffer, sizeof(buffer), "%N is using %s", buffer, client, type );
+    log(Info, "%s", buffer);
+    //LogToFile(path, "%s", buffer);
+
     /*char uid[64];
     GetClientAuthString(client, uid, sizeof(uid));
     int Handle banfile = OpenFile(pathdat, "a+");

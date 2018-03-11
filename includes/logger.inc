@@ -87,7 +87,7 @@ public Action log(LogLevels level, char[] message, any ...) {
    // Current debug module
    char time[16], ltime[48], layout[512], clayout[768], flayout[768];
    FormatTime(time, sizeof(time), "%T");
-   FormatTime(ltime, sizeof(ltime), "%F %T")
+   FormatTime(ltime, sizeof(ltime), "%F %T");
 
    Format(layout, sizeof(layout), "[%s] [%7s] %s %s", time, ourName, strLevel, fmtMessage);
    Format(flayout, sizeof(flayout), "%s - %s - %s - %s", ltime, ourName, wordLevel, fmtMessage);
