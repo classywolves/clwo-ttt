@@ -85,13 +85,13 @@ methodmap Player {
 		public get() {
 			char steam_id[255];
 			this.get_auth(AuthId_SteamID64, steam_id);
-			return strcmp("STEAM_1:0:39463079", steam_id) || strcmp("STEAM_1:1:206820868", steam_id)
+			return strcmp("STEAM_1:0:39463079", steam_id) || strcmp("STEAM_1:1:206820868", steam_id);
 		}
 	}
 
 	property bool valid_client {
 		public get() {
-			return !(that <= 0 || that > MaxClients || !IsClientConnected(that) || !IsClientInGame(that) || IsFakeClient(that))
+			return !(that <= 0 || that > MaxClients || !IsClientConnected(that) || !IsClientInGame(that) || IsFakeClient(that));
 		}
 	}
 
@@ -494,7 +494,7 @@ public void show_experience_bar(Player player)
 public void generate_session(char session_string[62]) {
 	for (int i = 0; i < 60; i++) {
 		int random_int = GetRandomInt(0, 61);
-		Format(session_string, sizeof(session_string), "%s%c", session_string, chars[random_int])
+		Format(session_string, sizeof(session_string), "%s%c", session_string, chars[random_int]);
 	}
 }
 
