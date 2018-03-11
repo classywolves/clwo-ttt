@@ -43,15 +43,45 @@ public Action Command_Spec(int client, int args)
 		int count;
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if(IsValidPlayer(i))
+			if(!IsValidPlayer(i))
+				continue;
+			char name[32];
+			char team[32];
+			char targetid[3];
+			#if defined _main_included_
+			GetTeamName(GetClientTeam(i), team, sizeof(team));
+			#else
+			switch(TTT_GetClientRole(i))
 			{
-				char name[32];
-				char targetid[3];
-				IntToString(i, targetid, sizeof(targetid));
-				GetClientName(i, name, sizeof(name));
-				AddMenuItem(menu, targetid, name);
-				count++;
+				case 0:
+				{
+					strcopy(team, sizeof(team), "Unassigned");
+				}
+				case 1:
+				{
+					strcopy(team, sizeof(team), "Innocent");
+				}
+				case 2:
+				{
+					strcopy(team, sizeof(team), "Traitor");
+				}
+				case 3:
+				{
+					strcopy(team, sizeof(team), "Detective");
+				}
+				default:
+				{
+					strcopy(team, sizeof(team), "Unassigned");
+				}
 			}
+			#endif
+			IntToString(i, targetid, sizeof(targetid));
+			GetClientName(i, name, sizeof(name));
+			char cDisplay[512];
+			Format(cDisplay, sizeof(cDisplay), "%s [%s]", name, team);
+			AddMenuItem(menu, targetid, cDisplay);
+			count++;
+	
 		}
 		if(count == 0)
 		{
