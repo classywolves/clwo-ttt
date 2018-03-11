@@ -33,8 +33,6 @@ public void MsgInsert(char[] name, char[] auth, char[] msg) {
 
 	Format(query, sizeof(query), "INSERT INTO msg VALUES (%i, '%s', '%s', '%s');", GetTime(), cName, auth, cMsg);
 
-	PrintToServer("Running query: %s", query);
-
 	msgDb.Query(MsgInsertCallback, query)
 }
 

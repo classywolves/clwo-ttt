@@ -23,7 +23,7 @@ enum LogLevels {
    Warn,
    Error
 }
- 
+
 // Forward usage: Action OnLog(char[] name, int level, int client, const char[] message)
 
 public void LogOnPluginStart()

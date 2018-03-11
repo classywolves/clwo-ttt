@@ -56,8 +56,6 @@ public Action OnPlayerMessage(Event event, const char[] eventName, bool dontBroa
 
 	GetEventString(event, "text", text, sizeof(text));
 
-	PrintToServer("Received message");
-
 	MsgInsert(name, auth, text);
 
 	return Plugin_Continue;

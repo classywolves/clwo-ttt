@@ -25,3 +25,10 @@ stock int GetStaffArray(int staff[32] = {}) {
 
 	return staffCount;
 }
+
+stock bool IsWorldDamage(int attacker, int damagetype) {
+	if (attacker == 0) {
+		return true;
+	}
+	return false;
+}
