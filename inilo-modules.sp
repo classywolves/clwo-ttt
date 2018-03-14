@@ -445,7 +445,7 @@ public Action Command_MySkins(int client, int args)
 
 
 /* Plugins Defines */
-#define MAX_USER_TYPES 11
+#define MAX_USER_TYPES 12
 #define MAX_USER_TYPES_CATEGORIES 8
 
 
@@ -458,6 +458,7 @@ stock char g_sUserTypes[MAX_USER_TYPES][MAX_USER_TYPES_CATEGORIES][64] =
 {
 	//"checker command [0]"				,"is staff[1]"	"broadcast"			,"Access Name [2]"	,"Full name [3]"	,"ScoreB name [4]"	,"Chat name [5]" ,"target string"
 	{"inilo_staff_checker_normal"			,"0"		,"0"				,"Normal"			,"Normal"			,""					,""			,"pleb"},
+	{"inilo_staff_checker_dev"				,"1"		,"1"				,"Developer"		,"Developer"		,"Dev"				,"Dev"		,"dev"},
 	{"inilo_staff_checker_informer"			,"1"		,"1"				,"Informer"			,"Informer"			,"+"				,"+"		,"informer"},
 	{"inilo_staff_checker_vip"				,"0"		,"0"				,"VIP"				,"VIP"				,"VIP"				,"VIP"		,"vip"},
 	{"inilo_staff_checker_vipplus"			,"0"		,"0"				,"VIP Plus"			,"VIP Plus"			,"VIP+"				,"VIP+"		,"vip+"},
