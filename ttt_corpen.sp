@@ -1,4 +1,6 @@
 #include <sourcemod>
+#include <player_methodmap>
+#include <ttt>
 
 /* Plugin TTT addon */ 
 #define PLUGIN_NAME       "TTT Corpen" 
@@ -18,6 +20,7 @@ public Plugin myinfo = {
 public void OnPluginStart()
 {
 	RegAdminCmd("sm_ssay", command_ssay, ADMFLAG_GENERIC);
+	RegConsoleCmd("sm_alive", command_alive, "Displays the currently alive / undiscovered players.");
 }
 
 public Action command_ssay(int client, int args)
@@ -46,4 +49,31 @@ public Action command_ssay(int client, int args)
 	//LogAction(client, -1, "\"%L\" triggered sm_csay (text %s)", client, text);
 	
 	return Plugin_Handled;	
+}
+
+public Action command_alive(int client, int args)
+{
+	int maxMessageLength = 64 * MAXPLAYERS;
+	char[] sepperator = ", ";
+	char message[(64 * MAXPLAYERS)];
+	
+	bool isFirst = true;
+	LoopValidClients(i)
+	{
+		if (TTT_GetFoundStatus(i) == false)
+		{
+			char userName[64];
+			Player(i).Name(userName);
+			StrCat(message, maxMessageLength, userName);
+			
+			if (isFirst == false)
+			{
+				StrCat(message, maxMessageLength, sepperator);
+			}
+			else
+			{
+				isFirst = false;
+			}
+		}
+	}
 }

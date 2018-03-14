@@ -64,6 +64,12 @@ methodmap Player {
 	property int id {
 		public get() { return that; }
 	}
+	
+	public void Name(char buffer[64])
+	{
+		GetClientName(view_as<int>(this), buffer, sizeof(buffer));
+	}
+	
 	public void get_auth(AuthIdType auth_id_type , char output[255]) {
 		GetClientAuthId(view_as<int>(this), auth_id_type, output, sizeof(output));
 	}

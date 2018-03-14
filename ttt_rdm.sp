@@ -757,7 +757,7 @@ L 09/05/2017 - 04:59:24: --------------------------------------
 */
 
 public Action Command_Verdict(int client, int args) {
-	log(Error, "%N just used Command_Verdict", client);
+	log(Info, "%N just used Command_Verdict", client);
 	if (args == 0) {
 		CPrintToChat(client, "{purple}[RDM] {orchid}Expected an argument, but got none.)");
 		return Plugin_Handled;
