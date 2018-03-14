@@ -55,7 +55,7 @@ public Action command_alive(int client, int args)
 {
 	int maxMessageLength = 64 * MAXPLAYERS;
 	char[] sepperator = ", ";
-	char message[(64 * MAXPLAYERS)];
+	char[] message = "Players Alive: ";
 	
 	bool isFirst = true;
 	LoopValidClients(i)
@@ -76,4 +76,6 @@ public Action command_alive(int client, int args)
 			}
 		}
 	}
+	
+	CPrintToChat(client, buffer);
 }
