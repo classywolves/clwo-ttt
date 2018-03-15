@@ -34,3 +34,13 @@ stock int GetStaffArray(int staff[32] = {}) {
 
 	return staffCount;
 }
+
+stock int GetStaffCount() {
+	int staffCount = 0;
+	
+	LoopStaff(i) {
+		staffCount++;
+	}
+
+	return staffCount;
+}

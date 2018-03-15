@@ -35,7 +35,7 @@ public void HookEvents() {
 }
 
 public void RegisterCmds() {
-	RegAdminCmd("sm_testinvis", Command_TestInvis, ADMFLAG_ROOT, "Test invisibility")
+	RegConsoleCmd("sm_testinvis", Command_TestInvis, "Test invisibility");
 }
 
 public void OnClientPutInServer(int client) {
@@ -60,7 +60,10 @@ public void HookClient(int client) {
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon) {
 	if (buttons & IN_ATTACK) {
 		Player attacker = Player(client);
-		if (!attacker.CanShoot) {
+		if (attacker.BlockShoot) {
+			if (!attacker.ErrorTimeout(2)) {
+				attacker.Msg("{red}You are not allowed to shoot whilst invulnerable!");
+			}
 			buttons &= ~IN_ATTACK;
 		}
 	}
@@ -78,7 +81,12 @@ public Action OnTraceAttack(int iVictim, int &iAttacker, int &inflictor, float &
 
 	if (victim.Invulnerable) {
 		// This player cannot take damage.
+		if (!attacker.ErrorTimeout(2)) {
+			attacker.Msg("{red}This person is invulnerable!");
+		}
+
 		damage = 0.0;
+
 		return Plugin_Changed;
 	}
 
@@ -95,7 +103,16 @@ public Action OnTraceAttack(int iVictim, int &iAttacker, int &inflictor, float &
 }
 
 public Action Command_TestInvis(int client, int args) {
-	ActivateInvisibility(client);
+	Player player = Player(client);
+
+
+	if (!player.Access("senadmin", true)) {
+		return Plugin_Handled;
+	}
+
+	ActivateInvisibility(player.Client);
+
+	return Plugin_Handled;
 }
 
 public Action ActivateInvisibility(int client) {
@@ -107,7 +124,7 @@ public Action ActivateInvisibility(int client) {
 		player.Msg("{yellow}Your invisibility has activated!");
 		player.Invisible = true;
 		player.Invulnerable = true;
-		player.CanShoot = false;
+		player.BlockShoot = true;
 		CreateTimer(2.5 * level, DisableInvisibility, player.Client);
 	}
 }
@@ -118,5 +135,5 @@ public Action DisableInvisibility(Handle time, any client) {
 	player.Msg("{yellow}Your invisibility has worn off!");
 	player.Invisible = false;
 	player.Invulnerable = false;
-	player.CanShoot = true;
+	player.BlockShoot = false;
 }

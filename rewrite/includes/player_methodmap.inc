@@ -30,7 +30,9 @@
 
 bool g_invisible[MAXPLAYERS + 1];
 bool g_invulnerable[MAXPLAYERS + 1];
-bool g_canShoot[MAXPLAYERS + 1];
+bool g_blockShoot[MAXPLAYERS + 1];
+
+int g_errorTimeout[MAXPLAYERS + 1];
 
 methodmap Player {
 	public Player(int client) {
@@ -63,8 +65,29 @@ methodmap Player {
 		CPrintToChat(that, "{purple}[TTT] %s", msg);
 	}
 
+	public bool Access(char[] rank, bool response = false) {
+		bool access = iMod_HigherThenString(that, rank, true)
+
+		if (!access) {
+			this.Msg("{red}You do not have access to this command!")
+		}
+
+		return access;
+	}
+
 	public void Give(char weapon[64]) {
 		GivePlayerItem(that, weapon);
+	}
+
+	public bool ErrorTimeout(int timeout) {
+		int currentTime = GetTime();
+
+		if (currentTime - g_errorTimeout[that] < timeout) {
+			return true;
+		}
+
+		g_errorTimeout[that] = currentTime;
+		return false;
 	}
 
 	property bool Invisible {
@@ -97,13 +120,13 @@ methodmap Player {
 
 	// This also needs a handler within the plugin calling it to block shooting.
 	// It only stores whether a player can shoot or not.
-	property bool CanShoot {
+	property bool BlockShoot {
 		public get() {
-			return g_canShoot[that];
+			return g_blockShoot[that];
 		}
 
-		public set(bool canShoot) {
-			g_canShoot[that] = canShoot;
+		public set(bool blockShoot) {
+			g_blockShoot[that] = blockShoot;
 		}
 	}
 
@@ -139,12 +162,14 @@ methodmap Player {
 
 	property bool InformerBlock {
 		public get() {
-			return !!GetStaffArray()
+			// 
+			return !!GetStaffCount()
 		}
 	}
 
 	property bool Staff {
 		public get() {
+			// Returns true, even for blocked informers.
 			return iMod_IsStaff(that);
 		}
 	}
