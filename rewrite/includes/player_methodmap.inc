@@ -1,30 +1,5 @@
-#if defined _player_methodmap_included
-	#endinput
-#endif
-#define _player_methodmap_included
-
-/* User Type */
-enum UserType {
-	USER_TYPE_COMMAND = 0,
-	USER_TYPE_IS_STAFF,
-	USER_TYPE_BROADCAST,
-	USER_TYPE_GROUPNAME,
-	USER_TYPE_FULLNAME,
-	USER_TYPE_SCORENAME,
-	USER_TYPE_CHATNAME,
-	USER_TYPE_MULTI_TARGET
-}
-
-/* Upgrade Names */
-#define UPGRADE_INVISIBILITY 	2
-
-#define MAX_MESSAGE_LENGTH 		1024
-
-#define that view_as<int>(this)
-
-#define INNOCENT 1
-#define TRAITOR 2
-#define DETECTIVE 3
+#if !defined _player_methodmap_include
+#define _player_methodmap_include
 
 /*
  * Base CS:GO plugin requirements.
@@ -39,10 +14,23 @@ enum UserType {
  */
 #include <colorvariables>
 #include <upgrades>
-#include <helpers>
+#include <generics>
 #include <imod>
+#include <ttt>
 
-native int TTT_GetClientRole(int client);
+#define MAX_MESSAGE_LENGTH			1024
+
+#define UPGRADE_INVISIBILITY	2
+
+#define INNOCENT 1
+#define TRAITOR 2
+#define DETECTIVE 3
+
+#define that view_as<int>(this)
+
+bool g_invisible[MAXPLAYERS + 1];
+bool g_invulnerable[MAXPLAYERS + 1];
+bool g_canShoot[MAXPLAYERS + 1];
 
 methodmap Player {
 	public Player(int client) {
@@ -69,14 +57,6 @@ methodmap Player {
 		GetClientWeapon(that, weapon, sizeof(weapon));
 	}
 
-	//public void Invisible(bool invisible) {
-	//	if (invisible) {
-	//		SetEntityRenderMode(that, RENDER_NONE); // RENDER_NONE
-	//	} else {
-	//		SetEntityRenderMode(that, RENDER_NORMAL); // RENDER_NORMAL
-	//	}
-	//}
-
 	public void Msg(const char[] msg, any ...) {
 		char buffer[MAX_MESSAGE_LENGTH];
 		VFormat(buffer, sizeof(buffer), msg, 2);
@@ -85,6 +65,46 @@ methodmap Player {
 
 	public void Give(char weapon[64]) {
 		GivePlayerItem(that, weapon);
+	}
+
+	property bool Invisible {
+		public get() {
+			return g_invisible[that];
+		}
+
+		public set(bool invisible) {
+			if (invisible) {
+				SetEntityRenderMode(that, RENDER_NONE); // RENDER_NONE
+			} else {
+				SetEntityRenderMode(that, RENDER_NORMAL); // RENDER_NORMAL
+			}
+
+			g_invisible[that] = invisible;
+		}
+	}
+
+	// This also needs a handler within the plugin calling it to block damage.
+	// It only stores whether a player is invulnerable or not.
+	property bool Invulnerable {
+		public get() {
+			return g_invulnerable[that];
+		}
+
+		public set(bool invulnerable) {
+			g_invulnerable[that] = invulnerable;
+		}
+	}
+
+	// This also needs a handler within the plugin calling it to block shooting.
+	// It only stores whether a player can shoot or not.
+	property bool CanShoot {
+		public get() {
+			return g_canShoot[that];
+		}
+
+		public set(bool canShoot) {
+			g_canShoot[that] = canShoot;
+		}
 	}
 
 	property int Client {
@@ -141,3 +161,5 @@ methodmap Player {
 		}
 	}
 }
+
+#endif

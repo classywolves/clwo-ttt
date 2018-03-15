@@ -1,18 +1,27 @@
-#if defined _helpers_included
+#if defined _generics_included
 	#endinput
 #endif
-#define _helpers_included 1
+#define _generics_included
 
-#if !defined(LoopValidClients)
+/*
+ * Includes for generics.
+ */
+#include <player_methodmap>
+
+/*
+ * Definitions.
+ */
+#if !defined LoopValidClients
 	#define LoopValidClients(%1) 	for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).ValidClient)
 #endif
 
 #define LoopAliveClients(%1) 		for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).ValidClient && Player(%1).Alive)
-#define LoopStaff(%1) 				for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).Staff)
-#define LoopClients(%1) 			for(int %1 = 1; %1 <= MaxClients; %1++)
+#define LoopStaff(%1) 				for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).ValidClient && Player(%1).Staff)
+#define LoopClients(%1) 			for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).ValidClient)
 
-#include <player_methodmap>
-
+/*
+ * Stock functions.
+ */
 stock int GetStaffArray(int staff[32] = {}) {
 	int staffCount = 0;
 
@@ -24,11 +33,4 @@ stock int GetStaffArray(int staff[32] = {}) {
 	}
 
 	return staffCount;
-}
-
-stock bool IsWorldDamage(int attacker, int damagetype) {
-	if (attacker == 0) {
-		return true;
-	}
-	return false;
 }

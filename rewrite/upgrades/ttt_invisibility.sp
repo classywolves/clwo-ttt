@@ -1,16 +1,17 @@
 /*
  * Base CS:GO plugin requirements.
  */
+#include <clientprefs>
 #include <sourcemod>
-#include <sdkhooks>
 #include <sdktools>
+#include <sdkhooks>
 #include <cstrike>
 
 /*
  * Custom include files.
  */
 #include <colorvariables>
-#include <helpers>
+#include <generics>
 
 /*
  * Custom methodmap includes.
@@ -30,12 +31,11 @@ public OnPluginStart()
 public void InitObjects() {
 }
 
-public void RegisterCmds() {
-	RegAdminCmd("sm_testinvis", Command_TestInvis, ADMFLAG_ROOT, "Test invisibility")
+public void HookEvents() {
 }
 
-public void HookEvents() {
-	//HookEvent("player_hurt", OnPlayerHurt, EventHookMode_Pre);
+public void RegisterCmds() {
+	RegAdminCmd("sm_testinvis", Command_TestInvis, ADMFLAG_ROOT, "Test invisibility")
 }
 
 public void OnClientPutInServer(int client) {
@@ -56,6 +56,18 @@ public void HookClient(int client) {
 	SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
 }
 
+// Block players from shooting if they're not allowed to shoot.
+public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon) {
+	if (buttons & IN_ATTACK) {
+		Player attacker = Player(client);
+		if (!attacker.CanShoot) {
+			buttons &= ~IN_ATTACK;
+		}
+	}
+
+	return Plugin_Continue;
+}
+
 public Action OnTraceAttack(int iVictim, int &iAttacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup) {
 	if (IsWorldDamage(iAttacker, damagetype)) {
 		return Plugin_Continue;
@@ -64,16 +76,17 @@ public Action OnTraceAttack(int iVictim, int &iAttacker, int &inflictor, float &
 	Player attacker = Player(iAttacker);
 	Player victim = Player(iVictim);
 
+	if (victim.Invulnerable) {
+		// This player cannot take damage.
+		damage = 0.0;
+		return Plugin_Changed;
+	}
+
 	char weapon[64];
 	attacker.Weapon(weapon);
 
-	//PrintToServer("%N shot %N with %s", iAttacker, iVictim, weapon);
-
 	if (StrContains(weapon, "taser", false) != -1) {
-		//PrintToServer("That string ^ contains the phrase taser.");
-		if (!victim.Traitor) { PrintToServer("Someone tased an inno, %N", iVictim); }
 		if (victim.Traitor) {
-			//PrintToServer("And this person was a traitor");
 			ActivateInvisibility(victim.Client);
 		}
 	}
@@ -92,7 +105,9 @@ public Action ActivateInvisibility(int client) {
 
 	if (level && player.Traitor) {
 		player.Msg("{yellow}Your invisibility has activated!");
-		SetEntityRenderMode(player.Client, RENDER_NONE);
+		player.Invisible = true;
+		player.Invulnerable = true;
+		player.CanShoot = false;
 		CreateTimer(2.5 * level, DisableInvisibility, player.Client);
 	}
 }
@@ -101,5 +116,7 @@ public Action DisableInvisibility(Handle time, any client) {
 	Player player = Player(client);
 
 	player.Msg("{yellow}Your invisibility has worn off!");
-	SetEntityRenderMode(player.Client, RENDER_NORMAL);
+	player.Invisible = false;
+	player.Invulnerable = false;
+	player.CanShoot = true;
 }
