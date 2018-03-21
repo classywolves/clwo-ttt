@@ -1,5 +1,12 @@
+#if defined _rdm_db_included
+	#endinput
+#endif
+#define _rdm_db_included
+
 Database rdmDb;
 bool rdmConnected;
+
+int currentRound
 
 public void RdmInit() {
 	Database.Connect(RdmCallback, "rdm");
@@ -7,8 +14,7 @@ public void RdmInit() {
 
 /*
  * rdm
- *   .rdm (time int, name varchar(64), auth varchar(64), rdm varchar(255))
- *   .pm () // not implemented
+ *   .death (index int, time int, victimName varchar(64), victimAuth varchar(32), victimRole tinyint, victimKarma int, killerName varchar(64), killerAuth varchar(32), killerRole tinyint, killerKarma int, weapon varchar(64), bad boolean, lastGunFire int, round int, verdict int)
  */
 
 public void RdmCallback(Database db, const char[] error, any data) {
@@ -17,11 +23,14 @@ public void RdmCallback(Database db, const char[] error, any data) {
 		return;
 	}
 
+	SQL_FastQuery(db, "SET NAMES utf8");
+	SQL_SetCharset(db, "utf8");
+
 	rdmDb = db;
 	rdmConnected = true;
 }
 
-public void RdmInsert(char[] name, char[] auth, char[] rdm) {
+public void RdmDeathInsert(char[] name, char[] auth, char[] rdm) {
 	if (!rdmConnected) {
 		return;
 	}

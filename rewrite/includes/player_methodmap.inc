@@ -19,6 +19,7 @@
 #include <ttt>
 
 #define MAX_MESSAGE_LENGTH			1024
+#define ERROR_TIMEOUT				2
 
 #define UPGRADE_INVISIBILITY	2
 
@@ -55,6 +56,10 @@ methodmap Player {
 		GetClientName(that, name, sizeof(name))
 	}
 
+	public void SetName(char name[64]) {
+		SetClientName(that, name)
+	}
+
 	public void Weapon(char weapon[64]) {
 		GetClientWeapon(that, weapon, sizeof(weapon));
 	}
@@ -88,6 +93,20 @@ methodmap Player {
 
 		g_errorTimeout[that] = currentTime;
 		return false;
+	}
+
+	public void Error(const char[] msg, any ...) {
+		if (!this.ErrorTimeout(ERROR_TIMEOUT)) {
+			char buffer[MAX_MESSAGE_LENGTH];
+			VFormat(buffer, sizeof(buffer), msg, 2);
+			CPrintToChat(that, "{purple}[TTT] {red}%s", msg);
+		}
+	}
+
+	property bool Alive {
+		public get() {
+			return IsPlayerAlive(that);			
+		}
 	}
 
 	property bool Invisible {

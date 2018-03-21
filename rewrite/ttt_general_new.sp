@@ -9,7 +9,7 @@
  * Custom include files.
  */
 #include <colorvariables>
-#include <helpers>
+#include <generics>
 
 /*
  * Database includes.
@@ -30,8 +30,6 @@ public void InitDBs() {
 }
 
 public void RegisterCmds() {
-	//RegConsoleCmd("sm_staff", Command_Staff, "List online staff members");
-	//RegConsoleCmd("sm_admins", Command_Staff, "List online staff members");
 }
 
 public void HookEvents() {
@@ -59,27 +57,4 @@ public Action OnPlayerMessage(Event event, const char[] eventName, bool dontBroa
 	MsgInsert(name, auth, text);
 
 	return Plugin_Continue;
-}
-
-public Action Command_Staff(int client, int args) {
-	int staff[32];
-	int staffCount = GetStaffArray(staff);
-
-	if (staffCount == 0) {
-		CPrintToChat(client, "{purple}[TTT] {orchid}There are currently %i staff online.", staffCount);
-		return Plugin_Handled;
-	}
-
-	CPrintToChat(client, "{purple}[TTT] {yellow}There are currently {green}%d {yellow}staff online:", staffCount);
-
-	for (int i = 0; i < staffCount; i++) {
-		char rankName[64];
-
-		Player player = Player(staff[i]);
-		player.RankName(rankName);
-
-		CPrintToChat(client, "{purple}[TTT] {blue}%N is a {green}%s", staff[i], rankName);
-	}
-
-	return Plugin_Handled;
 }

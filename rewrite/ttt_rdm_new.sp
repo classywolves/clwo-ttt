@@ -9,7 +9,7 @@
  * Custom include files.
  */
 #include <colorvariables>
-#include <helpers>
+#include <generics>
 
 /*
  * Database includes.
@@ -23,4 +23,14 @@ public OnPluginStart()
 	InitDBs();
 	
 	PrintToServer("[GEN] Loaded succcessfully");
+}
+
+public void RegisterCmds() {
+}
+
+public void HookEvents() {
+}
+
+public void InitDBs() {
+	RdmInit();
 }

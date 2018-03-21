@@ -58,13 +58,14 @@ public void HookClient(int client) {
 
 // Block players from shooting if they're not allowed to shoot.
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3], float angles[3], int &weapon) {
-	if (buttons & IN_ATTACK) {
+	if (buttons & IN_ATTACK || buttons & IN_ATTACK2) {
 		Player attacker = Player(client);
 		if (attacker.BlockShoot) {
 			if (!attacker.ErrorTimeout(2)) {
 				attacker.Msg("{red}You are not allowed to shoot whilst invulnerable!");
 			}
 			buttons &= ~IN_ATTACK;
+			buttons &= ~IN_ATTACK2;
 		}
 	}
 
