@@ -29,6 +29,7 @@ public void OnPluginStart() {
 	AddFileToDownloadsTable("sound/ttt_clwo/ttt_levelup.mp3");
 
 	HookEvent("player_death", OnPlayerDeath);
+
 	LoopClients(client) if (AreClientCookiesCached(client)) OnClientCookiesCached(client);
 	LoopValidClients(client) OnClientPutInServer(client);
 }
@@ -111,6 +112,23 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 
 public void TTT_OnBodyFound(int client, int victim, const char[] deadPlayer) {
 	Player(client).experience += 2;
+}
+
+public void TTT_OnRoundEnd(int team) {
+	if (team == TRAITOR) {
+		int undiscovered = 0;
+		LoopDead(i) {
+			if (!TTT_GetFoundStatus(i)) {
+				undiscovered++;
+			}
+		}
+
+		LoopAliveClients(i) {
+			if (TTT_GetClientRole(i) == TRAITOR) {
+				CPrintToChat(i, "{purple}[TTT] {yellow}You gained %i experience for hiding %n bodies!", undiscovered * 3, undiscovered);
+			}
+		}
+	}
 }
 
 public Action command_display_experience(int client, int args) {

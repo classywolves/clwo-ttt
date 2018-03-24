@@ -12,6 +12,7 @@
 #define LoopAliveClients(%1) 		for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client && Player(%1).alive)
 #define LoopStaff(%1) 				for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).staff)
 #define LoopClients(%1) 			for(int %1 = 1; %1 <= MaxClients; %1++)
+#define LoopDead(%1)				for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).valid_client && !Player(%1).alive)
 
 #define colour_grey 				{128, 128, 128, 255}
 #define colour_red 					{255, 0, 0, 255}
