@@ -348,7 +348,16 @@ public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &
 	SQL_BindParamString(insert_damage, 10, sWeapon, false);
 
 	// Execute statement
-	if (!SQL_Execute(insert_damage)) { SQL_GetError(insert_damage, error, sizeof(error)); log(Error, "SQL Execute Failed Insert Damage: %s", error); return Plugin_Continue; }
+	if (!SQL_Execute(insert_damage)) {
+		SQL_GetError(insert_damage, error, sizeof(error)); log(Error, "SQL Execute Failed Insert Damage: %s", error);
+		CPrintToChatAll("{purple}[TTT] {red}RDM had a critical failure but auto-recovery appears successful, if you notice any errors, please quote %i in the error report.", GetTime());
+		delete db;
+		db = ConnectDatabase("ttt", "TTT");
+		SQL_FastQuery(db, "SET NAMES utf8");
+		SQL_SetCharset(db, "utf8");
+		ServerCommand("sm plugins reload ttt_upgrades; sm plugins load ttt_upgrades;");
+		return Plugin_Continue;
+	}
 	max_index++;
 	return Plugin_Continue;
 }
