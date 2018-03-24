@@ -53,11 +53,17 @@ methodmap Player {
 	}
 
 	public void Name(char name[64]) {
-		GetClientName(that, name, sizeof(name))
+		GetClientName(that, name, sizeof(name));
 	}
 
 	public void SetName(char name[64]) {
-		SetClientName(that, name)
+		// Currently, this does not work in CS:GO.  So we're being awkward
+		// and using the command version.
+		//SetClientName(that, name);
+
+		char command[128];
+		Format(command, sizeof(command), "sm_rename #%i %s", GetClientUserId(that), name);
+		ServerCommand(command);
 	}
 
 	public void Weapon(char weapon[64]) {
