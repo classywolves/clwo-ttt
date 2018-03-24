@@ -469,7 +469,22 @@ public void check_level(Player player) {
 		player.experience -= player.level_up_experience;
 		int new_level = player.level + 1;
 		player.level = new_level;
-		CPrintToChat(player.id, "{purple}[TTT] {green}Congratulations!  You've levelled up to level %d", new_level);
+		CPrintToChat(player.id, "{purple}[TTT] {green}Congratulations!  You've leveled up to level %d", new_level);
+
+		char msg[255];
+		Format(msg, sizeof(msg), "You are now lvl %i.", new_level);
+
+		Panel lvlPanel = new Panel();
+		lvlPanel.SetTitle("Level Up!")
+		lvlPanel.DrawItem("", ITEMDRAW_SPACER);
+		lvlPanel.DrawText(msg);
+		lvlPanel.DrawText("You have gained a skill point to use in /skills.");
+		lvlPanel.DrawItem("", ITEMDRAW_SPACER);
+		lvlPanel.CurrentKey = GetMaxPageItems(lvlPanel.Style);
+		lvlPanel.DrawItem("Exit", ITEMDRAW_CONTROL);
+
+		lvlPanel.Send(player.id, HandlerDoNothing, 10);
+
 		ClientCommand(player.id, "play */ttt_clwo/ttt_levelup.mp3");
 
 		char auth[255], query[255];
@@ -483,6 +498,10 @@ public void check_level(Player player) {
 			PrintToServer("Failed to query (error: %s)", error);
 		}
 	}
+}
+
+public int HandlerDoNothing(Menu menu, MenuAction action, int param1, int param2) {
+	/* Do nothing */
 }
 
 public void show_experience_bar(Player player)
