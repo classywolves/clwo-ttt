@@ -144,8 +144,12 @@ public HookEvents() {
 	HookEvent("player_death", OnPlayerDeath);
 	HookEvent("player_disconnect", OnPlayerDisconnect);
 	HookEvent("weapon_fire", OnWeaponFire);
-	HookEvent("player_hurt", OnPlayerHurt, EventHookMode_Pre);
 	HookEvent("player_spawned", OnPlayerSpawned);
+}
+
+void HookClient(int client)
+{
+	SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamage);
 }
 
 public OnPluginStart() {
@@ -177,6 +181,11 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
 
 public Action OnRoundEnd(Event event, const char[] name, bool dontBroadcast) {
 	return Plugin_Continue;
+}
+
+public void OnClientPutInServer(int client)
+{
+	HookClient(client);
 }
 
 public Action OnPlayerDisconnect(Event event, const char[] name, bool dontBroadcast) {
@@ -281,19 +290,16 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	return Plugin_Continue;
 }
 
-public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
-	int victim = GetClientOfUserId(GetEventInt(event, "userid"));
-	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-	int damage = GetEventInt(event, "dmg_health");
-	int health_left = GetEventInt(event, "health");
-	char weapon[32];
-	GetEventString(event, "weapon", weapon, sizeof(weapon), "Unknown");
-	
+public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &iDamage, int &iDamagetype, int &iWeapon, float damageForce[3], float damagePosition[3])
+{
 	char victim_name[64], attacker_name[64];
 	char victim_auth[32], attacker_auth[32];
 	// Determine whether RDM
-	int victim_role = TTT_GetClientRole(victim);
-	int attacker_role = TTT_GetClientRole(attacker);
+	int victim_role = TTT_GetClientRole(iVictim);
+	int attacker_role = TTT_GetClientRole(iAttacker);
+	int intDamage;
+	int health_left;
+	char sWeapon[32];
 
 	// Prepare a SQL statement for the insertion
 	char error[255];
@@ -306,7 +312,7 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	insert_damage = global_statement_insert_damage;
 	if (insert_damage == null || insert_damage == INVALID_HANDLE) { log(Error, "Error templating damage in the database"); log(Error, error); return Plugin_Continue; }
 	
-	if (!attacker)
+	if (!iAttacker)
 	{
 		attacker_name = "Console";
 		attacker_auth = "STEAM:1:0:0"
@@ -316,14 +322,17 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	{
 		//log(Info, "%i attacked %i (traitor is %i)", victim_role, attacker_role, TRAITOR);
 		if (victim_role == TRAITOR && attacker_role == TRAITOR) {
-			log(Info, "We blocked the damage.");
+			log(Info, "Traitor too Traitor damage blocked.");
 			return Plugin_Handled;
 		}
 
-		GetClientName(victim, victim_name, sizeof(victim_name));
-		GetClientName(attacker, attacker_name, sizeof(attacker_name));
-		GetClientAuthId(victim, AuthId_Steam2, victim_auth, sizeof(victim_auth));
-		GetClientAuthId(attacker, AuthId_Steam2, attacker_auth, sizeof(attacker_auth));
+		GetClientName(iVictim, victim_name, sizeof(victim_name));
+		GetClientName(iAttacker, attacker_name, sizeof(attacker_name));
+		GetClientAuthId(iVictim, AuthId_Steam2, victim_auth, sizeof(victim_auth));
+		GetClientAuthId(iAttacker, AuthId_Steam2, attacker_auth, sizeof(attacker_auth));
+		intDamage = RoundFloat(iDamage);
+		health_left = Player(iVictim).health;
+		GetEntityClassname(iWeapon, sWeapon, sizeof(sWeapon));
 	}
 
 	SQL_BindParamInt(insert_damage, 0, max_round, false);
@@ -333,10 +342,10 @@ public Action OnPlayerHurt(Event event, const char[] name, bool dontBroadcast) {
 	SQL_BindParamString(insert_damage, 4, attacker_name, false);
 	SQL_BindParamString(insert_damage, 5, attacker_auth, false);
 	SQL_BindParamInt(insert_damage, 6, attacker_role, false);
-	SQL_BindParamInt(insert_damage, 7, damage, false);
+	SQL_BindParamInt(insert_damage, 7, intDamage, false);
 	SQL_BindParamInt(insert_damage, 8, health_left, false);
 	SQL_BindParamInt(insert_damage, 9, round_time, false);
-	SQL_BindParamString(insert_damage, 10, weapon, false);
+	SQL_BindParamString(insert_damage, 10, sWeapon, false);
 
 	// Execute statement
 	if (!SQL_Execute(insert_damage)) { SQL_GetError(insert_damage, error, sizeof(error)); log(Error, "SQL Execute Failed Insert Damage: %s", error); return Plugin_Continue; }
