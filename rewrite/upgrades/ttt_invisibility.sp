@@ -126,7 +126,46 @@ public Action ActivateInvisibility(int client) {
 		player.Invisible = true;
 		player.Invulnerable = true;
 		player.BlockShoot = true;
+
 		CreateTimer(2.5 * level, DisableInvisibility, player.Client);
+
+		for (float i = 0.0; i < 2.5 * level; i += 0.1) {
+			DataPack pack;
+			CreateTimer(i, InvisibilityCountdown, pack);
+			pack.WriteCell(player.Client);
+			pack.WriteFloat(i / (2.5 * level));
+		}
+	}
+}
+
+public Action InvisibilityCountdown(Handle timer, Handle pack) {
+	ResetPack(pack);
+
+	int client = ReadPackCell(pack);
+	float percent = ReadPackFloat(pack);
+
+	Player player = Player(client);
+
+	char bar[80], progress[255];
+	GetProgressBar(percent, bar);
+	Format(progress, sizeof(progress), "Remaining Invisibility: [%s]", bar)
+
+	Handle hHudText = CreateHudSynchronizer();
+	SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 0, 0.0, 0.0, 0.0);
+	ShowSyncHudText(player.Client, hHudText, progress);
+	CloseHandle(hHudText);
+}
+
+public void GetProgressBar(float percent, char bar[80]) {
+	int bars = 40;
+	int squares = RoundFloat(bars * percent);
+
+	for (int i = 0; i < bars; i++) {
+		if (i <= squares) {
+			StrCat(bar, bars, "▰");
+		} else {
+			StrCat(bar, bars, "▱");
+		}
 	}
 }
 
