@@ -111,6 +111,7 @@ public Action Command_TestInvis(int client, int args) {
 		return Plugin_Handled;
 	}
 
+	player.Msg("{yellow}Activating Invisibility!");
 	ActivateInvisibility(player.Client);
 
 	return Plugin_Handled;
@@ -131,7 +132,7 @@ public Action ActivateInvisibility(int client) {
 
 		for (float i = 0.0; i < 2.5 * level; i += 0.1) {
 			DataPack pack;
-			CreateTimer(i, InvisibilityCountdown, pack);
+			CreateDataTimer(i, InvisibilityCountdown, pack);
 			pack.WriteCell(player.Client);
 			pack.WriteFloat(i / (2.5 * level));
 		}
@@ -151,22 +152,24 @@ public Action InvisibilityCountdown(Handle timer, Handle pack) {
 	Format(progress, sizeof(progress), "Remaining Invisibility: [%s]", bar)
 
 	Handle hHudText = CreateHudSynchronizer();
-	SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 0, 0.0, 0.0, 0.0);
+	SetHudTextParams(0.01, 0.01, 0.2, 255, 128, 0, 255, 0, 0.0, 0.0, 0.0);
 	ShowSyncHudText(player.Client, hHudText, progress);
 	CloseHandle(hHudText);
 }
 
 public void GetProgressBar(float percent, char bar[80]) {
-	int bars = 40;
+	int bars = 20;
 	int squares = RoundFloat(bars * percent);
 
-	for (int i = 0; i < bars; i++) {
-		if (i <= squares) {
-			StrCat(bar, bars, "▰");
-		} else {
-			StrCat(bar, bars, "▱");
-		}
+	for (int i = 0; i < bars - squares; i++) {
+		StrCat(bar, 80, "▰"); // Full Bar
 	}
+
+	for (int i = 0; i < squares; i++) {
+		StrCat(bar, 80, "▱"); // Empty Bar
+	}
+
+	//CPrintToChatAll("Percent: %f Bars: %i, Squares: %i, Bar: %s", percent, bars, squares, bar);
 }
 
 public Action DisableInvisibility(Handle time, any client) {
