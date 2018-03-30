@@ -43,6 +43,10 @@ public Action Command_StartRecord(int client, int args) {
 	RoundRecord(client);
 }
 
+public Action Command_Death(int client, int args) {
+	Death(client);
+}
+
 public void RoundRecord(int client) {
 	Player player = Player(client);
 

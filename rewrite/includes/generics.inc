@@ -44,3 +44,16 @@ stock int GetStaffCount() {
 
 	return staffCount;
 }
+
+stock int GetActiveStaffCount() {
+	int staffCount = 0;
+
+	LoopStaff(client) {
+		Player player = Player(client)
+		if (player.CounterTerrorist || player.Terrorist) {
+			staffCount++;
+		}
+	}
+
+	return staffCount
+}

@@ -13,6 +13,7 @@
  * Custom include files.
  */
 #include <colorvariables>
+#include <sourcecomms>
 #include <upgrades>
 #include <generics>
 #include <imod>
@@ -56,38 +57,14 @@ methodmap Player {
 		GetClientName(that, name, sizeof(name));
 	}
 
-	public void SetName(char name[64]) {
-		// Currently, this does not work in CS:GO.  So we're being awkward
-		// and using the command version.
-		//SetClientName(that, name);
-
-		char command[128];
-		Format(command, sizeof(command), "sm_rename #%i %s", GetClientUserId(that), name);
-		ServerCommand(command);
-	}
-
-	public void Weapon(char weapon[64]) {
-		GetClientWeapon(that, weapon, sizeof(weapon));
-	}
-
 	public void Msg(const char[] msg, any ...) {
-		char buffer[MAX_MESSAGE_LENGTH];
-		VFormat(buffer, sizeof(buffer), msg, 2);
-		CPrintToChat(that, "{purple}[TTT] %s", msg);
-	}
+			char buffer[MAX_MESSAGE_LENGTH], formatted[MAX_MESSAGE_LENGTH];
+			VFormat(buffer, sizeof(buffer), msg, 2);
 
-	public bool Access(char[] rank, bool response = false) {
-		bool access = iMod_HigherThenString(that, rank, true)
+			StrCat(formatted, sizeof(formatted), "{purple}[TTT]");
+			StrCat(formatted, sizeof(formatted), buffer);
 
-		if (!access) {
-			this.Msg("{red}You do not have access to this command!")
-		}
-
-		return access;
-	}
-
-	public void Give(char weapon[64]) {
-		GivePlayerItem(that, weapon);
+			CPrintToChat(that, formatted);
 	}
 
 	public bool ErrorTimeout(int timeout) {
@@ -103,10 +80,95 @@ methodmap Player {
 
 	public void Error(const char[] msg, any ...) {
 		if (!this.ErrorTimeout(ERROR_TIMEOUT)) {
-			char buffer[MAX_MESSAGE_LENGTH];
+			char buffer[MAX_MESSAGE_LENGTH], formatted[MAX_MESSAGE_LENGTH];
 			VFormat(buffer, sizeof(buffer), msg, 2);
-			CPrintToChat(that, "{purple}[TTT] {red}%s", msg);
+
+			StrCat(formatted, sizeof(formatted), "{purple}[TTT] {red}");
+			StrCat(formatted, sizeof(formatted), buffer);
+
+			CPrintToChat(that, formatted);
 		}
+	}
+
+	public int Target(char target[128], int targets[MAXPLAYERS], char target_name[128], bool alive, bool immunity) {
+		int filter = (alive ? COMMAND_FILTER_ALIVE : 0) | (immunity ? 0 : COMMAND_FILTER_NO_IMMUNITY);
+		bool translation;
+
+		int response = ProcessTargetString(target, that, targets, sizeof(targets), filter, target_name, sizeof(target_name), translation);
+
+		if (response == 0 || response == -5) {
+			this.Error("No targets were found.");
+			return 0;
+		} else if (response == -7) {
+			this.Error("Partial name had too many targets.");
+			return 0;
+		}
+
+		return response;
+	}
+
+	public Player TargetOne(char target[128], bool respond = false, bool immunity = true) {
+		int targetIndex = FindTarget(that, target, true, immunity);
+
+		if (respond && targetIndex == -1) {
+			this.Error("No targets were found.");
+		}
+
+		return Player(targetIndex);
+	}
+
+	public void SetName(char name[64]) {
+		// Currently, this does not work in CS:GO.  So we're being awkward
+		// and using the command version.
+		//SetClientName(that, name);
+
+		char command[128];
+		Format(command, sizeof(command), "sm_rename #%i %s", GetClientUserId(that), name);
+		ServerCommand(command);
+	}
+
+	public void Weapon(char weapon[64]) {
+		GetClientWeapon(that, weapon, sizeof(weapon));
+	}
+
+	// This command returns true when only informers are on a non-spectator team.
+	public bool ActiveInformer(bool response = true) {
+		// A good addition to this function would be some way for staff to specify that they want
+		// the informers help for a command.  A similar system to "adopt" on JB.
+		char rankName[64];
+		this.RankName(rankName);
+
+		if (StrEqual(rankName, "informer") && GetActiveStaffCount()) {
+			return true;
+		}
+
+		return false;
+	}
+
+	public bool Access(char[] rank, bool response = false) {
+		bool access = iMod_HigherThenString(that, rank, true)
+
+		if (!access && response) {
+			this.Msg("{red}You do not have access to this command!")
+		}
+
+		return access;
+	}
+
+	public void Give(char weapon[64]) {
+		GivePlayerItem(that, weapon);
+	}
+
+	public void Mute(int time, const char[] reason) {
+		SourceComms_SetClientMute(that, true, time, true, reason);
+	}
+
+	public void Gag(int time, const char[] reason) {
+		SourceComms_SetClientGag(that, true, time, true, reason);
+	}
+
+	public void Kick(const char[] reason) {
+		KickClient(that, reason);
 	}
 
 	property bool Alive {
@@ -185,10 +247,39 @@ methodmap Player {
 		}
 	}
 
-	property bool InformerBlock {
+	property bool Muted {
 		public get() {
-			// 
-			return !!GetStaffCount()
+			return SourceComms_GetClientMuteType(that) != bNot
+		}
+	}
+
+	property bool Gagged {
+		public get() {
+			return SourceComms_GetClientGagType(that) != bNot
+		}
+	}
+
+	property int Team {
+		public get() {
+			return GetClientTeam(that);
+		}
+	}
+
+	property bool CounterTerrorist {
+		public get() {
+			return this.Team == CS_TEAM_CT;
+		}
+	}
+
+	property bool Terrorist {
+		public get() {
+			return this.Team == CS_TEAM_T;
+		}
+	}
+
+	property bool Spectator {
+		public get() {
+			return this.Team == CS_TEAM_SPECTATOR;
 		}
 	}
 
