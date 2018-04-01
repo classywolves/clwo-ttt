@@ -18,8 +18,38 @@ enum model {
 }
 
 char models[][][] = {
-  { "weapon_awp", "models/weapons/w_snip_awp_dropped.mdl", "0.05" },
-  { "weapon_ak47", "models/weapons/w_rif_ak47_dropped.mdl", "0.2" }
+  { "weapon_ak47", "models/weapons/w_rif_ak47_dropped.mdl", "0.10" },
+  { "weapon_aug", "models/weapons/w_rif_aug_dropped.mdl", "0.05" },
+  { "weapon_awp", "models/weapons/w_snip_awp_dropped.mdl", "0.02" },
+  { "weapon_bizon", "models/weapons/w_smg_bizon_dropped.mdl", "0.05" },
+  { "weapon_deagle", "models/weapons/w_pist_deagle_dropped.mdl", "0.05" },
+  { "weapon_elite", "models/weapons/w_pist_elite_dropped.mdl", "0.05" },
+  { "weapon_famas", "models/weapons/w_rif_famas_dropped.mdl", "0.05" },
+  { "weapon_fiveseven", "models/weapons/w_pist_fiveseven_dropped.mdl", "0.10" },
+  { "weapon_flashbang", "models/weapons/w_eq_flashbang_dropped.mdl", "0.05" },
+  { "weapon_g3sg1", "models/weapons/w_snip_g3sg1_dropped.mdl", "0.01" },
+  { "weapon_galilar", "models/weapons/w_rif_galilar_dropped.mdl", "0.05" },
+  { "weapon_hegrenade", "models/weapons/w_eq_fraggrenade_dropped.mdl", "0.05" },
+  { "weapon_incgrenade", "models/weapons/w_eq_incendiarygrenade_dropped.mdl", "0.05" },
+  { "weapon_m249", "models/weapons/w_mach_m249_dropped.mdl", "0.02" },
+  { "weapon_m4a1", "models/weapons/w_rif_m4a1_dropped.mdl", "0.02" },
+  { "weapon_m4a1_silencer", "models/weapons/w_rif_m4a1_s_dropped.mdl", "0.02" },
+  { "weapon_mac10", "models/weapons/w_smg_mac10_dropped.mdl", "0.05" },
+  { "weapon_mag7", "models/weapons/w_shot_mag7_dropped.mdl", "0.05" },
+  { "weapon_mp7", "models/weapons/w_smg_mp7_dropped.mdl", "0.05" },
+  { "weapon_mp9", "models/weapons/w_smg_mp9_dropped.mdl", "0.05" },
+  { "weapon_negev", "models/weapons/w_mach_negev_dropped.mdl", "0.02" },
+  { "weapon_nova", "models/weapons/w_shot_nova_dropped.mdl", "0.05" },
+  { "weapon_p250", "models/weapons/w_pist_p250_dropped.mdl", "0.05" },
+  { "weapon_p90", "models/weapons/w_smg_p90_dropped.mdl", "0.05" },
+  { "weapon_sawedoff", "models/weapons/w_shot_sawedoff_dropped.mdl", "0.05" },
+  { "weapon_scar20", "models/weapons/w_snip_scar20_dropped.mdl", "0.01" },
+  { "weapon_sg556", "models/weapons/w_rif_sg556_dropped.mdl", "0.05" },
+  { "weapon_ssg08", "models/weapons/w_snip_ssg08_dropped.mdl", "0.05" },
+  { "weapon_smokegrenade", "models/weapons/w_eq_smokegrenade_dropped.mdl", "0.05" },
+  { "weapon_tec9", "models/weapons/w_pist_tec9_dropped.mdl", "0.05" },
+  { "weapon_ump45", "models/weapons/w_smg_ump45_dropped.mdl", "0.05" },
+  { "weapon_xm1014", "models/weapons/w_shot_xm1014_dropped.mdl", "0.05" }
 }
 
 int totalPositions = 0;
