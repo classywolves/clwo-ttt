@@ -35,21 +35,6 @@ public void HookEvents() {
 public void InitDBs() {
 }
 
-/**
- * Sets a client's mute state.
- *
- * @param client    Client index.
- * @param muteState   True to mute client, false to unmute.
- * -------------------------------------Parameters below this line are used only for muteState=true-------------------------------------
- * ----------------------------------for muteState=false these parameters are ignored (saveToDB=false)----------------------------------
- * @param muteLength    Length of punishment in minutes. Value < 0 muting client for session. Permanent (0) is not allowed at this time.
- * @param saveToDB    If true, punishment will be saved in database.
- * @param reason    Reason for punishment.
- * @return        True if this caused a change in mute state, false otherwise.
- */
-// native bool:SourceComms_SetClientMute(client, bool:muteState, muteLength = -1, bool:saveToDB = false, const String:reason[] = "Muted through natives");
-
-
 public Action Command_InformerMute(int client, int args) {
   // Usage is "/imute <target> <time> <reason>"
   Player player = Player(client);

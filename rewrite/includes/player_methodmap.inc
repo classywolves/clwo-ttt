@@ -107,6 +107,10 @@ methodmap Player {
 		return response;
 	}
 
+	public void Pos(float pos[3]) {
+		GetClientEyePosition(that, pos);
+	}
+
 	public Player TargetOne(char target[128], bool respond = false, bool immunity = true) {
 		int targetIndex = FindTarget(that, target, true, immunity);
 
