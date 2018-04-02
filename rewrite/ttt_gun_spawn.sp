@@ -56,6 +56,9 @@ int totalPositions = 0;
 float positions[1024][3];
 
 Handle mapPoints;
+Handle mapPointsRead;
+
+int g_iGlow;
 
 public OnPluginStart()
 {
@@ -73,6 +76,9 @@ public OnPluginStart()
 public void RegisterCmds() {
   RegConsoleCmd("sm_spawngun", Command_SpawnGun, "Spawn a gun!");
   RegConsoleCmd("sm_spawnguns", Command_SpawnGuns, "Spawn all guns!");
+  RegConsoleCmd("sm_addloc", Command_AddLoc, "Add a position for a gun to spawn!");
+  RegConsoleCmd("sm_loadlocs", Command_LoadLocs, "Load locations for guns to spawn!");
+  RegConsoleCmd("sm_showlocs", Command_ShowLocs, "Show all locations on a map!");
 }
 
 public void HookEvents() {
@@ -83,6 +89,8 @@ public void InitDBs() {
 }
 
 public void InitPrecache() {
+  g_iGlow = PrecacheModel("sprites/blueglow1.vmt");
+
   for (int i = 0; i < sizeof(models); i++) {
     PrecacheModel(models[i][WPN_MDL], true);
     AddFileToDownloadsTable(models[i][WPN_MDL]);
@@ -90,14 +98,6 @@ public void InitPrecache() {
 }
 
 public void OnMapStart() {
-  char map[255], path[PLATFORM_MAX_PATH];
-
-  GetCurrentMap(map, sizeof(map));
-  BuildPath(Path_SM, path, sizeof(path), "configs/lootpos/%s.txt", map);
-
-  if (mapPoints != INVALID_HANDLE) { mapPoints.Close(); }
-  mapPoints = OpenFile(path, "a+");
-
   LoadPoints();
 }
 
@@ -129,28 +129,81 @@ public Action Command_SpawnGun(int client, int args) {
 }
 
 public Action Command_SpawnGuns(int client, int args) {
+  Player player = Player(client);
+
+  if (!player.Access("senator", true)) {
+    return Plugin_Handled;
+  }
+
   SpawnGuns();
+
+  return Plugin_Handled;
 }
 
 public Action Command_AddLoc(int client, int args) {
   Player player = Player(client);
 
-  char map[255];
-  float pos[3];
+  if (!player.Access("senator", true)) {
+    return Plugin_Handled;
+  }
 
-  GetCurrentMap(map, sizeof(map));
+  float pos[3];
   player.Pos(pos);
 
-  AddLoc(map, pos);
+  char msg[255];
+  Format(msg, sizeof(msg), "Adding loc at %f;%f;%f", pos[0], pos[1], pos[2])
+  player.Msg(msg);
+
+  AddLoc(pos);
+
+  return Plugin_Handled;
+}
+
+public Action Command_LoadLocs(int client, int args) {
+  Player player = Player(client);
+
+  if (!player.Access("senator", true)) {
+    return Plugin_Handled;
+  }
+
+  LoadPoints();
+
+  return Plugin_Handled;
+}
+
+public Action Command_ShowLocs(int client, int args) {
+  ShowLootSpawns(client);
+}
+
+public void ShowLootSpawns(int client) {
+  Player player = Player(client);
+  player.Msg("Showing all %i loot spawning locations", totalPositions + 1);
+  for (int i = 0; i < totalPositions + 1; i++) {
+    TE_SetupGlowSprite(positions[i], g_iGlow, 10.0, 1.0, 235);
+    TE_SendToAll();
+  }
 }
 
 public void LoadPoints() {
+  char map[255], path[PLATFORM_MAX_PATH];
+
+  GetCurrentMap(map, sizeof(map));
+  BuildPath(Path_SM, path, sizeof(path), "configs/lootpos/%s.txt", map);
+
+  mapPointsRead = OpenFile(path, "r");
+
   char line[512];
   totalPositions = 0;
 
-  while(!IsEndOfFile(mapPoints) && ReadFileLine(mapPoints, line, sizeof(line))) {
-    char floatValues[128][3];
+  PrintToServer("Loading points from file");
+
+  while(!IsEndOfFile(mapPointsRead) && ReadFileLine(mapPointsRead, line, sizeof(line))) {
+    PrintToServer("Loaded a line: %s", line);
+
+    char floatValues[3][128];
     ExplodeString(line, ";", floatValues, 3, 128);
+
+    PrintToServer("%s %s;%s;%s", line, floatValues[0], floatValues[1], floatValues[2])
 
     positions[totalPositions][0] = StringToFloat(floatValues[0]);
     positions[totalPositions][1] = StringToFloat(floatValues[1]);
@@ -160,6 +213,12 @@ public void LoadPoints() {
   }
 
   totalPositions--;
+
+  PrintToServer("Loaded %i lines", totalPositions);
+
+  if (totalPositions < 0) totalPositions = 0;
+
+  mapPointsRead.Close();
 }
 
 public void SpawnGuns() {
@@ -172,6 +231,7 @@ public void SpawnGuns() {
         float pos[3];
         GetPos(pos);
 
+        PrintToServer("SpawnGun() : %s %f;%f;%f", models[i][WPN_MDL], pos[0], pos[1], pos[2]);
         SpawnGun(models[i][WPN_PROP], models[i][WPN_MDL], pos);
       }
     }
@@ -190,14 +250,18 @@ public Action SpawnGun(char[] entityName, char[] entityMode, float[3] pos) {
 }
 
 public void GetPos(float[3] pos) {
-  int item = GetRandomInt(0, totalPositions - 1);
+  if (totalPositions) {
+    int item = GetRandomInt(0, totalPositions - 1);
 
-  pos[0] = positions[item][0];
-  pos[1] = positions[item][1];
-  pos[2] = positions[item][2];
+    PrintToServer("GetPos() %f;%f;%f", positions[item][0], positions[item][1], positions[item][2]);
+
+    pos[0] = positions[item][0];
+    pos[1] = positions[item][1];
+    pos[2] = positions[item][2];
+  }
 }
 
-public void AddLoc(char[] map, float pos[3]) {
+public void AddLoc(float pos[3]) {
   positions[totalPositions][0] = pos[0];
   positions[totalPositions][1] = pos[1];
   positions[totalPositions][2] = pos[2];
@@ -207,5 +271,15 @@ public void AddLoc(char[] map, float pos[3]) {
   char line[512];
   Format(line, sizeof(line), "%f;%f;%f", pos[0], pos[1], pos[2]);
 
+  TE_SetupGlowSprite(pos, g_iGlow, 10.0, 1.0, 235);
+  TE_SendToAll();
+
+  char map[255], path[PLATFORM_MAX_PATH];
+
+  GetCurrentMap(map, sizeof(map));
+  BuildPath(Path_SM, path, sizeof(path), "configs/lootpos/%s.txt", map);
+
+  mapPoints = OpenFile(path, "a");
   WriteFileLine(mapPoints, line);
+  mapPoints.Close();
 } 
