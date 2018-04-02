@@ -37,6 +37,13 @@ bool g_blockShoot[MAXPLAYERS + 1];
 int g_traitorKills[MAXPLAYERS + 1];
 int g_errorTimeout[MAXPLAYERS + 1];
 
+Handle cookieInnocentWins;
+Handle cookieDetectiveWins;
+Handle cookieTraitorWins;
+Handle cookieInnocentLosses;
+Handle cookieDetectiveLosses;
+Handle cookieTraitorLosses;
+
 methodmap Player {
 	public Player(int client) {
 		return view_as<Player>(client);
@@ -89,6 +96,49 @@ methodmap Player {
 
 			CPrintToChat(that, formatted);
 		}
+	}
+
+	public int GetCookieInt(Handle cookie, int defaultValue) {
+		char cookieValue[128];
+		GetClientCookie(that, cookie, cookieValue, sizeof(cookieValue));
+		if (cookieValue[0] == '\0') return defaultValue;
+		return StringToInt(cookieValue);
+	}
+
+	public int SetCookieInt(Handle cookie, int value) {
+		char cookieValue[128];
+		IntToString(value, cookieValue, sizeof(cookieValue));
+		SetClientCookie(that, cookie, cookieValue);
+	}
+
+	property int TraitorWins {
+		public get() { return this.GetCookieInt(cookieTraitorWins, 0); }
+		public set(int wins) { this.SetCookieInt(cookieTraitorWins, wins); }
+	}
+
+	property int InnocentWins {
+		public get() { return this.GetCookieInt(cookieInnocentWins, 0); }
+		public set(int wins) { this.SetCookieInt(cookieInnocentWins, wins); }
+	}
+
+	property int DetectiveWins {
+		public get() { return this.GetCookieInt(cookieDetectiveWins, 0); }
+		public set(int wins) { this.SetCookieInt(cookieDetectiveWins, wins); }
+	}
+
+	property int TraitorLosses {
+		public get() { return this.GetCookieInt(cookieTraitorLosses, 0); }
+		public set(int losses) { this.SetCookieInt(cookieTraitorLosses, losses); }
+	}
+
+	property int InnocentLosses {
+		public get() { return this.GetCookieInt(cookieInnocentLosses, 0); }
+		public set(int losses) { this.SetCookieInt(cookieInnocentLosses, losses); }
+	}
+
+	property int DetectiveLosses {
+		public get() { return this.GetCookieInt(cookieDetectiveLosses, 0); }
+		public set(int losses) { this.SetCookieInt(cookieDetectiveLosses, losses); }
 	}
 
 	public int Target(char target[128], int targets[MAXPLAYERS], char target_name[128], bool alive, bool immunity) {

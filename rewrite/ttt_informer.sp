@@ -221,7 +221,7 @@ public Action Command_InformerKick(int client, int args) {
   Format(reason, sizeof(reason), "%sKicked by %L", reason, client);
 
   target.Kick(reason);
-  CPrintToChatAll("{purple}[TTT] {yellow}%N has been kicked by %N", target.Client, player.Client);
+  CPrintToChatAll("{purple}[TTT] {green}%N {blue}has been kicked by {blue}%N", target.Client, player.Client);
 
   return Plugin_Handled;
 }

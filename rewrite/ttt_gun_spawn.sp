@@ -95,7 +95,7 @@ public void OnMapStart() {
   GetCurrentMap(map, sizeof(map));
   BuildPath(Path_SM, path, sizeof(path), "configs/lootpos/%s.txt", map);
 
-  mapPoints.Close();
+  if (mapPoints != INVALID_HANDLE) { mapPoints.Close(); }
   mapPoints = OpenFile(path, "a+");
 
   LoadPoints();
