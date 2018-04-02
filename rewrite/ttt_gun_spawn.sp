@@ -163,15 +163,17 @@ public void LoadPoints() {
 }
 
 public void SpawnGuns() {
-  int total = 100;
-  for (int i = 0; i < sizeof(models); i++) {
-    float chance = StringToFloat(models[i][WPN_CHANCE]);
+  if (totalPositions) {
+    int total = 100;
+    for (int i = 0; i < sizeof(models); i++) {
+      float chance = StringToFloat(models[i][WPN_CHANCE]);
 
-    for (int j = 0; j < chance * total; j++) {
-      float pos[3];
-      GetPos(pos);
+      for (int j = 0; j < chance * total; j++) {
+        float pos[3];
+        GetPos(pos);
 
-      SpawnGun(models[i][WPN_PROP], models[i][WPN_MDL], pos);
+        SpawnGun(models[i][WPN_PROP], models[i][WPN_MDL], pos);
+      }
     }
   }
 }

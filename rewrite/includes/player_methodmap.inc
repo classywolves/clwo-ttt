@@ -20,13 +20,13 @@
 #include <ttt>
 
 #define MAX_MESSAGE_LENGTH			1024
-#define ERROR_TIMEOUT				2
+#define ERROR_TIMEOUT						2
 
-#define UPGRADE_INVISIBILITY	2
+#define UPGRADE_INVISIBILITY		2
 
-#define INNOCENT 1
-#define TRAITOR 2
-#define DETECTIVE 3
+#define INNOCENT 								1
+#define TRAITOR 								2
+#define DETECTIVE 							3
 
 #define that view_as<int>(this)
 
@@ -34,6 +34,7 @@ bool g_invisible[MAXPLAYERS + 1];
 bool g_invulnerable[MAXPLAYERS + 1];
 bool g_blockShoot[MAXPLAYERS + 1];
 
+int g_traitorKills[MAXPLAYERS + 1];
 int g_errorTimeout[MAXPLAYERS + 1];
 
 methodmap Player {
@@ -159,6 +160,9 @@ methodmap Player {
 		return access;
 	}
 
+	// Is this expected usage for natives within methodmaps?
+	// native void AddSpeed(float speed, float maxSpeed);
+
 	public void Give(char weapon[64]) {
 		GivePlayerItem(that, weapon);
 	}
@@ -178,6 +182,15 @@ methodmap Player {
 	property bool Alive {
 		public get() {
 			return IsPlayerAlive(that);			
+		}
+	}
+
+	property int TraitorKills {
+		public get() {
+			return g_traitorKills[that];
+		}
+		public set(int kills) {
+			g_traitorKills[that] = kills;
 		}
 	}
 
