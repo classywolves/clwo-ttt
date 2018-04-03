@@ -69,7 +69,7 @@ methodmap Player {
 			char buffer[MAX_MESSAGE_LENGTH], formatted[MAX_MESSAGE_LENGTH];
 			VFormat(buffer, sizeof(buffer), msg, 2);
 
-			StrCat(formatted, sizeof(formatted), "{purple}[TTT]");
+			StrCat(formatted, sizeof(formatted), "{purple}[TTT] {yellow}");
 			StrCat(formatted, sizeof(formatted), buffer);
 
 			CPrintToChat(that, formatted);
@@ -193,8 +193,20 @@ methodmap Player {
 		char rankName[64];
 		this.RankName(rankName);
 
-		if (StrEqual(rankName, "informer") && GetActiveStaffCount()) {
+		if (StrEqual(rankName, "Informer") && !GetActiveStaffCount()) {
 			return true;
+		}
+
+		if (!StrEqual(rankName, "Informer")) {
+			char msg[255];
+			Format(msg, sizeof(msg), "Access denied, not an informer.", rankName);
+			this.Error(msg);
+		}
+
+		if (GetActiveStaffCount()) {
+			char msg[255];
+			Format(msg, sizeof(msg), "Access denied, %i staff active.", GetActiveStaffCount());
+			this.Error(msg);
 		}
 
 		return false;
@@ -353,7 +365,7 @@ methodmap Player {
 	property bool Staff {
 		public get() {
 			// Returns true, even for blocked informers.
-			return iMod_IsStaff(that);
+			return this.Access("tmod");
 		}
 	}
 

@@ -125,7 +125,7 @@ public void TTT_OnRoundEnd(int team) {
 
 		LoopAliveClients(i) {
 			if (TTT_GetClientRole(i) == TRAITOR) {
-				CPrintToChat(i, "{purple}[TTT] {yellow}You gained %i experience for hiding %n bodies!", undiscovered * 3, undiscovered);
+				CPrintToChat(i, "{purple}[TTT] {yellow}You gained %i experience for hiding %i bodies!", undiscovered * 3, undiscovered);
 			}
 		}
 	}
