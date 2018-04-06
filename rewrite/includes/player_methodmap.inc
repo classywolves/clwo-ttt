@@ -63,10 +63,6 @@ methodmap Player {
 		return Upgrade_Limit(Upgrade_GetPoints(that, upgrade), min, max);
 	}
 
-	public void Pos(float loc[3]) {
-		GetClientAbsOrigin(that, loc);
-	}
-
 	public void Name(char name[64]) {
 		GetClientName(that, name, sizeof(name));
 	}
