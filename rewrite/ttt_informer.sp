@@ -50,7 +50,7 @@ public Action Command_InformerMute(int client, int args) {
     return Plugin_Handled;
   }
 
-  char reason[255], arg1[128], arg2[128], buffer[128];
+  char reason[255], mini[255], arg1[128], arg2[128], buffer[128];
   int time;
 
   GetCmdArg(1, arg1, sizeof(arg1));
@@ -95,13 +95,18 @@ public Action Command_InformerMute(int client, int args) {
       Format(reason, sizeof(reason), "%s %s", reason, buffer);
     }
 
+    Format(mini, sizeof(mini), "%s", reason);
     Format(reason, sizeof(reason), "%s - ", reason);
   }
 
   Format(reason, sizeof(reason), "%sMuted by %L", reason, client);
 
   target.Mute(time, reason);
-  CPrintToChatAll("{purple}[TTT] {yellow}%N has been muted for %i minutes by %N", target.Client, time, player.Client);
+  if (args >= 3) {
+    CPrintToChatAll("{purple}[TTT] {yellow}%N has been muted for %i minutes by %N due to '%s'", target.Client, time, player.Client, mini);
+  } else {
+    CPrintToChatAll("{purple}[TTT] {yellow}%N has been muted for %i minutes by %N", target.Client, time, player.Client);
+  }
 
   return Plugin_Handled;
 }
@@ -121,7 +126,7 @@ public Action Command_InformerGag(int client, int args) {
     return Plugin_Handled;
   }
 
-  char reason[255], arg1[128], arg2[128], buffer[128];
+  char reason[255], mini[255], arg1[128], arg2[128], buffer[128];
   int time;
 
   GetCmdArg(1, arg1, sizeof(arg1));
@@ -166,13 +171,18 @@ public Action Command_InformerGag(int client, int args) {
       Format(reason, sizeof(reason), "%s %s", reason, buffer);
     }
 
+    Format(mini, sizeof(mini), "%s", reason);
     Format(reason, sizeof(reason), "%s - ", reason);
   }
 
   Format(reason, sizeof(reason), "%sGagged by %L", reason, client);
 
   target.Gag(time, reason);
-  CPrintToChatAll("{purple}[TTT] {yellow}%N has been gagged for %i minutes by %N", target.Client, time, player.Client);
+  if (args >= 3) {
+    CPrintToChatAll("{purple}[TTT] {yellow}%N has been gagged for %i minutes by %N due to '%s'", target.Client, time, player.Client, mini);
+  } else {
+    CPrintToChatAll("{purple}[TTT] {yellow}%N has been gagged for %i minutes by %N", target.Client, time, player.Client);
+  }
 
   return Plugin_Handled;
 }
@@ -192,7 +202,7 @@ public Action Command_InformerKick(int client, int args) {
     return Plugin_Handled;
   }
 
-  char reason[255], arg1[128], buffer[128];
+  char reason[255], mini[255], arg1[128], buffer[128];
 
   GetCmdArg(1, arg1, sizeof(arg1));
   Player target = player.TargetOne(arg1, true)
@@ -215,13 +225,18 @@ public Action Command_InformerKick(int client, int args) {
       Format(reason, sizeof(reason), "%s %s", reason, buffer);
     }
 
+    Format(mini, sizeof(mini), "%s", reason);
     Format(reason, sizeof(reason), "%s - ", reason);
   }
 
   Format(reason, sizeof(reason), "%sKicked by %L", reason, client);
 
   target.Kick(reason);
-  CPrintToChatAll("{purple}[TTT] {green}%N {blue}has been kicked by {blue}%N", target.Client, player.Client);
+  if (args >= 3) {
+    CPrintToChatAll("{purple}[TTT] {green}%N {yellow}has been kicked by {green}%N{yellow} %s", target.Client, player.Client, mini);
+  } else {
+    CPrintToChatAll("{purple}[TTT] {green}%N {yellow}has been kicked by {green}%N", target.Client, player.Client);
+  }
 
   return Plugin_Handled;
 }
