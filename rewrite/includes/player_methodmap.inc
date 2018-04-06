@@ -14,12 +14,14 @@
  */
 #include <colorvariables>
 #include <sourcecomms>
+#include <ttt_shop>
 #include <upgrades>
 #include <generics>
 #include <imod>
 #include <ttt>
 
 #define MAX_MESSAGE_LENGTH			1024
+#define MAX_MSAY_LENGTH					255
 #define ERROR_TIMEOUT						2
 
 #define UPGRADE_INVISIBILITY		2
@@ -59,6 +61,10 @@ methodmap Player {
 
 	public int Upgrade(int upgrade, int min, int max) {
 		return Upgrade_Limit(Upgrade_GetPoints(that, upgrade), min, max);
+	}
+
+	public void Pos(float loc[3]) {
+		GetClientAbsOrigin(that, loc);
 	}
 
 	public void Name(char name[64]) {
@@ -222,6 +228,24 @@ methodmap Player {
 		return access;
 	}
 
+	public void SendPanelMsg(char[] title, char[] message) {
+		ReplaceString(message, MAX_MSAY_LENGTH, "\\n", "\n");
+		
+		Panel panel = new Panel();
+		panel.SetTitle(title);
+		panel.DrawItem("", ITEMDRAW_SPACER);
+		panel.DrawText(message);
+		panel.DrawItem("", ITEMDRAW_SPACER);
+		panel.CurrentKey = GetMaxPageItems(panel.Style);
+		panel.DrawItem("Exit", ITEMDRAW_CONTROL);
+
+		if(IsValidClient(that)) {
+			panel.Send(that, HandlerDoNothing, 10);
+		}
+
+		delete panel;
+	}
+
 	// Is this expected usage for natives within methodmaps?
 	// native void AddSpeed(float speed, float maxSpeed);
 
@@ -233,6 +257,10 @@ methodmap Player {
 		SourceComms_SetClientMute(that, true, time, true, reason);
 	}
 
+	public void CSay(char[] msg) {
+		PrintCenterText(that, msg);
+	}
+
 	public void Gag(int time, const char[] reason) {
 		SourceComms_SetClientGag(that, true, time, true, reason);
 	}
@@ -241,9 +269,12 @@ methodmap Player {
 		KickClient(that, reason);
 	}
 
-	property bool Alive {
+	property bool Found {
 		public get() {
-			return IsPlayerAlive(that);			
+			return TTT_GetFoundStatus(that);
+		}
+		public set(bool found) {
+			TTT_SetFoundStatus(that, found);
 		}
 	}
 
@@ -269,6 +300,15 @@ methodmap Player {
 			}
 
 			g_invisible[that] = invisible;
+		}
+	}
+
+	property int Armour {
+		public get() {
+			return GetEntProp(that, Prop_Data, "m_ArmorValue"); 
+		}
+		public set(int armour) {
+			SetEntProp(that, Prop_Data, "m_ArmorValue", armour, 1);
 		}
 	}
 
@@ -369,6 +409,30 @@ methodmap Player {
 		}
 	}
 
+	property bool Alive {
+		public get() {
+			return IsPlayerAlive(that);
+		}
+		public set(bool alive) {
+			if (alive) {
+				ForcePlayerSuicide(that);
+				TTT_SetFoundStatus(that, true);
+			} else {
+				CS_RespawnPlayer(that);
+				TTT_SetFoundStatus(that, false);
+			}
+		}
+	}
+
+	property int Credits {
+		public get() {
+			return TTT_GetClientCredits(that);
+		}
+		public set(int amount) {
+			TTT_SetClientCredits(that, amount);
+		}
+	}
+
 	property bool ValidClient {
 		public get() {
 			if(!IsValidClient(that))
@@ -380,6 +444,11 @@ methodmap Player {
 			return true;
 		}
 	}
+}
+
+public int HandlerDoNothing(Menu menu, MenuAction action, int param1, int param2) {
+	// Do nothing.  It's really exciting.
+	return;
 }
 
 #endif

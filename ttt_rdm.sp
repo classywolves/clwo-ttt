@@ -321,8 +321,8 @@ public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &
 	else
 	{
 		//log(Info, "%i attacked %i (traitor is %i)", victim_role, attacker_role, TRAITOR);
-		if (victim_role == TRAITOR && attacker_role == TRAITOR) {
-			log(Info, "Traitor too Traitor damage blocked.");
+		if (victim_role == TRAITOR && attacker_role == TRAITOR && victim_role != attacker_role) {
+			log(Info, "Traitor hurt another traitor.");
 			return Plugin_Handled;
 		}
 

@@ -57,3 +57,19 @@ stock int GetActiveStaffCount() {
 
 	return staffCount
 }
+
+stock int GetUnfoundPlayers(char playerNames[MAXPLAYERS][64]) {
+	int visible = 0;
+
+	LoopClients(i) {
+		Player player = Player(i)
+
+		if (player.Found) {
+			player.Name(playerNames[visible])
+			// Some stuff to array/
+			visible++;
+		}
+	}
+
+	return visible;
+}
