@@ -73,3 +73,12 @@ stock int GetUnfoundPlayers(char playerNames[MAXPLAYERS][64]) {
 
 	return visible;
 }
+
+stock void ClearTimer(&Handle:timer)
+{
+	if (timer != INVALID_HANDLE)
+	{
+		KillTimer(timer);
+		timer = INVALID_HANDLE;
+	}
+}
