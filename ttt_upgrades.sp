@@ -6,6 +6,8 @@
 #include <ttt>
 #include <general>
 
+int startingInnocents = 0;
+int startingNoneTraitors = 0;
 typedef NativeCall = function int (Handle plugin, int numParams);
 
 public void OnPluginStart() {
@@ -114,18 +116,49 @@ public void TTT_OnBodyFound(int client, int victim, const char[] deadPlayer) {
 	Player(client).experience += 2;
 }
 
+public void TTT_OnRoundStart(int innocents, int traitors, int detective)
+{
+	startingInnocents = innocents;
+	startingNoneTraitors = innocents + detective;
+}
+
 public void TTT_OnRoundEnd(int team) {
 	if (team == TRAITOR) {
-		int undiscovered = 0;
+		float undiscovered = 0.0;
 		LoopDead(i) {
 			if (!TTT_GetFoundStatus(i)) {
-				undiscovered++;
+				if (TTT_GetClientRole(i) != TTT_TEAM_TRAITOR)
+				{
+					undiscovered++;
+				}
 			}
 		}
-
+		
+		int gainedXP = Math.RoundFloat(20 * (undiscovered / startingNoneTraitors));
 		LoopAliveClients(i) {
 			if (TTT_GetClientRole(i) == TRAITOR) {
-				CPrintToChat(i, "{purple}[TTT] {yellow}You gained %i experience for hiding %i bodies!", undiscovered * 3, undiscovered);
+				CPrintToChat(i, "{purple}[TTT] {yellow}You gained %i experience for hiding %i bodies!", gainedXP, undiscovered);
+				Player(i).experience += gainedXP;
+			}
+		}
+	}
+	else
+	{
+		float innocentsAlive = 0.0;
+		LoopAliveClient(i)
+		{
+			if (TTT_GetClientRole(i) == TTT_TEAM_INNOCENT)
+			{
+				innocentsAlive++;
+			}
+		}
+		int gainedXP = Math.RoundFloat(20.0 * (innocentsAlive / startingInnocents));
+		LoopAliveClient(i)
+		{
+			if (TTT_GetClientRole(i) == TTT_TEAM_DETECTIVE)
+			{
+				CPrintToChat(i, "{purple}[TTT] {yellow}You gained %i experience for keeping %i players alive!", gainedXP, innocents);
+				Player(i).experience += gainedXP;
 			}
 		}
 	}
