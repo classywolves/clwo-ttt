@@ -11,6 +11,7 @@
 #include <ttt>
 #include <colorvariables>
 #include <generics>
+#include <datapack>
 
 /*
  * Custom methodmaps.
@@ -71,7 +72,7 @@ public Action TTT_OnRoundStart_Pre()
 
 public void TTT_OnClientGetRole(int client, int role)
 {
-	Datapack pack;
+	DataPack pack;
 	CreateDataTimer(0.05, TimedSetPlayerModel, pack);
 	pack.WriteCell(client);
 	pack.WriteCell(role);
@@ -105,11 +106,13 @@ public void PreCacheTeamModels()
 	}
 }
 
-public Handle TimedSetPlayerModel(Handle timer, Handle pack)
+public Action TimedSetPlayerModel(Handle timer, Handle pack)
 {
 	int client = ReadPackCell(pack);
 	int role = ReadPackCell(pack);
 	SetPlayerModel(client, role);
+	
+	return Plugin_Continue;
 }
 
 public void SetPlayerModel(int client, int role)
