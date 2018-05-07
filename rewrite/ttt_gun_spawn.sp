@@ -91,10 +91,10 @@ public void InitDBs() {
 public void InitPrecache() {
   g_iGlow = PrecacheModel("sprites/blueglow1.vmt");
 
-  for (int i = 0; i < sizeof(models); i++) {
-    PrecacheModel(models[i][WPN_MDL], true);
-    AddFileToDownloadsTable(models[i][WPN_MDL]);
-  }
+  //for (int i = 0; i < sizeof(models); i++) {
+  //  PrecacheModel(models[i][WPN_MDL]);
+  //  //AddFileToDownloadsTable(models[i][WPN_MDL]);
+  //}
 }
 
 public void OnMapStart() {
@@ -102,7 +102,7 @@ public void OnMapStart() {
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
-  SpawnGuns();
+  //SpawnGuns();
 }
 
 public Action Command_SpawnGun(int client, int args) {
@@ -112,7 +112,7 @@ public Action Command_SpawnGun(int client, int args) {
     return Plugin_Handled;
   }
 
-  char name[128], mode[128];
+  char name[128], mode[128], ipos[256];
   float pos[3];
 
   player.Pos(pos);
@@ -120,7 +120,19 @@ public Action Command_SpawnGun(int client, int args) {
   GetCmdArg(1, name, sizeof(name));
   GetCmdArg(2, mode, sizeof(mode));
 
-  SpawnGun(name, mode, pos);
+  //if (args > 2) {
+  //  GetCmdArg(3, ipos, sizeof(ipos));
+
+  //  char floatValues[3][128];
+  //  ExplodeString(ipos, ";", floatValues, 3, 128);
+
+  //  pos[0] = StringToFloat(floatValues[0]);
+  //  pos[1] = StringToFloat(floatValues[1]);
+  //  pos[2] = StringToFloat(floatValues[2]);
+  //}
+
+  PrintToServer("SpawnGun() - %s %s %f;%f;%f setting ammo", name, mode, pos[0], pos[1], pos[2]);
+  SpawnGun(name, pos);
 
   // name - "prop_physics" / "prop_physics_override"  
   // mode - "models/props_junk/watermelon01.mdl" / "models/weapons/w_rif_ak47_dropped.mdl"
@@ -191,6 +203,7 @@ public void LoadPoints() {
   BuildPath(Path_SM, path, sizeof(path), "configs/lootpos/%s.txt", map);
 
   mapPointsRead = OpenFile(path, "r");
+  if (mapPointsRead == null) return;
 
   char line[512];
   totalPositions = 0;
@@ -231,22 +244,27 @@ public void SpawnGuns() {
         float pos[3];
         GetPos(pos);
 
-        PrintToServer("SpawnGun() : %s %f;%f;%f", models[i][WPN_MDL], pos[0], pos[1], pos[2]);
-        SpawnGun(models[i][WPN_PROP], models[i][WPN_MDL], pos);
+        PrintToServer("SpawnGun() : %s %s %f;%f;%f", models[0][WPN_PROP], models[0][WPN_MDL], pos[0], pos[1], pos[2]);
+        //SpawnGun(models[0][WPN_PROP], models[0][WPN_MDL], pos);
+        SpawnGun(models[i][WPN_PROP], pos);
       }
     }
   }
 }
 
-public Action SpawnGun(char[] entityName, char[] entityMode, float[3] pos) {
-  float angle[3];
-  angle[1] = GetRandomFloat(0.0, 360.0);
+public int SpawnGun(char[] cWeaponName, float[3] pos) {
+    float angle[3];
+    angle[1] = GetRandomFloat(0.0, 360.0);
 
-  int entIndex = CreateEntityByName(entityName);
-  SetEntityModel(entIndex, entityMode);
-  DispatchSpawn(entIndex);
-  ActivateEntity(entIndex);
-  TeleportEntity(entIndex, pos, angle, NULL_VECTOR);
+    int weapon = CreateEntityByName(cWeaponName);
+    if(!IsValidEntity(weapon))
+        return INVALID_ENT_REFERENCE;
+
+    // KillEntityIn(weapon, 600.0);
+        //PrintToChat(client, "You spawned: %s", itemToCreate)
+    DispatchSpawn(weapon); 
+    TeleportEntity(weapon, pos, angle, NULL_VECTOR);
+    return weapon;
 }
 
 public void GetPos(float[3] pos) {

@@ -308,6 +308,15 @@ methodmap Player {
 		}
 	}
 
+	property int Health {
+		public get() {
+			return GetClientHealth(that);
+		}
+		public set(int health) {
+			SetEntityHealth(that, health)
+		}
+	}
+
 	// This also needs a handler within the plugin calling it to block damage.
 	// It only stores whether a player is invulnerable or not.
 	property bool Invulnerable {
