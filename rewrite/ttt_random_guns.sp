@@ -14,7 +14,7 @@
 
 char maps[][] = {
 	"ttt_dtk_streets_v2",
-	"ttt_princess_skyscraper4",
+	//"ttt_princess_skyscraper4",
 	"de_mirage",
 	"ttt_screamcastle_final"
 };

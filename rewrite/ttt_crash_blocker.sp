@@ -40,7 +40,7 @@ public void HookEvents() {
 }
 
 public void HookClient(int client) {
-  SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamagePre);
+  SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
 }
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
@@ -137,7 +137,7 @@ public void DestroyBody(int entity) {
   Entity_Kill(entity);
 }
 
-public Action OnTakeDamagePre(int victimClient, int &attackerClient, int &inflictor, float &damage, int &damagetype) {
+public Action OnTraceAttack(int victimClient, int &attackerClient, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup) {
   Player victim = Player(victimClient);
 
   if (victim.Health > damage) {

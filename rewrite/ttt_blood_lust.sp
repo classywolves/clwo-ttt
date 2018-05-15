@@ -38,10 +38,15 @@ float bloodLustFinalTime = 30.0;
 public OnPluginStart()
 {
 	PreCache();
+	HookEvents();
 	
 	LoadTranslations("common.phrases");
 	
 	PrintToServer("[BLM] Loaded succcessfully");
+}
+
+public void HookEvents() {
+	HookEvent("player_death", OnPlayerDeath);
 }
 
 public void OnAllPluginsLoaded()
@@ -69,28 +74,36 @@ public void PreCache()
 	PrecacheDecal(traitorBloodLustOverlay, true);
 }
 
-public void TTT_OnClientGetRole(int client, int role)
+public void TTT_OnRoundStart(int innocents, int traitors)
 {
-	if (role == TTT_TEAM_TRAITOR)
-	{
-		bloodLustTimers[client] = CreateTimer(bloodLustStartTime, BloodLustStart, client);
+	LoopAliveClients(i) {
+		Player player = Player(i)
+
+		if (player.Traitor) {
+			bloodLustTimers[i] = CreateTimer(bloodLustStartTime, BloodLustStart, i);
+		}
 	}
 }
 
-public void TTT_OnClientDeath(int victim, int attacker)
-{
-	if (TTT_GetClientRole(attacker) == TTT_TEAM_TRAITOR)
-	{
-		ClearTimer(bloodLustTimers[attacker]);
+public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
+	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int attackerClient = GetClientOfUserId(GetEventInt(event, "attacker"));
+
+	Player victim = Player(client)
+	Player attacker = Player(attackerClient)
+
+	if (attacker.Traitor) {
+		ClearTimer(bloodLustTimers[attacker.Client]);
 		
-		BloodLustReset(attacker);
-		bloodLustTimers[attacker] = CreateTimer(bloodLustStartTime, BloodLustStart, attacker);
+		BloodLustReset(attacker.Client);
+		bloodLustTimers[attacker.Client] = CreateTimer(bloodLustStartTime, BloodLustStart, attacker.Client);
 	}
-	
-	if (TTT_GetClientRole(victim) == TTT_TEAM_TRAITOR)
-	{
+
+	if (victim.Traitor) {
 		ClearTimer(bloodLustTimers[victim]);
 	}
+
+	return Plugin_Continue;
 }
 
 public void TTT_OnRoundEnd(int winner)
