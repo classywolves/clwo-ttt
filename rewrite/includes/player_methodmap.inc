@@ -298,7 +298,21 @@ methodmap Player {
 			g_invisible[that] = invisible;
 		}
 	}
+	
+	property bool NightVision {
+		public get() {
+			return GetEntProp(that, Prop_Send, "m_bNightVisionOn") == 1;
+		}
 
+		public set(bool nightVision) {
+			if (nightVision) {
+				SetEntProp(that, Prop_Send, "m_bNightVisionOn", 1); // Night Vision On
+			} else {
+				SetEntProp(that, Prop_Send, "m_bNightVisionOn", 0); // Night Vision Off
+			}
+		}
+	}
+	
 	property int Armour {
 		public get() {
 			return GetEntProp(that, Prop_Data, "m_ArmorValue"); 

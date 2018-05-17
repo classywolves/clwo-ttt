@@ -4,6 +4,7 @@
 #define _upgrades_included
 
 #define Upgrade_Invisibility 2
+#define Upgrade_Night_Vision 9
 
 native int get_upgrade_points(int client_id, int upgrade_id);
 
