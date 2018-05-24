@@ -26,11 +26,24 @@ public Plugin myinfo =
 	url = "" 
 };
 
+char soundTurnOn[PLATFORM_MAX_PATH] = "ttt_clwo/nightvision/nvon.mp3";
+
 public OnPluginStart()
 {
+	PreCache();
+
 	RegisterCmds();
 	
 	PrintToServer("[NVS] Loaded succcessfully");
+}
+
+public void PreCache()
+{
+	PrecacheSound(soundTurnOn, true);
+	
+	char buffer[PLATFORM_MAX_PATH];
+	Format(buffer, sizeof(buffer),"sound/%s", soundTurnOn);
+	AddFileToDownloadsTable(buffer); 
 }
 
 public void RegisterCmds()
@@ -70,6 +83,11 @@ public Action Command_NightVision(int client, int args)
 		{ 
 			player.NightVision = true;
 			player.Msg("{yellow}NV is activated.");
+			EmitSoundToClient(client, soundTurnOn);
 		} 
+	}
+	else
+	{
+		player.Error("You have not yet unlocked the night vision skill.");
 	}
 }
