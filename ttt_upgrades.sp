@@ -100,12 +100,12 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 	player.get_auth(AuthId_Steam2, attacker_auth);
 
 	if (player.bad_kill(victim)) {
-		player.experience -= 10
+		player.experience -= 20
 	} else {
 		if (player.role == TRAITOR) {
-			player.experience += 5
+			player.experience += 10
 		} else {
-			player.experience += 20
+			player.experience += 40
 		}
 	}
 
@@ -113,7 +113,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 }
 
 public void TTT_OnBodyFound(int client, int victim, const char[] deadPlayer) {
-	Player(client).experience += 2;
+	Player(client).experience += 4;
 }
 
 public void TTT_OnRoundStart(int innocents, int traitors, int detective)
@@ -134,7 +134,7 @@ public void TTT_OnRoundEnd(int team) {
 			}
 		}
 		
-		int gainedXP = Math.RoundFloat(20 * (undiscovered / startingNoneTraitors));
+		int gainedXP = RoundFloat(40 * (undiscovered / startingNoneTraitors));
 		LoopAliveClients(i) {
 			if (TTT_GetClientRole(i) == TRAITOR) {
 				CPrintToChat(i, "{purple}[TTT] {yellow}You gained %i experience for hiding %i bodies!", gainedXP, undiscovered);
@@ -145,19 +145,19 @@ public void TTT_OnRoundEnd(int team) {
 	else
 	{
 		float innocentsAlive = 0.0;
-		LoopAliveClient(i)
+		LoopAliveClients(i)
 		{
 			if (TTT_GetClientRole(i) == TTT_TEAM_INNOCENT)
 			{
 				innocentsAlive++;
 			}
 		}
-		int gainedXP = Math.RoundFloat(20.0 * (innocentsAlive / startingInnocents));
-		LoopAliveClient(i)
+		int gainedXP = RoundFloat(40.0 * (innocentsAlive / startingInnocents));
+		LoopAliveClients(i)
 		{
 			if (TTT_GetClientRole(i) == TTT_TEAM_DETECTIVE)
 			{
-				CPrintToChat(i, "{purple}[TTT] {yellow}You gained %i experience for keeping %i players alive!", gainedXP, innocents);
+				CPrintToChat(i, "{purple}[TTT] {yellow}You gained %i experience for keeping %i players alive!", gainedXP, innocentsAlive);
 				Player(i).experience += gainedXP;
 			}
 		}
@@ -332,11 +332,11 @@ public Action GiveExperience(Handle timer, any serial)
 		return Plugin_Stop;
 	}
 
-	int experience = 25;
+	int experience = 50;
 	int team = GetClientTeam(client);
 
 	if (team == CS_TEAM_T || team == CS_TEAM_CT) {
-		experience = 50;
+		experience = 100;
 	}
  	
 

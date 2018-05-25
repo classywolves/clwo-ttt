@@ -7,8 +7,8 @@
 
 public OnPluginStart() {
 	// Register Commands
-	RegAdminCmd("sm_fixrdm", Command_Fix_RDM, ADMFLAG_CONFIG, "Reload /rdm");
-	RegAdminCmd("sm_fixskills", Command_Fix_Skills, ADMFLAG_CONFIG, "Reload /skills");
+	RegAdminCmd("sm_fixrdm", Command_Fix_RDM, ADMFLAG_GENERIC, "Reload /rdm");
+	RegAdminCmd("sm_fixskills", Command_Fix_Skills, ADMFLAG_GENERIC, "Reload /skills");
 }
 
 public Action Command_Fix_RDM(int client, int args) {
