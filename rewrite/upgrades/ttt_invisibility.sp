@@ -80,6 +80,11 @@ public Action OnTraceAttack(int iVictim, int &iAttacker, int &inflictor, float &
 	Player attacker = Player(iAttacker);
 	Player victim = Player(iVictim);
 
+	if (!victim.Traitor)
+	{
+		return Plugin_Continue;
+	}
+	
 	if (victim.Invulnerable) {
 		// This player cannot take damage.
 		if (!attacker.ErrorTimeout(2)) {
@@ -95,9 +100,7 @@ public Action OnTraceAttack(int iVictim, int &iAttacker, int &inflictor, float &
 	attacker.Weapon(weapon);
 
 	if (StrContains(weapon, "taser", false) != -1) {
-		if (victim.Traitor) {
-			ActivateInvisibility(victim.Client);
-		}
+		ActivateInvisibility(victim.Client);
 	}
 
 	return Plugin_Continue;
