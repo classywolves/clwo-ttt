@@ -39,6 +39,8 @@ bool g_blockShoot[MAXPLAYERS + 1];
 int g_traitorKills[MAXPLAYERS + 1];
 int g_errorTimeout[MAXPLAYERS + 1];
 
+UserMsg g_FadeUserMsgId = INVALID_MESSAGE_ID;
+
 Handle cookieInnocentWins;
 Handle cookieDetectiveWins;
 Handle cookieTraitorWins;
@@ -263,6 +265,38 @@ methodmap Player {
 
 	public void Kick(const char[] reason) {
 		KickClient(that, reason);
+	}
+	
+	public void SetScreenColor(int color[4], int duration, int holdTime, int flags)
+	{
+		if (g_FadeUserMsgId == INVALID_MESSAGE_ID)
+		{
+			g_FadeUserMsgId = GetUserMessageId("Fade");
+		}
+	
+		int clients[2];
+		clients[0] = that;
+
+		Handle message = StartMessageEx(g_FadeUserMsgId, clients, 1);
+		if (GetUserMessageType() == UM_Protobuf)
+		{
+			PbSetInt(message, "duration", duration);
+			PbSetInt(message, "hold_time", holdTime);
+			PbSetInt(message, "flags", flags);
+			PbSetColor(message, "clr", color);
+		}
+		else
+		{
+			BfWriteShort(message, duration);
+			BfWriteShort(message, holdTime);
+			BfWriteShort(message, flags);
+			BfWriteByte(message, color[0]);
+			BfWriteByte(message, color[1]);
+			BfWriteByte(message, color[2]);
+			BfWriteByte(message, color[3]);
+		}
+		
+		EndMessage();
 	}
 
 	property bool Found {

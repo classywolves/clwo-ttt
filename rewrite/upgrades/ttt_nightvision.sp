@@ -74,17 +74,24 @@ public Action Command_NightVision(int client, int args)
 	Player player = Player(client);
 	if (player.Upgrade(Upgrade_Night_Vision, 0, 1))
 	{
+		int iFlags = GetCommandFlags("mat_fullbright");
+		SetCommandFlags("mat_fullbright", iFlags &~ FCVAR_CHEAT);
+		
 		if (player.NightVision) 
 		{ 
 			player.NightVision = false;
 			player.Msg("{yellow}NV is deactivated.");
+			ClientCommand(i, "mat_fullbright 0");
 		}
 		else 
 		{ 
 			player.NightVision = true;
 			player.Msg("{yellow}NV is activated.");
 			EmitSoundToClient(client, soundTurnOn);
-		} 
+			ClientCommand(i, "mat_fullbright 1");
+		}
+		
+		SetCommandFlags("mat_fullbright", iFlags | FCVAR_CHEAT);
 	}
 	else
 	{
