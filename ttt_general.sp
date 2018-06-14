@@ -133,6 +133,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
 		if (player.has_clan_tag && player.armour == 0) {
 			player.armour += 10;
 		}
+
+		player.third_person = false;
 	}
 
 	return Plugin_Continue;

@@ -401,6 +401,9 @@ methodmap Player {
 		public get() {
 			return GetClientTeam(that);
 		}
+		public set(int team) {
+			CS_SwitchTeam(that, team);
+		}
 	}
 
 	property bool CounterTerrorist {
