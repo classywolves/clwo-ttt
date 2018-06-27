@@ -4,11 +4,13 @@ Logger logger;
 
 public OnPluginStart()
 {
-	logger = Logger("test");
-	logger.log("A random info message");
-	logger.success("We did good");
-	logger.warn("Watch out!");
-	logger.error("Uh oh...");
+	logger = Logger();
+	logger.name("test");
 
-	logger.warn("Huh %s", "test");
+	logger.Log("A random info message");
+	logger.Success("We did good");
+	logger.Warn("Watch out!");
+	logger.Error("Uh oh...");
+
+	logger.Warn("Huh %s", "test");
 }
