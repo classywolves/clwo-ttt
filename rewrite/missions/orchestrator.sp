@@ -1,75 +1,41 @@
 #include <player_methodmap>
+#include <mission>
 
-methodmap Mission {
-	public Mission(int client) {
-		return view_as<Mission>(client);
-	}
+/*
+ * List of included missions.  If you are adding it to here, you are likely also
+ * going to want to add it to "SelectMission"
+ */
+#include <killmission>
 
-	public void Name(char name[64]) {
-		StrCat(name, sizeof(name), "Example Mission");
-	}
+#define TOTAL_MISSIONS 1
 
-	public void Description(char description[512]) {
-		StrCat(description, sizeof(description), "An Example Mission Description");
-	}
-
-
-}
-
-methodmap KillMission < Mission {
-	public KillMission(int client) {
-		return view_as<KillMission>(client);
-	}
-}
-
-Mission mission;
+Mission playerMissions[MAXPLAYERS + 1][3];
 
 public void OnPluginStart() {
-	mission = KillMission(2);
 
-	char name[64], description[512];
-
-	mission.Name(name);
-	mission.Description(description);
-
-	PrintToServer(name);
 }
 
-methodmap Mission {
-	public Mission(int client) {
-		return view_as<Mission>(client);
-	}
+public Mission SelectMission(int client) {
+	// I am a terrible person, you cannot seem to put types into an array so hard coding it.
+	int chosen = GetRandomInt(0, TOTAL_MISSIONS - 1);
 
-	public void Name(char name[64]) {
-		StrCat(name, sizeof(name), "Example Mission");
-	}
+	if (chosen == 0) return KillMission(client);
 
-	public void Description(char description[512]) {
-		StrCat(description, sizeof(description), "An Example Mission Description");
-	}
+	// Should never be reached.
+	return KillMission(client);
+}
 
-	// Called when the mission is successful, gives rewards.
-	public void Success() {
-		Player player = Player(that)
-
+public void GeneratePlayerMissions(int client) {
+	for (int i = 0; i < 3; i++) {
+		playerMissions[client][i] = SelectMission(client);
 	}
 }
 
-methodmap KillMission < Mission {
-	public KillMission(int client) {
-		return view_as<KillMission>(client);
-	}
-}
+public void OnRoundStart() {
+  LoopValidClients(i) {
+    Player player = Player(i)
 
-Mission mission;
+  }
 
-public void OnPluginStart() {
-	mission = KillMission(2);
-
-	char name[64], description[512];
-
-	mission.Name(name);
-	mission.Description(description);
-
-	PrintToServer(name);
+  
 }
