@@ -26,12 +26,16 @@ public Plugin myinfo =
 	url = "" 
 };
 
+ConVar matFullbright;
+
 char soundTurnOn[PLATFORM_MAX_PATH] = "ttt_clwo/nightvision/nvon.mp3";
 
 public OnPluginStart()
 {
 	PreCache();
 
+	GetConVars();
+	
 	RegisterCmds();
 	
 	PrintToServer("[NVS] Loaded succcessfully");
@@ -44,6 +48,11 @@ public void PreCache()
 	char buffer[PLATFORM_MAX_PATH];
 	Format(buffer, sizeof(buffer),"sound/%s", soundTurnOn);
 	AddFileToDownloadsTable(buffer); 
+}
+
+public void GetConVars()
+{
+	matFullbright = FindConVar("mat_fullbright");
 }
 
 public void RegisterCmds()
@@ -74,24 +83,24 @@ public Action Command_NightVision(int client, int args)
 	Player player = Player(client);
 	if (player.Upgrade(Upgrade_Night_Vision, 0, 1))
 	{
-		int iFlags = GetCommandFlags("mat_fullbright");
-		SetCommandFlags("mat_fullbright", iFlags &~ FCVAR_CHEAT);
+		int iFlags = matFullbright.Flags;
+		matFullbright.Flags = iFlags &~ FCVAR_CHEAT;
 		
 		if (player.NightVision) 
 		{ 
 			player.NightVision = false;
 			player.Msg("{yellow}NV is deactivated.");
-			ClientCommand(i, "mat_fullbright 0");
+			matFullbright.ReplicateToClient(client, "0");
 		}
 		else 
 		{ 
 			player.NightVision = true;
 			player.Msg("{yellow}NV is activated.");
 			EmitSoundToClient(client, soundTurnOn);
-			ClientCommand(i, "mat_fullbright 1");
+			matFullbright.ReplicateToClient(client, "1");
 		}
 		
-		SetCommandFlags("mat_fullbright", iFlags | FCVAR_CHEAT);
+		matFullbright.Flags = iFlags | FCVAR_CHEAT;
 	}
 	else
 	{
