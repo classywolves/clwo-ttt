@@ -22,8 +22,9 @@ public void OnPluginStart() {
 	RegConsoleCmd("sm_give", command_give);
 	RegAdminCmd("sm_cbeacon", command_toggle_beacon, ADMFLAG_GENERIC);
 	RegAdminCmd("sm_teleport", command_teleport, ADMFLAG_GENERIC);
+	RegAdminCmd("sm_tp", command_teleport, ADMFLAG_GENERIC);
 	//RegAdminCmd("sm_volume", command_volume, ADMFLAG_GENERIC);
-	RegAdminCmd("sm_tp", command_toggle_third_person, ADMFLAG_CHEATS);
+	//RegAdminCmd("sm_tp", command_toggle_third_person, ADMFLAG_CHEATS);
 	RegAdminCmd("sm_reload", command_reload_plugin, ADMFLAG_CHEATS);
 
 	LoadTranslations("common.phrases");

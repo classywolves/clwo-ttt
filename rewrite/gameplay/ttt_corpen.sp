@@ -46,6 +46,7 @@ public OnPluginStart()
 public void RegisterCmds() {
 	RegConsoleCmd("sm_smsay", Command_SMSay, "Targeted MSay.");
 	RegConsoleCmd("sm_scsay", Command_SCSay, "Targeted CSay.");
+	RegConsoleCmd("sm_pmsg", Command_PMsg, "Targeted CSay.");
 	//RegConsoleCmd("sm_alive", Command_Alive, "Displays the currently alive / undiscovered players.");
 }
 
@@ -135,6 +136,57 @@ public Action Command_SCSay(int client, int args)
 
 	target.CSay(message);	
 	return Plugin_Handled;	
+}
+
+public Action Command_PMsg(int client, int args)
+{
+	Player player = Player(client);
+
+	if (!Player(client).Access("informer", true)) {
+		return Plugin_Handled;
+	}
+
+	if (args < 2) {
+		player.Error("Invalid Usage: /pmsg <player> <message>")
+		return Plugin_Handled;
+	}
+
+	char message[255] , arg1[128], buffer[128];
+
+	GetCmdArg(1, arg1, sizeof(arg1));
+	Player target = player.TargetOne(arg1, true)
+
+	if (target.Client == -1) {
+		return Plugin_Handled;
+	}
+
+	if (args >= 2) {
+		// They've included a message!
+		GetCmdArg(2, message, sizeof(message));
+
+		for (int i = 3; i <= args; i++) {
+			GetCmdArg(i, buffer, sizeof(buffer));
+			Format(message, sizeof(message), "%s %s", message, buffer);
+		}
+	}
+
+	SendPrivateChat(client ,target.Client, "{red}%s", message);
+	return Plugin_Handled;	
+}
+
+void SendPrivateChat(int client, int target, const char[] message)
+{
+	if (!client)
+	{
+		PrintToServer("(Private to %N) %N: %s", target, client, message);
+	}
+	else if (target != client)
+	{
+		CPrintToChat(client, "{green}(Private to %N) %N: {red}%s", target, client, message);
+	}
+
+	CPrintToChat(target, "{green}(Private to %N) %N: {red}%s", target, client, message);
+	LogAction(client, -1, "\"%L\" triggered sm_pmsg to \"%L\" (text %s)", client, target, message);
 }
 
 public Action Command_Alive(int client, int args) {
