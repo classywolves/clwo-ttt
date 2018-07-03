@@ -17,7 +17,7 @@
 
 #define LoopAliveClients(%1) 		for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).ValidClient && Player(%1).Alive)
 #define LoopStaff(%1) 				for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).ValidClient && Player(%1).Staff)
-#define LoopClients(%1) 			for(int %1 = 1; %1 <= MaxClients; %1++) if(IsValidClient(i))
+#define LoopClients(%1) 			for(int %1 = 1; %1 <= MaxClients; %1++)
 
 /*
  * Stock functions.

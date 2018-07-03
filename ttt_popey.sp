@@ -290,17 +290,34 @@ public Action Command_Staff(int client, int args) {
 	int[] staff = new int[MaxClients+1];
 	int num_staff;
 	num_staff = GetStaffInArray(staff, MaxClients+1);
-	if (num_staff == 0) {
+	if (num_staff == 0)
+	{
 		CPrintToChat(client, "{purple}[w] {darkred}There are no staff online")
-	} else {
+	}
+	else
+	{
 		// PrintToChat(client, "%L", staff);
 		// iMod_GetUserTypeString(int UserType,int type, char[] output, int maxlen)
 		CPrintToChat(client, "{purple}[Staff] {yellow}There are currently {green}%i {yellow}staff online:", num_staff);
 
-		for (int i = 0; i < num_staff; i++) {
+		for (int i = 0; i < num_staff; i++)
+		{
 			new String:name[200];
-			iMod_GetUserTypeString(iMod_GetUserType(staff[i]), USER_TYPE_FULLNAME, name, sizeof(name));
-			CPrintToChat(client, "{purple}[Staff] {darkblue}%N {yellow}is a {green}%s", staff[i], name)
+			
+			int rank = iMod_GetUserType(staff[i]);
+			iMod_GetUserTypeString(rank, USER_TYPE_FULLNAME, name, sizeof(name));
+			switch (rank)
+			{
+				case 0, 1, 4, 5, 6, 7, 8, 10, 11:
+				{
+					CPrintToChat(client, "{purple}[Staff] {darkblue}%N {yellow}is a {green}%s", staff[i], name);
+				}
+				
+				case 2, 3, 9:
+				{
+					CPrintToChat(client, "{purple}[Staff] {darkblue}%N {yellow}is an {green}%s", staff[i], name);
+				}
+			}
 		}
 	}
 	return Plugin_Handled;
