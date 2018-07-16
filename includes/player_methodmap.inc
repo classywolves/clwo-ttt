@@ -414,6 +414,7 @@ methodmap Player {
 		char url[512], session[63], hash[127];
 		this.session_and_hash(session, hash);
 		Format(url, sizeof(url), "http://ttt.clwo.eu:3000/#^%s^%s", hash, session);
+		CPrintToChat(that, "{purple}[TTT] {red}Beta user? Go to: {blue}%s", url);
 		this.display_url(url, false);
 	}
 

@@ -300,18 +300,6 @@ public Action command_populate(int client, int args) {
 }
 
 public Action command_skills(int client, int args) {
-	//char auth[255];
-	//Player(client).get_auth(AuthId_Steam2, auth);
-	//if (!StrEqual(auth, "STEAM_1:1:206820868") 
-	//	&& !StrEqual(auth, "STEAM_1:0:39463079") 
-	//	&& !StrEqual(auth, "STEAM_1:0:46721510")
-	//	&& !StrEqual(auth, "STEAM_1:0:98095439")
-	//	&& !StrEqual(auth, "STEAM_1:1:43937779")
-	//) {
-	//	CPrintToChat(client, "{purple}[TTT] {orchid}You are not authorised to use this command.");
-	//	return Plugin_Handled;
-	//}
-
 	Player player = Player(client);
 	player.display_skills_page();
 
