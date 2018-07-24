@@ -14,6 +14,7 @@
  */
 #include <colorvariables>
 #include <sourcecomms>
+#include <ttt_ranks>
 #include <ttt_shop>
 #include <upgrades>
 #include <generics>
@@ -162,18 +163,39 @@ methodmap Player {
 		return response;
 	}
 
+	public void GetRankName(char rankName[64], int type) {
+		GetRankName(GetPlayerRank(that), rankName, type);
+	}
+
 	public void Pos(float pos[3]) {
 		GetClientEyePosition(that, pos);
 	}
 
 	public Player TargetOne(char target[128], bool respond = false, bool immunity = true) {
-		int targetIndex = FindTarget(that, target, true, immunity);
+		//int targetIndex = FindTarget(that, target, true, immunity);
 
-		if (respond && targetIndex == -1) {
-			this.Error("No targets were found.");
+		int targets[MAXPLAYERS];
+
+		char targetName[256];
+		bool tnIsMl;
+
+		int targetIndex = ProcessTargetString(target, that, targets, sizeof(targets), COMMAND_FILTER_NO_IMMUNITY | COMMAND_FILTER_NO_MULTI, targetName, sizeof(targetName), tnIsMl)
+
+		if (targetIndex == 1) {
+			return view_as<Player>(targets[0]);
 		}
 
-		return Player(targetIndex);
+		if (respond) {
+			if (targetIndex == -1) this.Error("No targets were found.");
+			if (targetIndex == -2) this.Error("Target is not alive.");
+			if (targetIndex == -3) this.Error("Target is not dead.");
+			if (targetIndex == -4) this.Error("Target is not in game.");
+			if (targetIndex == -5) this.Error("Target is immune.");
+			if (targetIndex == -6) this.Error("Target is not human.");
+			if (targetIndex == -7) this.Error("Ambiguous target string.");
+		}
+
+		return view_as<Player>(targetIndex);
 	}
 
 	public void SetName(char name[64]) {
@@ -425,6 +447,10 @@ methodmap Player {
 		}
 	}
 
+	public bool HasCommandAccess (char commandName[64], int defaultFlags) {
+		return CheckCommandAccess(that, commandName, defaultFlags);
+	}
+
 	property bool Gagged {
 		public get() {
 			return SourceComms_GetClientGagType(that) != bNot
@@ -461,7 +487,7 @@ methodmap Player {
 	property bool Staff {
 		public get() {
 			// Returns true, even for blocked informers.
-			return this.Access("tmod");
+			return this.Access("informer");
 		}
 	}
 

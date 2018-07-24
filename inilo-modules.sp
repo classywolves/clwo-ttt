@@ -55,8 +55,8 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 }
 
 
-public OnPluginStart()
-{
+	public OnPluginStart()
+	{
 	RegisterCvars();
 	RegisterCmds();
 	HookEvents();
