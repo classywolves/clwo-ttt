@@ -22,6 +22,7 @@ public Mission SelectMission(int client) {
 	if (chosen == 0) return KillMission(client);
 
 	// Should never be reached.
+  PrintToServer("We couldn't select a mission, chosen = %i", chosen);
 	return KillMission(client);
 }
 
