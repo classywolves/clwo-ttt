@@ -15,6 +15,15 @@ char userRanks[MAX_USER_RANKS][MAX_USER_TYPES][64] = {
   {   "rank_senator",     "1",        "Senator",          "Senator",    "S",         "senator"  }
 };
 
+StringMap ranks;
+
+public OnPluginStart() {
+  // Initialise Trie
+  ranks = new StringMap();
+  ranks.SetValue("STEAM_1:1:182504457", 8); // Corpen
+  ranks.SetValue("STEAM_1:1:75162869", 8); // Dog
+}
+
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
    CreateNative("HasPermission", Native_HasPermission);
    CreateNative("GetRankName", Native_GetRankName);
@@ -72,6 +81,14 @@ public int Internal_GetRankLevel(char name[64], int type) {
 
 public int Internal_GetPlayerRank(int client) {
   Player player = view_as<Player>(client);
+
+  char steamId[64];
+  player.Auth(AuthId_Steam2, steamId);
+
+  int specifiedRank;
+  if (ranks.GetValue(steamId, specifiedRank)) {
+    return specifiedRank;
+  }
 
   for (int rank = MAX_USER_TYPES - 1; rank >= 0; rank++) {
     if (player.HasCommandAccess(userRanks[rank][USER_RANK_COMMAND], ADMFLAG_ROOT)) return rank;
