@@ -75,6 +75,7 @@ int rdm_call_cooldown[MAXPLAYERS + 1];
 
 // Array of last time players fired guns
 int last_gun_fire[MAXPLAYERS + 1];
+int last_knife_attack[MAXPLAYERS + 1];
 
 #define should_slay		1
 #define should_warn		2
@@ -150,6 +151,7 @@ public HookEvents() {
 void HookClient(int client)
 {
 	SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamage);
+	SDKHook(client, SDKHook_WeaponCanUse, OnWeaponUse);
 }
 
 public OnPluginStart() {
@@ -361,6 +363,21 @@ public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &
 		return Plugin_Continue;
 	}
 	max_index++;
+	return Plugin_Continue;
+}
+
+public Action OnWeaponUse(int client, int weapon) {
+	CSWeaponID weaponId = view_as<CSWeaponID>(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
+
+	if (weaponId == CSWeapon_KNIFE ||
+		  weaponId == CSWeapon_KNIFE_GG	||
+		  weaponId == CSWeapon_KNIFE_T ||
+		  weaponId > CSWeapon_MAX_WEAPONS_NO_KNIFES) {
+		// Knife has been used!
+
+		last_knife_attack[client] = GetTime();
+	}
+
 	return Plugin_Continue;
 }
 
@@ -1194,6 +1211,7 @@ public Action Command_UnSlayNR(int client, int args) {
 public void TTT_OnClientGetRole(int client, int role)
 {
 	last_gun_fire[client] = -1;
+	last_knife_attack[client] = -1;
 	Player player = Player(client)
 	if (player.slaynr == 1)
 	{
