@@ -123,6 +123,8 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective)
 }
 
 public void TTT_OnRoundEnd(int team) {
+	if (startingNoneTraitors < 4) return;
+
 	if (team == TRAITOR) {
 		float undiscovered = 0.0;
 		LoopDead(i) {
