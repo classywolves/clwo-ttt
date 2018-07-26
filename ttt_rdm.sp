@@ -292,6 +292,8 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) 
 
 public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &iDamage, int &iDamagetype, int &iWeapon, float damageForce[3], float damagePosition[3])
 {
+	if (!IsValidClient(iVictim) || !IsValidClient(iAttacker)) return Plugin_Continue;
+
 	char victim_name[64], attacker_name[64];
 	char victim_auth[32], attacker_auth[32];
 	// Determine whether RDM

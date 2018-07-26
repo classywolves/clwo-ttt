@@ -46,7 +46,7 @@ public void OnClientPutInServer(int client) {
 
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max)
 {
-   RegPluginLibrary("ttt_upgrades");
+   RegPluginLibrary("ttt_skills");
    CreateNative("get_upgrade_points", Native_upgrades_get_upgrade_points);
    CreateNative("set_upgrade_points", Native_upgrades_set_upgrade_points);
 }
