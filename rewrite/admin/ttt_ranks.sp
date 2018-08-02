@@ -4,15 +4,15 @@
 char userRanks[MAX_USER_RANKS][MAX_USER_TYPES][64] = {
   //  "command",          "is staff", "name",             "score name", "chat name", "dev name"
   {   "rank_normal",      "0",        "Normal",           "",           "",          "pleb"     },
-  {   "rank_vip",         "0",        "VIP",              "VIP",        "VIP",       "vip"      },
+  {   "rank_vip",         "0",        "VIP",              "VIP",        "♥",         "vip"      },
   {   "rank_informer",    "1",        "Informer",         "+",          "+",         "informer" },
-  {   "rank_trialmod",    "1",        "Trial Moderator",  "Trial Mod",  "T.MOD",     "tmod"     },
-  {   "rank_moderator",   "1",        "Moderator",        "Moderator",  "M",         "mod"      },
-  {   "rank_seniormod",   "1",        "Senior Moderator", "Sen. Mod",   "S.MOD",     "smod"     },
-  {   "rank_guardian",    "1",        "Guardian",         "Guarian",    "G",         "guardian" },
-  {   "rank_admin",       "1",        "Admin",            "Admin",      "A",         "admin"    },
-  {   "rank_senioradmin", "1",        "Senior Admin",     "Sen. Admin", "SA",        "sadmin"   },
-  {   "rank_senator",     "1",        "Senator",          "Senator",    "S",         "senator"  }
+  {   "rank_trialmod",    "1",        "Trial Moderator",  "Trial Mod",  "ζ",         "tmod"     },
+  {   "rank_moderator",   "1",        "Moderator",        "Moderator",  "ε",         "mod"      },
+  {   "rank_seniormod",   "1",        "Senior Moderator", "Sen. Mod",   "δ",         "smod"     },
+  {   "rank_guardian",    "1",        "Guardian",         "Guarian",    "Ω",         "guardian" },
+  {   "rank_admin",       "1",        "Admin",            "Admin",      "γ",         "admin"    },
+  {   "rank_senioradmin", "1",        "Senior Admin",     "Sen. Admin", "β",         "sadmin"   },
+  {   "rank_senator",     "1",        "Senator",          "Senator",    "α",         "senator"  }
 };
 
 StringMap ranks;
