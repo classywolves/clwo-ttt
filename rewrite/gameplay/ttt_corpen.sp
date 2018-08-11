@@ -170,7 +170,7 @@ public Action Command_PMsg(int client, int args)
 		}
 	}
 
-	SendPrivateChat(client ,target.Client, "{red}%s", message);
+	SendPrivateChat(client, target.Client, "{red}%s", message);
 	return Plugin_Handled;	
 }
 

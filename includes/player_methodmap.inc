@@ -518,7 +518,7 @@ public void show_experience_bar(Player player)
 }
 
 public void generate_session(char session_string[62]) {
-	for (int i = 0; i < 60; i++) {
+	for (int i = 0; i < 16; i++) {
 		int random_int = GetRandomInt(0, 61);
 		Format(session_string, sizeof(session_string), "%s%c", session_string, chars[random_int]);
 	}
