@@ -170,11 +170,11 @@ public Action Command_PMsg(int client, int args)
 		}
 	}
 
-	SendPrivateChat(client, target.Client, "{red}%s", message);
+	SendPrivateChat(client, target.Client, message);
 	return Plugin_Handled;	
 }
 
-void SendPrivateChat(int client, int target, const char[] message)
+void SendPrivateChat(int client, int target, const char[] message, ...)
 {
 	if (!client)
 	{
@@ -185,7 +185,9 @@ void SendPrivateChat(int client, int target, const char[] message)
 		CPrintToChat(client, "{green}(Private to %N) %N: {red}%s", target, client, message);
 	}
 
-	CPrintToChat(target, "{green}(Private to %N) %N: {red}%s", target, client, message);
+	char buffer[255] = "";
+	VFormat(buffer, 255, message, 4);
+	CPrintToChat(target, "{green}(Private to %N) %N: {red}%s", target, client, buffer);
 	LogAction(client, -1, "\"%L\" triggered sm_pmsg to \"%L\" (text %s)", client, target, message);
 }
 
