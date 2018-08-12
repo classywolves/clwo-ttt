@@ -20,8 +20,19 @@
  */
 #include <player_methodmap>
 
+public Plugin myinfo =
+{
+	name = "TTT Chat",
+	author = "Popey & iNilo & Corpen",
+	description = "TTT Custom rank and access system.",
+	version = "1.0.0",
+	url = ""
+};
+
 public OnPluginStart() {
   RegisterCmds();
+
+  PrintToServer("[CHT] Loaded successfully");
 }
 
 public void RegisterCmds() {
@@ -93,7 +104,7 @@ public void getRankTag(Player player, char rankTag[64]) {
 
   player.GetRankName(rankName, USER_RANK_CHAT_NAME);
 
-  if (rankName[0] != '\0') Format(rankTag, sizeof(rankTag), "[{green}%s{default}]", rankName);
+  if (rankName[0] != '\0') Format(rankTag, sizeof(rankTag), "{default}[{green}%s{default}]", rankName);
 }
 
 public bool isPM(char[] message) {

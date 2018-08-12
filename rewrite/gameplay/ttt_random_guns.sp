@@ -84,7 +84,7 @@ public Action Command_RandomGuns(int client, int args) {
   Player player = Player(client);
 
   // Player is not tmod or above AND is not an active informer.
-  if (!player.Access("admin")) {
+  if (!player.Access(RANK_ADMIN)) {
     player.Error("You do not have access to this command!");
     return Plugin_Handled;
   }

@@ -1,2 +1,4 @@
 *.smx
+*.project
 rewrite/upload.sh
+

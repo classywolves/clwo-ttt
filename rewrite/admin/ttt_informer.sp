@@ -40,7 +40,7 @@ public Action Command_InformerMute(int client, int args) {
   Player player = Player(client);
 
   // Player is not tmod or above AND is not an active informer.
-  if (!player.Access("tmod") && !player.ActiveInformer()) {
+  if (!player.Informer) {
     player.Error("You do not have access to this command!");
     return Plugin_Handled;
   }
@@ -116,7 +116,7 @@ public Action Command_InformerGag(int client, int args) {
   Player player = Player(client);
 
   // Player is not tmod or above AND is not an active informer.
-  if (!player.Access("tmod") && !player.ActiveInformer()) {
+  if (!player.Informer) {
     player.Error("You do not have access to this command!");
     return Plugin_Handled;
   }
@@ -192,7 +192,7 @@ public Action Command_InformerKick(int client, int args) {
   Player player = Player(client);
 
   // Player is not tmod or above AND is not an active informer.
-  if (!player.Access("tmod") && !player.ActiveInformer()) {
+  if (!player.Informer) {
     player.Error("You do not have access to this command!");
     return Plugin_Handled;
   }

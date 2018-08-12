@@ -68,7 +68,7 @@ public Action Command_SMSay(int client, int args)
 {
 	Player player = Player(client);
 
-	if (!Player(client).Access("informer", true)) {
+	if (!Player(client).Access(RANK_INFORMER, true)) {
 		return Plugin_Handled;
 	}
 
@@ -106,7 +106,7 @@ public Action Command_SCSay(int client, int args)
 {
 	Player player = Player(client);
 
-	if (!Player(client).Access("informer", true)) {
+	if (!Player(client).Access(RANK_INFORMER, true)) {
 		return Plugin_Handled;
 	}
 
@@ -142,7 +142,7 @@ public Action Command_PMsg(int client, int args)
 {
 	Player player = Player(client);
 
-	if (!Player(client).Access("informer", true)) {
+	if (!Player(client).Access(RANK_INFORMER, true)) {
 		return Plugin_Handled;
 	}
 

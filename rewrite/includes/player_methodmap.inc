@@ -1,4 +1,6 @@
-#if !defined _player_methodmap_include
+#if defined _player_methodmap_include
+  #endinput
+#endif
 #define _player_methodmap_include
 
 /*
@@ -18,7 +20,6 @@
 #include <ttt_shop>
 #include <upgrades>
 #include <generics>
-#include <imod>
 #include <ttt>
 
 #define MAX_MESSAGE_LENGTH			1024
@@ -55,7 +56,7 @@ methodmap Player {
 	}
 
 	public void RankName(char name[64]) {
-		iMod_GetUserTypeString(iMod_GetUserType(that), USER_TYPE_FULLNAME, name, sizeof(name));
+		GetRankName(that, name, USER_RANK_NAME);
 	}
 
 	public void Auth(AuthIdType idType, char auth[64]) {
@@ -216,16 +217,15 @@ methodmap Player {
 	public bool ActiveInformer(bool response = true) {
 		// A good addition to this function would be some way for staff to specify that they want
 		// the informers help for a command.  A similar system to "adopt" on JB.
-		char rankName[64];
-		this.RankName(rankName);
+		bool activeInformer = GetPlayerRank(that) == RANK_INFORMER;
 
-		if (StrEqual(rankName, "Informer") && !GetActiveStaffCount()) {
+		if (activeInformer && !GetActiveStaffCount()) {
 			return true;
 		}
 
-		if (!StrEqual(rankName, "Informer")) {
+		if (!activeInformer) {
 			char msg[255];
-			Format(msg, sizeof(msg), "Access denied, not an informer.", rankName);
+			Format(msg, sizeof(msg), "Access denied, not an informer.");
 			this.Error(msg);
 		}
 
@@ -238,11 +238,11 @@ methodmap Player {
 		return false;
 	}
 
-	public bool Access(char[] rank, bool response = false) {
-		bool access = iMod_HigherThenString(that, rank, true)
+	public bool Access(int rank, bool response = false) {
+		bool access = GetPermission(that, rank);
 
 		if (!access && response) {
-			this.Msg("{red}You do not have access to this command!")
+			this.Msg("{red}You do not have access to this command!");
 		}
 
 		return access;
@@ -319,6 +319,18 @@ methodmap Player {
 		}
 		
 		EndMessage();
+	}
+
+	property int Rank {
+		public get() {
+			return GetPlayerRank(that);
+		}
+	}
+
+	property bool Informer {
+		public get() {
+			return GetPlayerRank(that) == RANK_INFORMER;
+		}
 	}
 
 	property bool Found {
@@ -487,7 +499,7 @@ methodmap Player {
 	property bool Staff {
 		public get() {
 			// Returns true, even for blocked informers.
-			return this.Access("informer");
+			return GetPlayerRank(that) >= RANK_INFORMER;
 		}
 	}
 
@@ -532,5 +544,3 @@ public int HandlerDoNothing(Menu menu, MenuAction action, int param1, int param2
 	// Do nothing.  It's really exciting.
 	return;
 }
-
-#endif

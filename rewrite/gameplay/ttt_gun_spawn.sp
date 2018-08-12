@@ -108,7 +108,7 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
 public Action Command_SpawnGun(int client, int args) {
   Player player = Player(client);
 
-  if (!player.Access("senator", true)) {
+  if (!player.Access(RANK_SENATOR, true)) {
     return Plugin_Handled;
   }
 
@@ -143,7 +143,7 @@ public Action Command_SpawnGun(int client, int args) {
 public Action Command_SpawnGuns(int client, int args) {
   Player player = Player(client);
 
-  if (!player.Access("senator", true)) {
+  if (!player.Access(RANK_SENATOR, true)) {
     return Plugin_Handled;
   }
 
@@ -155,7 +155,7 @@ public Action Command_SpawnGuns(int client, int args) {
 public Action Command_AddLoc(int client, int args) {
   Player player = Player(client);
 
-  if (!player.Access("senator", true)) {
+  if (!player.Access(RANK_SENATOR, true)) {
     return Plugin_Handled;
   }
 
@@ -174,7 +174,7 @@ public Action Command_AddLoc(int client, int args) {
 public Action Command_LoadLocs(int client, int args) {
   Player player = Player(client);
 
-  if (!player.Access("senator", true)) {
+  if (!player.Access(RANK_SENATOR, true)) {
     return Plugin_Handled;
   }
 

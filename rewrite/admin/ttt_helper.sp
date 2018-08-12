@@ -63,7 +63,7 @@ public Action Command_HMsg(int client, int args)
 	/*
 	if (args > 1)
 	{
-		if (player.Access("informer", true))
+		if (player.Access(RANK_INFORMER, true))
 		{
 			player.Error("Invalid Usage: /hmsg <player>");
 		}
@@ -79,7 +79,7 @@ public Action Command_HMsg(int client, int args)
 	
 	if (args == 1)
 	{
-		if (!player.Access("informer", true))
+		if (!player.Access(RANK_INFORMER, true))
 		{
 			player.Error("You do not have access to target players with this command!");
 			return Plugin_Handled;
@@ -114,7 +114,7 @@ public Action Command_HR(int client, int args)
 	/*
 	if (args > 1)
 	{
-		if (player.Access("informer", true))
+		if (player.Access(RANK_INFORMER, true))
 		{
 			player.Error("Invalid Usage: /hr <player>");
 		}
@@ -130,7 +130,7 @@ public Action Command_HR(int client, int args)
 	
 	if (args == 1)
 	{
-		if (!player.Access("informer", true))
+		if (!player.Access(RANK_INFORMER, true))
 		{
 			player.Error("You do not have access to target players with this command!");
 			return Plugin_Handled;

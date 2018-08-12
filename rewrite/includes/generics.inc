@@ -11,6 +11,60 @@
 /*
  * Definitions.
  */
+
+/**
+ * This function will check if we have a valid player (alive)
+ **/
+stock bool IsAliveClient(int client) // ingame and not bot and alive
+{
+  if(!IsValidClient(client))
+    return false;
+
+  if(!IsPlayerAlive(client))
+    return false;
+
+  if(GetClientTeam(client) == CS_TEAM_SPECTATOR)
+    return false;
+
+  if(GetClientTeam(client) == CS_TEAM_NONE)
+    return false;
+
+  return true;
+}
+
+/**
+ * This function will check if we have a valid player
+ **/
+
+stock bool IsValidClient(int client, bool allowconsole=false)
+{
+    if(client == 0 && allowconsole)
+    {
+      return true;
+    }
+    if(client <= 0)
+    {
+      return false;
+    }
+    if(client > MaxClients)
+    {
+      return false;
+    }
+    if (!IsClientConnected(client))
+    {
+      return false;
+    }
+    if(!IsClientInGame(client))
+    {
+      return false;
+    }
+    if(IsFakeClient(client))
+    {
+      return false;
+    }
+    return true;
+}
+
 #if !defined LoopValidClients
 	#define LoopValidClients(%1) 	for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).ValidClient)
 #endif
