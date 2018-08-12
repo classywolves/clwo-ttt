@@ -1,7 +1,11 @@
 #include <colorvariables>
 
 char messages[][255] = {
-  "An announcement has appeared."
+  "Check us out today at {purple}https://CLWO.eu{/lightgreen}!.",
+  "Current Map: {purple}{currentmap}",
+  "Come talk to us over at {purple}https://discord.clwo.eu{lightgreen}!",
+  "Issue joining a team? Do {purple}!t {lightgreen}in chat.",
+  "Come talk to us over at {purple}https://discord.clwo.eu{lightgreen}!"
 }
 
 public OnPluginStart() {
@@ -11,7 +15,7 @@ public OnPluginStart() {
 public Action Timer_Announcement(Handle timer) {
   static int currentMessage = 0;
 
-  CPrintToChatAll("[TTT] %s", messages[currentMessage]);
+  CPrintToChatAll("{orchid}[{green}T{darkred}T{blue}T{orchid}]{lightgreen} %s", messages[currentMessage]);
 
   currentMessage++;
   if (currentMessage >= sizeof(messages)) currentMessage = 0;
