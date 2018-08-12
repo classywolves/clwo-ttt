@@ -104,7 +104,7 @@ public void getRankTag(Player player, char rankTag[64]) {
 
   player.GetRankName(rankName, USER_RANK_CHAT_NAME);
 
-  if (rankName[0] != '\0') Format(rankTag, sizeof(rankTag), "{default}[{green}%s{default}]", rankName);
+  if (rankName[0] != '\0') Format(rankTag, sizeof(rankTag), "{default}[{blue}%s{default}]", rankName);
 }
 
 public bool isPM(char[] message) {
