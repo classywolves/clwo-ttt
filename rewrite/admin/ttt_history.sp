@@ -91,3 +91,28 @@ public Action Command_AddHistory(int client, int args) {
 
 	return Plugin_Handled;
 }
+
+public Action Command_History(int client, int args) {
+	// Usage is "/history <target> <page>"
+	Player player = Player(client);
+
+	// Player is not tmod or above AND is not an active informer.
+	if (!player.Informer && player.Staff) {
+		player.Error("You do not have access to this command!");
+		return Plugin_Handled;
+	}
+
+	if (args < 1) {
+		player.Error("Invalid Usage: /addhistory <target> <page>")
+		return Plugin_Handled;
+	}
+
+	char arg1[128]
+	
+	GetCmdArg(1, arg1, sizeof(arg1));
+	Player target = player.TargetOne(arg1, true);
+
+	if (target.Client == -1) {
+		return Plugin_Handled;
+	}
+}
