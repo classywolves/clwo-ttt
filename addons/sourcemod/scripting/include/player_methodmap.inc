@@ -181,6 +181,27 @@ methodmap Player {
 
 		return response;
 	}
+	
+	public bool RayTrace(float pos[3])
+	{
+		float vOrigin[3], vAngles[3];
+		
+		GetClientEyePosition(that, vOrigin);
+		GetClientEyeAngles(that, vAngles);
+		
+		Handle trace = TR_TraceRayFilterEx(vOrigin, vAngles, MASK_SOLID, RayType_Infinite, TraceEntityFilterPlayer);
+		
+		if(TR_DidHit(trace))
+		{
+			TR_GetEndPosition(pos, trace);
+			CloseHandle(trace);
+			
+			return true;
+		}
+		
+		CloseHandle(trace);
+		return false;
+	}
 
     public bool RayTrace(float pos[3]) {
         float vOrigin[3], vAngles[3];

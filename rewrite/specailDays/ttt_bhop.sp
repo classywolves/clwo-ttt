@@ -19,8 +19,8 @@
 #include <player_methodmap>
 #include <ttt_specialDays>
 
-#define AUTO_BHOP_MIN_ROUNDS 1
-#define AUTO_BHOP_MAX_ROUNDS 5
+#define AUTO_BHOP_ROUNDS_MIN 1
+#define AUTO_BHOP_ROUNDS_MAX 5
 
 public Plugin myinfo =
 {
@@ -35,6 +35,7 @@ bool isDayRunning = false;
 int remainingRounds = -1;
 
 ConVar autoBHop;
+ConVar enableBHop;
 
 public OnPluginStart()
 {
@@ -45,7 +46,8 @@ public OnPluginStart()
 
 public void GetCVars()
 {
-    matFullbright = FindConVar("sv_autobunnyhopping");
+    autoBHop = FindConVar("sv_autobunnyhopping");
+    enableBHop = FindConVar("sv_enablebunnyhopping");
 }
 
 public Action TTT_StartSpecialDay(int specialDay)
@@ -54,16 +56,22 @@ public Action TTT_StartSpecialDay(int specialDay)
     
     remainingRounds = GetRandomInt(AUTO_BHOP_MIN_ROUNDS, AUTO_BHOP_MAX_ROUNDS);
     
-    SetAutoBHop(true);
+    SetConVarBool(autoBHop, true);
+    SetConVarBool(enableBHop, true);
     isDayRunning = true;
+    
+    return Plugin_Handled;
 }
 
 public Action TTT_StopSpecialDay()
 {
     if (!isDayRunning) return Plugin_Continue;
     
-    SetAutoBHop(false);
+    SetConVarBool(autoBHop, false);
+    SetConVarBool(enableBHop, false);
     isDayRunning = false;
+    
+    return Plugin_Handled;
 }
 
 public void TTT_OnRoundStart(int innocents, int traitors, int detective)
@@ -81,14 +89,4 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective)
         
         remainingRounds--;
     }
-}
-
-public void SetAutoBHop(bool enabled)
-{
-    int iFlags = autoBHop.Flags;
-    autoBHop.Flags = iFlags &~ FCVAR_CHEAT;
-    
-    autoBHop.SetBool(enabled, true, false);
-    
-    autoBHop.Flags = iFlags | FCVAR_CHEAT;
 }

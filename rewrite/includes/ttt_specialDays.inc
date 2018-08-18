@@ -13,7 +13,7 @@ forward Action TTT_StopSpecialDay();
 
 public SharedPlugin __pl_special_days =
 {
-                name = "ttt_special_days",
+                name = "ttt_specialDays",
                 file = "ttt_specialDays.smx",
 #if defined REQUIRE_PLUGIN
                 required = 1

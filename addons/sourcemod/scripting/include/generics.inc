@@ -214,3 +214,13 @@ stock int AccountIDToClient(int AccountID)
 	}
 	return 0;
 }
+
+stock void SetConVarBool(ConVar &conVar, bool enabled, bool replicateToAll = true, bool notify = false)
+{
+	int iFlags = conVar.Flags;
+	conVar.Flags = iFlags &~ FCVAR_CHEAT;
+	
+	conVar.SetBool(enabled, replicateToAll, notify);
+	
+	conVar.Flags = iFlags | FCVAR_CHEAT;
+}

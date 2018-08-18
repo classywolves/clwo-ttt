@@ -28,8 +28,8 @@ public Plugin myinfo =
     url = ""
 };
 
-Handle startSpecailDayForward;
-Handle stopSpecailDayForward;
+Handle startSpecialDayForward;
+Handle stopSpecialDayForward;
 
 int specialDay = -1;
 
@@ -42,31 +42,31 @@ public OnPluginStart()
 
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max)
 {
-    RegPluginLibrary("ttt_special_days");
+    RegPluginLibrary("ttt_specialDays");
     
-    startSpecailDayForward = CreateGlobalForward("TTT_StartSpecialDay", ET_Event, Param_Cell);
-    stopSpecailDayForward = CreateGlobalForward("TTT_StopSpecialDay", ET_Event);
+    startSpecialDayForward = CreateGlobalForward("TTT_StartSpecialDay", ET_Event, Param_Cell);
+    stopSpecialDayForward = CreateGlobalForward("TTT_StopSpecialDay", ET_Event);
     
     return APLRes_Success;
 }
 
 public void RegisterCmds() {
-    RegConsoleCmd("sm_startday", Command_StartDay, "Allows an admin to trigger a specail day.");
-    RegConsoleCmd("sm_stopday", Command_StopDay, "Allows an admin to stop a specail day.");
+    RegConsoleCmd("sm_startday", Command_StartDay, "Allows an admin to trigger a special day.");
+    RegConsoleCmd("sm_stopday", Command_StopDay, "Allows an admin to stop a special day.");
 }
 
 // Called after MapStart and any CVars will have been set and registered thus is safe to call any Special Day.
 public void OnConfigsExecuted()
 {
-    if (SPECAIL_DAY_COUNT) {
-        if (GetRandomInt(0, 2) == 1)
+    if (SPECIAL_DAY_COUNT) {
+        if (GetRandomInt(0, 5) == 1)
         {
-            specailDay = GetRandomInt(0, SPECAIL_DAY_COUNT);
+            specialDay = GetRandomInt(0, SPECIAL_DAY_COUNT);
     
             Action result = Plugin_Continue;
             
-            Call_StartForward(startSpecailDayForward);
-            Call_PushCell(specailDay);
+            Call_StartForward(startSpecialDayForward);
+            Call_PushCell(specialDay);
             Call_Finish(result);
     
             if (result == Plugin_Stop || result == Plugin_Changed)
@@ -79,7 +79,7 @@ public void OnConfigsExecuted()
         }
         else
         {
-            specailDay = -1;
+            specialDay = -1;
         }
     }
 }
@@ -106,7 +106,7 @@ public Action Command_StartDay(int client, int args)
     // Stop any other active special days.
     if (specialDay != -1)
     {
-        Call_StartForward(stopSpecailDayForward);
+        Call_StartForward(stopSpecialDayForward);
         Call_Finish(result);
     
         if (result == Plugin_Stop || result == Plugin_Changed)
@@ -117,8 +117,8 @@ public Action Command_StartDay(int client, int args)
         }
     }
     
-    Call_StartForward(startSpecailDayForward);
-    Call_PushCell(specailDay);
+    Call_StartForward(startSpecialDayForward);
+    Call_PushCell(specialDay);
     Call_Finish(result);
     
     if (result == Plugin_Stop || result == Plugin_Changed)
@@ -147,7 +147,7 @@ public Action Command_StopDay(int client, int args)
     
     Action result = Plugin_Continue;
     
-    Call_StartForward(stopSpecailDayForward);
+    Call_StartForward(stopSpecialDayForward);
     Call_Finish(result);
     
     if (result == Plugin_Stop || result == Plugin_Changed)
@@ -157,7 +157,7 @@ public Action Command_StopDay(int client, int args)
         return Plugin_Handled;
     }
     
-    player.Msg("Stopped Specail Day: %n", specialDay);
+    player.Msg("Stopped Special Day: %n", specialDay);
     PrintToServer("Stopped Special Day: %n", specialDay);
     
     return Plugin_Handled;
