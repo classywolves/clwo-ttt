@@ -26,5 +26,6 @@ public SharedPlugin __pl_special_days =
 public void __pl_special_days_SetNTVOptional()
 {
     MarkNativeAsOptional("TTT_StartSpecialDay");
+    MarkNativeAsOptional("TTT_StopSpecialDay");
 }
 #endif
