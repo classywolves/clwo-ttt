@@ -151,7 +151,7 @@ public HookEvents() {
 void HookClient(int client)
 {
 	SDKHook(client, SDKHook_OnTakeDamageAlive, OnTakeDamage);
-	SDKHook(client, SDKHook_WeaponCanUse, OnWeaponUse);
+	//SDKHook(client, SDKHook_WeaponCanUse, OnWeaponUse);
 }
 
 public OnPluginStart() {
@@ -354,7 +354,7 @@ public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &
 	// Execute statement
 	if (!SQL_Execute(insert_damage)) {
 		SQL_GetError(insert_damage, error, sizeof(error)); log(Error, "SQL Execute Failed Insert Damage: %s", error);
-		CPrintToChatAll("{purple}[TTT] {red}RDM had a critical failure but auto-recovery appears successful, if you notice any errors, please quote %i in the error report.", GetTime());
+		// CPrintToChatAll("{purple}[TTT] {red}RDM had a critical failure but auto-recovery appears successful, if you notice any errors, please quote %i in the error report.", GetTime());
 		delete db;
 		db = ConnectDatabase("ttt", "TTT");
 		SQL_FastQuery(db, "SET NAMES utf8");
@@ -366,20 +366,20 @@ public Action OnTakeDamage(int iVictim, int &iAttacker, int &iInflictor, float &
 	return Plugin_Continue;
 }
 
-public Action OnWeaponUse(int client, int weapon) {
-	CSWeaponID weaponId = view_as<CSWeaponID>(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
+//public Action OnWeaponUse(int client, int weapon) {
+//	CSWeaponID weaponId = view_as<CSWeaponID>(GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"));
 
-	if (weaponId == CSWeapon_KNIFE ||
-		  weaponId == CSWeapon_KNIFE_GG	||
-		  weaponId == CSWeapon_KNIFE_T ||
-		  weaponId > CSWeapon_MAX_WEAPONS_NO_KNIFES) {
-		// Knife has been used!
+//	if (weaponId == CSWeapon_KNIFE ||
+//		  weaponId == CSWeapon_KNIFE_GG	||
+//		  weaponId == CSWeapon_KNIFE_T ||
+//		  weaponId > CSWeapon_MAX_WEAPONS_NO_KNIFES) {
+//		// Knife has been used!
 
-		last_knife_attack[client] = GetTime();
-	}
+//		last_knife_attack[client] = GetTime();
+//	}
 
-	return Plugin_Continue;
-}
+//	return Plugin_Continue;
+//}
 
 public Action OnPlayerSpawned(Event event, const char[] name, bool dontBroadcast) {
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
