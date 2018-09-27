@@ -91,7 +91,7 @@ stock int GetStaffArray(int staff[32] = {}) {
 
 stock int GetStaffCount() {
 	int staffCount = 0;
-	
+
 	LoopStaff(i) {
 		staffCount++;
 	}

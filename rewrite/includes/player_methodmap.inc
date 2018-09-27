@@ -16,11 +16,11 @@
  */
 #include <colorvariables>
 #include <sourcecomms>
-#include <ttt_ranks>
-#include <ttt_shop>
+#include <ttt>
 #include <upgrades>
 #include <generics>
-#include <ttt>
+#include <ttt_ranks>
+#include <ttt_shop>
 
 #define MAX_MESSAGE_LENGTH			1024
 #define MAX_MSAY_LENGTH					255
@@ -250,7 +250,7 @@ methodmap Player {
 
 	public void SendPanelMsg(char[] title, char[] message) {
 		ReplaceString(message, MAX_MSAY_LENGTH, "\\n", "\n");
-		
+
 		Panel panel = new Panel();
 		panel.SetTitle(title);
 		panel.DrawItem("", ITEMDRAW_SPACER);
@@ -288,14 +288,14 @@ methodmap Player {
 	public void Kick(const char[] reason) {
 		KickClient(that, reason);
 	}
-	
+
 	public void SetScreenColor(int color[4], int duration, int holdTime, int flags)
 	{
 		if (g_FadeUserMsgId == INVALID_MESSAGE_ID)
 		{
 			g_FadeUserMsgId = GetUserMessageId("Fade");
 		}
-	
+
 		int clients[2];
 		clients[0] = that;
 
@@ -317,7 +317,7 @@ methodmap Player {
 			BfWriteByte(message, color[2]);
 			BfWriteByte(message, color[3]);
 		}
-		
+
 		EndMessage();
 	}
 
@@ -366,7 +366,7 @@ methodmap Player {
 			g_invisible[that] = invisible;
 		}
 	}
-	
+
 	property bool NightVision {
 		public get() {
 			return GetEntProp(that, Prop_Send, "m_bNightVisionOn") == 1;
@@ -380,10 +380,10 @@ methodmap Player {
 			}
 		}
 	}
-	
+
 	property int Armour {
 		public get() {
-			return GetEntProp(that, Prop_Data, "m_ArmorValue"); 
+			return GetEntProp(that, Prop_Data, "m_ArmorValue");
 		}
 		public set(int armour) {
 			SetEntProp(that, Prop_Data, "m_ArmorValue", armour, 1);
