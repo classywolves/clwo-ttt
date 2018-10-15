@@ -5,11 +5,13 @@
 
 #define SPECIAL_DAY_COUNT 3
 #define SPECIAL_DAY_BHOP 0
-#define SPECIAL_DAY_TEST 1
+#define SPECIAL_DAY_EXAMPLE 1
 #define SPECIAL_DAY_KOTH 2
 
 forward Action TTT_StartSpecialDay(int specailDay);
 forward Action TTT_StopSpecialDay();
+
+public bool TTT_IsSpecailDay();
 
 public SharedPlugin __pl_special_days =
 {
@@ -27,5 +29,6 @@ public void __pl_special_days_SetNTVOptional()
 {
     MarkNativeAsOptional("TTT_StartSpecialDay");
     MarkNativeAsOptional("TTT_StopSpecialDay");
+    MarkNativeAsOptional("TTT_IsSpecailDay");
 }
 #endif
