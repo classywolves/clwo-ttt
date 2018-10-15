@@ -11,7 +11,7 @@
 forward Action TTT_StartSpecialDay(int specailDay);
 forward Action TTT_StopSpecialDay();
 
-public bool TTT_IsSpecailDay();
+public bool TTT_IsSpecialDay();
 
 public SharedPlugin __pl_special_days =
 {
@@ -29,6 +29,6 @@ public void __pl_special_days_SetNTVOptional()
 {
     MarkNativeAsOptional("TTT_StartSpecialDay");
     MarkNativeAsOptional("TTT_StopSpecialDay");
-    MarkNativeAsOptional("TTT_IsSpecailDay");
+    MarkNativeAsOptional("TTT_IsSpecialDay");
 }
 #endif
