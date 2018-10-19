@@ -55,10 +55,6 @@ methodmap Player {
 		return view_as<Player>(client);
 	}
 
-	public void RankName(char name[64]) {
-		GetRankName(that, name, USER_RANK_NAME);
-	}
-
 	public void Auth(AuthIdType idType, char auth[64]) {
 		GetClientAuthId(that, idType, auth, sizeof(auth));
 	}
@@ -164,12 +160,34 @@ methodmap Player {
 		return response;
 	}
 
+    public bool RayTrace(float pos[3]) {
+        float vOrigin[3], vAngles[3];
+
+        GetClientEyePosition(that, vOrigin);
+        GetClientEyeAngles(that, vAngles);
+
+        Handle trace = TR_TraceRayFilterEx(vOrigin, vAngles, MASK_SOLID, RayType_Infinite, TraceEntityFilterPlayer);
+        if(TR_DidHit(trace)) {
+            TR_GetEndPosition(pos, trace);
+            CloseHandle(trace);
+
+            return true;
+        }
+
+        CloseHandle(trace);
+        return false;
+    }
+
 	public void GetRankName(char rankName[64], int type) {
 		GetRankName(GetPlayerRank(that), rankName, type);
 	}
 
 	public void Pos(float pos[3]) {
 		GetClientEyePosition(that, pos);
+	}
+
+    public void SetPos(float pos[3]) {
+		TeleportEntity(that, pos, NULL_VECTOR, NULL_VECTOR);
 	}
 
 	public Player TargetOne(char target[128], bool respond = false, bool immunity = true) {
@@ -543,4 +561,9 @@ methodmap Player {
 public int HandlerDoNothing(Menu menu, MenuAction action, int param1, int param2) {
 	// Do nothing.  It's really exciting.
 	return;
+}
+
+public bool TraceEntityFilterPlayer(entity, contentsMask)
+{
+    return entity > MaxClients;
 }

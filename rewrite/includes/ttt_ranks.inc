@@ -10,7 +10,7 @@
 #define RANK_PLEB 			0
 #define RANK_VIP 			1
 #define RANK_INFORMER 		2
-#define RANK_TMOD 		3
+#define RANK_TMOD 		    3
 #define RANK_MOD			4
 #define RANK_SMOD			5
 #define RANK_GUARDIAN		6
