@@ -40,7 +40,7 @@ ConVar enableBHop;
 public OnPluginStart()
 {
     GetCVars();
-    
+
     PrintToServer("[SDB] Loaded successfully");
 }
 
@@ -53,24 +53,24 @@ public void GetCVars()
 public Action TTT_StartSpecialDay(int specialDay)
 {
     if (specialDay != SPECIAL_DAY_BHOP) return Plugin_Continue;
-    
+
     remainingRounds = GetRandomInt(AUTO_BHOP_MIN_ROUNDS, AUTO_BHOP_MAX_ROUNDS);
-    
-    SetConVarBool(autoBHop, true);
-    SetConVarBool(enableBHop, true);
+
+    autoBHop.SetBool(true);
+    enableBHop.SetBool(true);
     isDayRunning = true;
-    
+
     return Plugin_Handled;
 }
 
 public Action TTT_StopSpecialDay()
 {
     if (!isDayRunning) return Plugin_Continue;
-    
-    SetConVarBool(autoBHop, false);
-    SetConVarBool(enableBHop, false);
+
+    autoBHop.SetBool(false);
+    enableBHop.SetBool(false);
     isDayRunning = false;
-    
+
     return Plugin_Handled;
 }
 
@@ -83,10 +83,10 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective)
             TTT_StopSpecialDay();
             return;
         }
-        
+
         if (remainingRounds > 1) { CPrintToChatAll("{purple}[TTT] {yellow}For the next {blue}%n {yellow}rounds auto BHop will be enabled.", remainingRounds); }
         else { CPrintToChatAll("{purple}[TTT] {yellow}For the next round auto BHop will be enabled."); }
-        
+
         remainingRounds--;
     }
 }
