@@ -60,7 +60,7 @@ public Action TTT_StartSpecialDay(int specialDay)
     deathDropGun.SetBool(false);
     isDayRunning = true;
 
-    return Plugin_Handled;
+    return Plugin_Changed;
 }
 
 public Action TTT_StopSpecialDay()
@@ -71,7 +71,13 @@ public Action TTT_StopSpecialDay()
     deathDropGun.SetBool(true);
     isDayRunning = false;
 
-    return Plugin_Handled;
+    return Plugin_Changed;
+}
+
+public bool TTT_IsSpecialDayRunning(bool isRunning)
+{
+    isRunning = isDayRunning;
+    return Plugin_Changed;
 }
 
 public void TTT_OnRoundStart(int innocents, int traitors, int detective)

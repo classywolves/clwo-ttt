@@ -30,6 +30,7 @@ public Plugin myinfo =
 
 Handle startSpecialDayForward;
 Handle stopSpecialDayForward;
+Handle isSpecailDayRunningForward;
 
 int specialDay = -1;
 
@@ -46,6 +47,9 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max
 
     startSpecialDayForward = CreateGlobalForward("TTT_StartSpecialDay", ET_Event, Param_Cell);
     stopSpecialDayForward = CreateGlobalForward("TTT_StopSpecialDay", ET_Event);
+    isSpecailDayRunningForward = CreateGlobalForward("TTT_IsSpecialDayRunning", ET_Event, Param_CellByRef);
+
+    CreateNative("TTT_IsSpecialDay")
 
     return APLRes_Success;
 }
@@ -69,19 +73,37 @@ public void OnConfigsExecuted()
             Call_PushCell(specialDay);
             Call_Finish(result);
 
-            if (result == Plugin_Stop || result == Plugin_Changed)
+            if (result == Plugin_Changed)
+            {
+                PrintToServer("Started Special Day: %n", specialDay);
+            }
+            else
             {
                 PrintToServer("Failed to start Special Day: %n", specialDay);
-                return;
             }
-
-            PrintToServer("Started Special Day: %n", specialDay);
         }
         else
         {
             specialDay = -1;
         }
     }
+}
+
+public bool Native_IsSpecailDay(Handle plugin, int numParams)
+{
+    bool isRunning = false;
+
+    Action result = Plugin_Continue;
+    Call_StartForward(g_hOnCheckCommandAccess);
+    Call_PushCellRef(isRunning);
+    Call_Finish(result);
+
+    if (result == Plugin_Changed)
+    {
+        return isRunning;
+    }
+
+    return false;
 }
 
 public Action Command_StartDay(int client, int args)
@@ -109,27 +131,30 @@ public Action Command_StartDay(int client, int args)
         Call_StartForward(stopSpecialDayForward);
         Call_Finish(result);
 
-        if (result == Plugin_Stop || result == Plugin_Changed)
+        if (result == Plugin_Changed)
         {
-            player.Msg("Failed to stop Special Day: %n", specialDay);
-            PrintToServer("Failed to stop Special Day: %n", specialDay);
+            player.Msg("Special Day %n was running.", specialDay);
+            PrintToServer("Special Day %n was running.", specialDay);
             return Plugin_Handled;
         }
     }
+
+    result = Plugin_Continue;
 
     Call_StartForward(startSpecialDayForward);
     Call_PushCell(specialDay);
     Call_Finish(result);
 
-    if (result == Plugin_Stop || result == Plugin_Changed)
+    if (result == Plugin_Changed)
+    {
+        player.Msg("Started Special Day: %n", specialDay);
+        PrintToServer("Started Special Day: %n", specialDay);
+    }
+    else
     {
         player.Msg("Failed to start Special Day: %n", specialDay);
         PrintToServer("Failed to start Special Day: %n", specialDay);
-        return Plugin_Handled;
     }
-
-    player.Msg("Started Special Day: %n", specialDay);
-    PrintToServer("Started Special Day: %n", specialDay);
 
     return Plugin_Handled;
 }
@@ -150,15 +175,16 @@ public Action Command_StopDay(int client, int args)
     Call_StartForward(stopSpecialDayForward);
     Call_Finish(result);
 
-    if (result == Plugin_Stop || result == Plugin_Changed)
+    if (result == Plugin_Changed)
+    {
+        player.Msg("Stopped Special Day: %n", specialDay);
+        PrintToServer("Stopped Special Day: %n", specialDay);
+    }
+    else
     {
         player.Msg("Failed to stop Special Day: %n", specialDay);
         PrintToServer("Failed to stop Special Day: %n", specialDay);
-        return Plugin_Handled;
     }
-
-    player.Msg("Stopped Special Day: %n", specialDay);
-    PrintToServer("Stopped Special Day: %n", specialDay);
 
     return Plugin_Handled;
 }
