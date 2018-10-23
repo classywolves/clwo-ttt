@@ -5,8 +5,9 @@
 
 #define SPECIAL_DAY_COUNT 3
 #define SPECIAL_DAY_BHOP 0
-#define SPECIAL_DAY_EXAMPLE 1
+#define SPECIAL_DAY_OITC 1
 #define SPECIAL_DAY_KOTH 2
+#define SPECIAL_DAY_EXAMPLE 3
 
 forward Action TTT_StartSpecialDay(int specailDay);
 forward Action TTT_StopSpecialDay();
