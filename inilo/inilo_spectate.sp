@@ -53,19 +53,19 @@ public Action Command_Spec(int client, int args)
 			#else
 			switch(TTT_GetClientRole(i))
 			{
-				case 0:
+				case TTT_TEAM_UNASSIGNED:
 				{
 					strcopy(team, sizeof(team), "Unassigned");
 				}
-				case 1:
+				case TTT_TEAM_INNOCENT:
 				{
 					strcopy(team, sizeof(team), "Innocent");
 				}
-				case 2:
+				case TTT_TEAM_TRAITOR:
 				{
 					strcopy(team, sizeof(team), "Traitor");
 				}
-				case 3:
+				case TTT_TEAM_DETECTIVE:
 				{
 					strcopy(team, sizeof(team), "Detective");
 				}
