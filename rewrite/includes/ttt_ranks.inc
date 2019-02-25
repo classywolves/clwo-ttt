@@ -3,6 +3,26 @@
 #endif
 #define _ttt_ranks_included
 
+public SharedPlugin __pl_ttt_ranks =
+{
+	name = "ttt_ranks",
+	file = "ttt_ranks.smx",
+#if defined REQUIRE_PLUGIN
+	required = 1,
+#else
+	required = 0,
+#endif
+};
+
+#if !defined REQUIRE_PLUGIN
+public __pl_ttt_upgrades_SetNTVOptional()
+{
+	MarkNativeAsOptional("GetRankName");
+	MarkNativeAsOptional("GetPermission");
+    MarkNativeAsOptional("GetPlayerRank");
+}
+#endif
+
 #define MAX_USER_STANDARD_RANKS 8
 #define MAX_USER_RANKS 11
 #define MAX_USER_TYPES 6

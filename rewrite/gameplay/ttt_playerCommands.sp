@@ -25,7 +25,7 @@
 
 public Plugin myinfo = {
     name = "TTT Player Commands",
-    author = "Popey & Corpen",
+    author = "Popey & c0rp3n",
     description = "General player commands for CLWO TTT.",
     version = "1.0.0",
     url = ""
@@ -285,4 +285,25 @@ public void TTTPlaytimeCallback(Database db, DBResultSet results, const char[] e
     if (days > 0) { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}days and {green}%i {yellow}hours.", client, days, hours); }
     else if (hours > 0) { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}hours.", client, hours); }
     else { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}minutes.", client, minutes); }
+}
+
+public Action Command_Give(int client, int args) {
+    Player player = Player(client);
+    if (args < 2) {
+        player.Error("Usage: sm_give <target> <credits>.");
+        return Plugin_Handled;
+    }
+
+    char buffer[MAX_NAME_LENGTH];
+    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
+    Player target = player.TargetOne(buffer, true);
+    if (!target.ValidClient) { return Plugin_Handled; }
+
+    GetCmdArg(2, buffer, MAX_NAME_LENGTH);
+    int credits = StringToInt(buffer);
+    if (credits < 1 || credits > player.Credits) {
+        CPrintToChat(client, "{purple}[TTT] {red}You have an insufficient amount of credits to give {blue}%N {green}%i {yellow}credits.", target.Client, credits);
+    }
+
+    return Plugin_Handled;
 }

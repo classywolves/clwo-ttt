@@ -1,9 +1,24 @@
-#include <ttt_ranks>
+/*
+* Base CS:GO plugin requirements.
+*/
+#include <sourcemod>
+#include <sdktools>
+#include <cstrike>
+
+/*
+* Custom include files.
+*/
+#include <generics>
+#include <datapack>
+
+/*
+* Custom methodmaps.
+*/
 #include <player_methodmap>
 
 public Plugin myinfo = {
     name = "TTT Ranks",
-    author = "Popey & iNilo & Corpen",
+    author = "Popey & iNilo & c0rp3n",
     description = "TTT Custom rank and access system.",
     version = "1.0.1",
     url = ""
@@ -41,6 +56,8 @@ public OnPluginStart() {
 }
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
+    RegPluginLibrary("ttt_ranks");
+
     CreateNative("GetRankName", Native_GetRankName);
     CreateNative("GetPermission", Native_GetPermission);
     CreateNative("GetPlayerRank", Native_GetPlayerRank);

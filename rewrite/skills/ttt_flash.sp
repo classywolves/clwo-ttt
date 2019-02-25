@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 /*
  * Base CS:GO plugin requirements.
  */
@@ -10,6 +12,7 @@
  * Custom include files.
  */
 #include <ttt>
+#include <ttt_taser>
 #include <colorvariables>
 #include <generics>
 
@@ -18,83 +21,33 @@
  */
 #include <player_methodmap>
 
+#define FLASH_MAX_LEVEL 1
+
 public Plugin myinfo =
-{ 
-	name = "TTT Flash", 
-	author = "Corpen", 
-	description = "TTT Flash on Taze", 
-	version = "0.0.1", 
-	url = "" 
+{
+    name = "TTT Flash",
+    author = "c0rp3n",
+    description = "TTT Flash on Tase",
+    version = "0.0.1",
+    url = ""
 };
 
 public OnPluginStart()
 {
-	RegisterCmds();
-	HookEvents();
-	InitObjects();
-	LateLoadAll();
-	
-	PrintToServer("[FLH] Loaded succcessfully");
+    PrintToServer("[FLH] Loaded successfully");
 }
 
-public void InitObjects() {
-}
+public Action TTT_OnTased(int attacker, int victim)
+{
+    if (TTT_GetClientRole(victim) != TTT_TEAM_TRAITOR) { return Plugin_Continue; }
 
-public void HookEvents() {
-}
+    if (Player(victim).Skill(Skill_Flash, 0, FLASH_MAX_LEVEL))
+    {
+        int color[4] = {255, 255, 255, 255};
+        int duration = 480;
+        int holdTime = 480;
+        int flags = 0x0001;
 
-public void RegisterCmds() {
-	
-}
-
-public void OnClientPutInServer(int client) {
-	HookClient(client);
-}
-
-public void LateLoadAll() {
-	LoopValidClients(client) {
-		LateLoadClient(client);
-	}
-}
-
-public void LateLoadClient(int client) {
-	HookClient(client);
-}
-
-public void HookClient(int client) {
-	SDKHook(client, SDKHook_TraceAttack, OnTraceAttack);
-}
-
-public Action OnTraceAttack(int iVictim, int &iAttacker, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup) {
-	if (IsWorldDamage(iAttacker, damagetype))
-	{
-		return Plugin_Continue;
-	}
-
-	Player attacker = Player(iAttacker);
-	Player victim = Player(iVictim);
-
-	if (!victim.Traitor || attacker.Traitor)
-	{
-		return Plugin_Continue;
-	}
-	
-	char weapon[64];
-	attacker.Weapon(weapon);
-
-	
-	if (victim.Upgrade(Upgrade_Flash, 0, 1))
-	{
-		if (StrContains(weapon, "taser", false) != -1)
-		{
-			int color[4] = {255, 255, 255, 255};
-			int duration = 480;
-			int holdTime = 480;
-			int flags = 0x0001;
-			
-			attacker.SetScreenColor(color, duration, holdTime, flags);
-		}
-	}
-
-	return Plugin_Continue;
+        Player(attacker).SetScreenColor(color, duration, holdTime, flags);
+    }
 }

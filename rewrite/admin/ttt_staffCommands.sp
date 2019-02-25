@@ -25,7 +25,7 @@
 
 public Plugin myinfo = {
     name = "TTT Staff Commands",
-    author = "Popey & Corpen",
+    author = "Popey & c0rp3n",
     description = "General staff commands for CLWO TTT.",
     version = "1.0.0",
     url = ""

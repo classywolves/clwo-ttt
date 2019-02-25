@@ -24,12 +24,12 @@
  #include <player_models>
 
 public Plugin myinfo =
-{ 
-	name = "TTT Random Player Models", 
-	author = "Corpen", 
-	description = "Corpen's TTT Area", 
-	version = "0.0.1", 
-	url = "" 
+{
+	name = "TTT Random Player Models",
+	author = "c0rp3n",
+	description = "Random player models for CLWO TTT.",
+	version = "1.0.0",
+	url = ""
 };
 
 int ctRandom = 0;
@@ -41,21 +41,12 @@ int playerModelIndex[MAXPLAYERS + 1] = {-1, ...};
 
 public OnPluginStart()
 {
-	//RegisterCmds();
 	HookEvents();
-	//InitDBs();
 
 	LoadTranslations("common.phrases");
-	
+
 	PrintToServer("[RPM] Loaded succcessfully");
 }
-
-/*
-public void RegisterCmds()
-{
-	
-}
-*/
 
 public void HookEvents()
 {
@@ -63,33 +54,17 @@ public void HookEvents()
 	HookEvent("player_spawn", OnPlayerSpawnPost, EventHookMode_Post);
 }
 
-/*
-public void InitDBs()
-{
-	
-}
-*/
-
-public Action OnRoundStartPre(Handle event, const char[] name, bool dontBroadcast)
+public Action OnRoundStartPre(Event event, const char[] name, bool dontBroadcast)
 {
 	ctRandom = GetRandomInt(0, MAX_PLAYER_TEAMS - 1);
 	tRandom = GetRandomInt(0, MAX_PLAYER_TEAMS - 1);
 	GetBaseIndex();
-	
-	/*
+
 	LoopClients(i)
 	{
-		if (playerModelChanged[i] == true)
-			playerModelChanged[i] = false;
-		
-		if (IsValidClient(i))
-		{
-			GetPlayerModel(i, TTT_TEAM_INNOCENT);
-			SetPlayerModel(i, TTT_TEAM_INNOCENT);
-		}
+        GetPlayerModel(i, TTT_TEAM_INNOCENT);
 	}
-	*/
-	
+
 	return Plugin_Continue;
 }
 
@@ -97,9 +72,8 @@ public Action OnPlayerSpawnPost(Event event, const char[] name, bool dontBroadca
 {
 	int client = GetClientOfUserId(event.GetInt("userid"));
 
-	GetPlayerModel(client, TTT_TEAM_INNOCENT);
 	SetPlayerModel(client, TTT_TEAM_INNOCENT);
-	
+
 	return Plugin_Continue;
 }
 
@@ -110,7 +84,7 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective)
 		int role = TTT_GetClientRole(i);
 		if (role == TTT_TEAM_DETECTIVE)
 			GetPlayerModel(i, role);
-		
+
 		SetPlayerModel(i, role);
 	}
 }
@@ -126,17 +100,17 @@ public void PreCacheTeamModels()
 	{
 		PrecacheModel(ctPlayerModels[i], true);
 	}
-	
+
 	for (int i = 0; i < MAX_VIEW_MODELS_COUNT; i++)
 	{
 		PrecacheModel(ctViewModels[i], true);
 	}
-	
+
 	for (int i = 0; i < MAX_T_PLAYER_MODELS_COUNT; i++)
 	{
 		PrecacheModel(tPlayerModels[i], true);
 	}
-	
+
 	for (int i = 0; i < MAX_VIEW_MODELS_COUNT; i++)
 	{
 		PrecacheModel(tViewModels[i], true);
@@ -194,8 +168,6 @@ public void GetPlayerModel(int client, int role)
 			ItterateTIndex(4);
 		}
 	}
-	
-	//playerModelChanged[client] = true;
 }
 
 public void ItterateCtIndex(int max)
@@ -247,7 +219,7 @@ public void GetBaseIndex()
 			baseIndexCt = GetRandomInt(0, 4);
 		}
 	}
-	
+
 	baseIndexT = GetRandomInt(0, 4);
 }
 
@@ -278,12 +250,12 @@ void SetPlayerArms(int client, char arms_path[PLATFORM_MAX_PATH])
 		{
 			weapon_index = GetPlayerWeaponSlot(client, slot);
 			{
-				if(weapon_index != -1) 
+				if(weapon_index != -1)
 				{
 					if (IsValidEntity(weapon_index))
 					{
 						RemovePlayerItem(client, weapon_index);
-						
+
 						DataPack pack;
 						CreateDataTimer(0.1, GiveBackWeapons, pack);
 						pack.WriteCell(client);
@@ -292,7 +264,7 @@ void SetPlayerArms(int client, char arms_path[PLATFORM_MAX_PATH])
 				}
 			}
 		}
-	
+
 		//Set player arm model
 		if(!IsModelPrecached(arms_path))
 			PrecacheModel(arms_path);

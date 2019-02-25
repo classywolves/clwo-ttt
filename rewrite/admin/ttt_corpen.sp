@@ -24,12 +24,12 @@
 
 
 public Plugin myinfo =
-{ 
-	name = "TTT Corpen", 
-	author = "Corpen", 
-	description = "Corpen's TTT Area", 
-	version = "0.0.1", 
-	url = "" 
+{
+	name = "TTT c0rp3n", 
+	author = "c0rp3n",
+	description = "c0rp3n's TTT Area",
+	version = "0.0.1",
+	url = ""
 };
 
 public OnPluginStart()
@@ -39,7 +39,7 @@ public OnPluginStart()
 	//InitDBs();
 
 	LoadTranslations("common.phrases");
-	
+
 	PrintToServer("[CRP] Loaded succcessfully");
 }
 
@@ -53,14 +53,14 @@ public void RegisterCmds() {
 /*
 public void HookEvents()
 {
-	
+
 }
 */
 
 /*
 public void InitDBs()
 {
-	
+
 }
 */
 
@@ -98,8 +98,8 @@ public Action Command_SMSay(int client, int args)
 
 	Format(title, sizeof(title), "%N: ", player.Client);
 	target.SendPanelMsg(title, message);
-	
-	return Plugin_Handled;	
+
+	return Plugin_Handled;
 }
 
 public Action Command_SCSay(int client, int args)
@@ -134,8 +134,8 @@ public Action Command_SCSay(int client, int args)
 		}
 	}
 
-	target.CSay(message);	
-	return Plugin_Handled;	
+	target.CSay(message);
+	return Plugin_Handled;
 }
 
 public Action Command_PMsg(int client, int args)
@@ -171,7 +171,7 @@ public Action Command_PMsg(int client, int args)
 	}
 
 	SendPrivateChat(client, target.Client, message);
-	return Plugin_Handled;	
+	return Plugin_Handled;
 }
 
 void SendPrivateChat(int client, int target, const char[] message, ...)

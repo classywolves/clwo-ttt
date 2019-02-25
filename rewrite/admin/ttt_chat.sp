@@ -23,7 +23,7 @@
 public Plugin myinfo =
 {
 	name = "TTT Chat",
-	author = "Popey & iNilo & Corpen",
+	author = "Popey & iNilo & c0rp3n",
 	description = "TTT Custom rank and access system.",
 	version = "1.0.0",
 	url = ""

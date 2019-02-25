@@ -70,6 +70,7 @@ stock bool IsValidClient(int client, bool allowconsole=false)
 #endif
 
 #define LoopAliveClients(%1) 		for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).ValidClient && Player(%1).Alive)
+#define LoopDeadClients(%1) 		for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).ValidClient && !Player(%1).Alive)
 #define LoopStaff(%1) 				for(int %1 = 1; %1 <= MaxClients; %1++) if(Player(%1).ValidClient && Player(%1).Staff)
 #define LoopClients(%1) 			for(int %1 = 1; %1 <= MaxClients; %1++)
 
@@ -103,13 +104,13 @@ stock int GetActiveStaffCount() {
 	int staffCount = 0;
 
 	LoopStaff(client) {
-		Player player = Player(client)
+		Player player = Player(client);
 		if (player.CounterTerrorist || player.Terrorist) {
 			staffCount++;
 		}
 	}
 
-	return staffCount
+	return staffCount;
 }
 
 stock int GetUnfoundPlayers(char playerNames[MAXPLAYERS][64]) {
@@ -117,7 +118,6 @@ stock int GetUnfoundPlayers(char playerNames[MAXPLAYERS][64]) {
 
 	LoopClients(i) {
 		Player player = Player(i)
-
 		if (player.Found) {
 			player.Name(playerNames[visible])
 			// Some stuff to array/
@@ -128,11 +128,44 @@ stock int GetUnfoundPlayers(char playerNames[MAXPLAYERS][64]) {
 	return visible;
 }
 
+stock void CallTimer(&Handle:timer)
+{
+	if (timer != INVALID_HANDLE)
+	{
+		TriggerTimer(timer);
+		ClearTimer(timer);
+	}
+}
+
 stock void ClearTimer(&Handle:timer)
 {
 	if (timer != INVALID_HANDLE)
 	{
 		KillTimer(timer);
 		timer = INVALID_HANDLE;
+	}
+}
+
+stock Database ConnectDatabase(char[] database, char[] name) {
+	char error[255];
+	Database dbDatabase = SQL_Connect(database, true, error, sizeof(error));
+	if (dbDatabase == null) { PrintToServer("[%s] Could not connect to db: %s", name, error); }
+	else { PrintToServer("[%s] Connected to DB", name); }
+	return dbDatabase;
+}
+
+stock DBStatement PrepareStatement(Database database, char[] statement) {
+	char error[255];
+	DBStatement newStatement = SQL_PrepareQuery(database, statement, error, sizeof(error));
+	if (newStatement == null) { PrintToServer(error); return newStatement; }
+	return newStatement;
+}
+
+stock int GenericOnSQLConnectCallback(Handle owner, Handle hndl, char [] error, any data)
+{
+	if(hndl == INVALID_HANDLE)
+	{
+		LogError("Query failure: %s", error);
+		return;
 	}
 }

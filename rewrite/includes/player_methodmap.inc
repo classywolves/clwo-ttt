@@ -17,22 +17,19 @@
 #include <colorvariables>
 #include <sourcecomms>
 #include <ttt>
-#include <upgrades>
 #include <generics>
 #include <ttt_ranks>
 #include <ttt_shop>
+#include <ttt_skills>
+#include <generics>
 
 #define MAX_MESSAGE_LENGTH			1024
-#define MAX_MSAY_LENGTH					255
-#define ERROR_TIMEOUT						2
-
-#define UPGRADE_INVISIBILITY		2
-
-#define INNOCENT 								1
-#define TRAITOR 								2
-#define DETECTIVE 							3
+#define MAX_MSAY_LENGTH				255
+#define ERROR_TIMEOUT				2
 
 #define that view_as<int>(this)
+
+Database databaseTTT;
 
 bool g_invisible[MAXPLAYERS + 1];
 bool g_invulnerable[MAXPLAYERS + 1];
@@ -49,6 +46,8 @@ Handle cookieTraitorWins;
 Handle cookieInnocentLosses;
 Handle cookieDetectiveLosses;
 Handle cookieTraitorLosses;
+Handle cookieGoodActions;
+Handle cookieBadActions;
 
 methodmap Player {
 	public Player(int client) {
@@ -59,8 +58,18 @@ methodmap Player {
 		GetClientAuthId(that, idType, auth, sizeof(auth));
 	}
 
-	public int Upgrade(int upgrade, int min, int max) {
-		return Upgrade_Limit(Upgrade_GetPoints(that, upgrade), min, max);
+	public int Skill(int skill, int min, int max) {
+		return Skills_Limit(Skills_GetPoints(that, skill), min, max);
+	}
+
+	public int GetSkill(int skill)
+	{
+		return Skills_GetPoints(that, skill);
+	}
+
+	public int SetSkill(int skill, int points)
+	{
+		Skills_SetPoints(that, skill, points);
 	}
 
 	public void Name(char name[64]) {
@@ -111,6 +120,91 @@ methodmap Player {
 		char cookieValue[128];
 		IntToString(value, cookieValue, sizeof(cookieValue));
 		SetClientCookie(that, cookie, cookieValue);
+	}
+
+	public bool BadKill(int victim)
+	{
+		if (victim == that || victim == 0 || that == 0)
+			return false;
+
+		int attackerRole = TTT_GetClientRole(that);
+		int victimRole = TTT_GetClientRole(victim);
+
+		return attackerRole == victimRole || (attackerRole == TTT_TEAM_INNOCENT && victimRole == TTT_TEAM_DETECTIVE);
+	}
+
+	property int Karma {
+		public get() {
+			char steamID[64];
+			this.Auth(AuthId_SteamID64, steamID);
+
+			DBStatement playerKarma = PrepareStatement(databaseTTT, "SELECT `karma` FROM `ttt` WHERE communityid=? LIMIT 1");
+			SQL_BindParamString(playerKarma, 0, steamID, false);
+			if (!SQL_Execute(playerKarma)) { PrintToServer("User Karma Grab Failed."); return -1; }
+
+			if (SQL_FetchRow(playerKarma)) {
+				return SQL_FetchInt(playerKarma, 0);
+			} else {
+				return 100;
+			}
+		}
+	}
+
+	property int Level {
+		public get()
+		{
+			return Skills_GetLevel(that);
+		}
+		public set(int level)
+		{
+			Skills_SetLevel(that, level);
+		}
+	}
+
+	property int Experience {
+		public get()
+		{
+			return Skills_GetExperience(that);
+		}
+		public set(int experience)
+		{
+            Skills_SetExperience(that, experience);
+		}
+	}
+
+	property int LevelUpExperience {
+		public get()
+		{
+			return RoundToFloor(this.Level + 600 * Pow(2.0, (float(this.Level) / 4.0)));
+		}
+	}
+
+	property int Playtime {
+		public get()
+		{
+			char auth[64];
+			this.Auth(AuthId_Steam2, auth);
+
+			DBStatement player_playtime = PrepareStatement(databaseTTT, "SELECT SUM(`duration`) FROM `player_analytics` WHERE auth=? LIMIT 1");
+			SQL_BindParamString(player_playtime, 0, auth, false);
+			if (!SQL_Execute(player_playtime)) { PrintToServer("Player Analaytics Sum Failed."); return -1; }
+
+			if (SQL_FetchRow(player_playtime)) {
+				return SQL_FetchInt(player_playtime, 0);
+			} else {
+				return 0;
+			}
+		}
+	}
+
+	property int GoodActions {
+		public get() { return this.GetCookieInt(cookieGoodActions, 0); }
+		public set(int goodActions) { this.SetCookieInt(cookieGoodActions, goodActions); }
+	}
+
+	property int BadActions {
+		public get() { return this.GetCookieInt(cookieBadActions, 0); }
+		public set(int badActions) { this.SetCookieInt(cookieBadActions, badActions); }
 	}
 
 	property int TraitorWins {
@@ -198,7 +292,7 @@ methodmap Player {
 		char targetName[256];
 		bool tnIsMl;
 
-		int targetIndex = ProcessTargetString(target, that, targets, sizeof(targets), COMMAND_FILTER_NO_IMMUNITY | COMMAND_FILTER_NO_MULTI, targetName, sizeof(targetName), tnIsMl)
+		int targetIndex = ProcessTargetString(target, that, targets, sizeof(targets), COMMAND_FILTER_NO_IMMUNITY | COMMAND_FILTER_NO_MULTI, targetName, sizeof(targetName), tnIsMl);
 
 		if (targetIndex == 1) {
 			return view_as<Player>(targets[0]);
@@ -418,7 +512,13 @@ methodmap Player {
 			return GetClientHealth(that);
 		}
 		public set(int health) {
-			SetEntityHealth(that, health)
+			SetEntityHealth(that, health);
+		}
+	}
+
+	property int MaxHealth {
+		public get() {
+			return GetEntProp(that, Prop_Data, "m_iMaxHealth", 4);
 		}
 	}
 
@@ -460,25 +560,25 @@ methodmap Player {
 
 	property bool Traitor {
 		public get() {
-			return this.Role == TRAITOR;
+			return this.Role == TTT_TEAM_TRAITOR;
 		}
 	}
 
 	property bool Innocent {
 		public get() {
-			return this.Role == INNOCENT;
+			return this.Role == TTT_TEAM_INNOCENT;
 		}
 	}
 
 	property bool Detective {
 		public get() {
-			return this.Role == DETECTIVE;
+			return this.Role == TTT_TEAM_DETECTIVE;
 		}
 	}
 
 	property bool Muted {
 		public get() {
-			return SourceComms_GetClientMuteType(that) != bNot
+			return SourceComms_GetClientMuteType(that) != bNot;
 		}
 	}
 
@@ -488,7 +588,7 @@ methodmap Player {
 
 	property bool Gagged {
 		public get() {
-			return SourceComms_GetClientGagType(that) != bNot
+			return SourceComms_GetClientGagType(that) != bNot;
 		}
 	}
 
@@ -553,9 +653,6 @@ methodmap Player {
 	property bool ValidClient {
 		public get() {
 			if(!IsValidClient(that))
-				return false;
-
-			if(!IsPlayerAlive(that))
 				return false;
 
 			return true;
