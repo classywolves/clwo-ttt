@@ -40,8 +40,10 @@ public OnPluginStart() {
 }
 
 public void RegisterCmds() {
-    RegConsoleCmd("sm_staff", Command_Staff, "");
-    RegConsoleCmd("sm_admins", Command_Staff, "");
+    RegConsoleCmd("sm_staff", Command_Staff, "List the all of the staff who are currently online.");
+    RegConsoleCmd("sm_admins", Command_Staff, "List the all of the staff who are currently online.");
+
+    RegConsoleCmd("sm_spec", Command_Spectate, "Choose which of the alive players you would like to spectate.");
 
     RegConsoleCmd("sm_terrorist", Command_Terrorist, "Move Player to T.");
     RegConsoleCmd("sm_ct", Command_CounterTerrorist, "Move Player to CT.");
@@ -92,6 +94,41 @@ public Action Command_Staff(int client, int args) {
     return Plugin_Handled;
 }
 
+public Action Command_Spectate(int client, int args) {
+    Menu menu = new Menu(MenuHandler_Spectate);
+    menu.SetTitle("Which player would you like to specate?");
+    LoopAliveClients(i) {
+        char index[4];
+        IntToChar4(i, index);
+
+        char name[64];
+        Player(i).Name(name);
+
+        char display[512];
+        switch(TTT_GetClientRole(i)) {
+			case TTT_TEAM_UNASSIGNED: {
+                Format(display, sizeof(display), "%s [%s]", name, "Unassigned");
+			}
+			case TTT_TEAM_INNOCENT: {
+                Format(display, sizeof(display), "%s [%s]", name, "Innocent");
+			}
+			case TTT_TEAM_TRAITOR: {
+                Format(display, sizeof(display), "%s [%s]", name, "Traitor");
+			}
+			case TTT_TEAM_DETECTIVE: {
+                Format(display, sizeof(display), "%s [%s]", name, "Detective");
+			}
+            default: {
+                Format(display, sizeof(display), "%s [%s]", name, "Unassigned");
+            }
+        }
+
+        menu.AddItem(index, display);
+    }
+
+    return Plugin_Handled;
+}
+
 public Action Command_Terrorist(int client, int args) {
     Player player = Player(client)
     player.Team = CS_TEAM_T;
@@ -122,6 +159,53 @@ public Action Command_Rank(int client, int args)
     char steamID[64];
     player.Auth(AuthId_SteamID64, steamID);
     TTTGetRank(steamID, GetClientUserId(client));
+
+    return Plugin_Handled;
+}
+
+public Action Command_Playtime(int client, int args)
+{
+    Player player = Player(client);
+    char steamID[64];
+    player.Auth(AuthId_SteamID64, steamID);
+    TTTGetPlaytime(steamID, GetClientUserId(client));
+
+    return Plugin_Handled;
+}
+
+public Action Commnand_Give(int client, int args) {
+    Player player = Player(client);
+    if (args < 2) {
+        player.Error("Usage: sm_give <target> <credits>.");
+        return Plugin_Handled;
+    }
+
+    char buffer[MAX_NAME_LENGTH];
+    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
+    Player target = player.TargetOne(buffer, true);
+    if (!target.ValidClient) { return Plugin_Handled; }
+
+    GetCmdArg(2, buffer, MAX_NAME_LENGTH);
+    int credits = StringToInt(buffer);
+    if (credits < 1 || credits > player.Credits) {
+        CPrintToChat(client, "{purple}[TTT] {red}You have an insufficient amount of credits to give {blue}%N {green}%i {yellow}credits.", targer.Client, credits);
+    }
+
+    return Plugin_Handled;
+}
+
+public Action MenuHandler_Spectate(Menu menu, MenuAction action, int client, int data) {
+    switch (action) {
+        case MenuAction_Select: {
+            char indexChars[4];
+            menu.GetItem(data, indexChars, 4);
+            int index = Char4ToInt(indexChars);
+            if (Player(index).ValidClient) {
+                Player(client).Msg("You started specating {blue}%N", target);
+                Player.Spectate(index);
+            }
+        }
+    }
 
     return Plugin_Handled;
 }
@@ -164,16 +248,6 @@ public void TTTKarmaRankCallback(Database db, DBResultSet results, const char[] 
     }
 }
 
-public Action Command_Playtime(int client, int args)
-{
-    Player player = Player(client);
-    char steamID[64];
-    player.Auth(AuthId_SteamID64, steamID);
-    TTTGetPlaytime(steamID, GetClientUserId(client));
-
-    return Plugin_Handled;
-}
-
 public void TTTGetPlaytime(char auth[64], int userID) {
     if (tttConnected == false) return;
 
@@ -211,25 +285,4 @@ public void TTTPlaytimeCallback(Database db, DBResultSet results, const char[] e
     if (days > 0) { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}days and {green}%i {yellow}hours.", client, days, hours); }
     else if (hours > 0) { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}hours.", client, hours); }
     else { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}minutes.", client, minutes); }
-}
-
-public Action Commnand_Give(int client, int args) {
-    Player player = Player(client);
-    if (args < 2) {
-        player.Error("Usage: sm_give <target> <credits>.");
-        return Plugin_Handled;
-    }
-
-    char buffer[MAX_NAME_LENGTH];
-    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
-    Player target = player.TargetOne(buffer, true);
-    if (!target.ValidClient) { return Plugin_Handled; }
-
-    GetCmdArg(2, buffer, MAX_NAME_LENGTH);
-    int credits = StringToInt(buffer);
-    if (credits < 1 || credits > player.Credits) {
-        CPrintToChat(client, "{purple}[TTT] {red}You have an insufficient amount of credits to give {blue}%N {green}%i {yellow}credits.", targer.Client, credits);
-    }
-
-    return Plugin_Handled;
 }

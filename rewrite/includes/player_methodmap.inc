@@ -307,6 +307,11 @@ methodmap Player {
 		KickClient(that, reason);
 	}
 
+    public void Spectate(int target) {
+        SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", target);
+    	SetEntProp(client, Prop_Send, "m_iObserverMode", 4);
+    }
+
 	public void SetScreenColor(int color[4], int duration, int holdTime, int flags)
 	{
 		if (g_FadeUserMsgId == INVALID_MESSAGE_ID)
