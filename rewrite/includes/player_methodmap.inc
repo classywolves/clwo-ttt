@@ -109,6 +109,14 @@ methodmap Player {
 		}
 	}
 
+    public bool BadKill(int victim) {
+        int attackerRole = TTT_GetClientRole(that);
+        int victimRole = TTT_GetClientRole(victim);
+        if (attackerRole == victimRole) return true;
+        else if (attackerRole == TTT_TEAM_TRAITOR || victimRole == TTT_TEAM_TRAITOR) return false;
+        else return true;
+    }
+
 	public int GetCookieInt(Handle cookie, int defaultValue) {
 		char cookieValue[128];
 		GetClientCookie(that, cookie, cookieValue, sizeof(cookieValue));
@@ -122,33 +130,10 @@ methodmap Player {
 		SetClientCookie(that, cookie, cookieValue);
 	}
 
-	public bool BadKill(int victim)
-	{
-		if (victim == that || victim == 0 || that == 0)
-			return false;
-
-		int attackerRole = TTT_GetClientRole(that);
-		int victimRole = TTT_GetClientRole(victim);
-
-		return attackerRole == victimRole || (attackerRole == TTT_TEAM_INNOCENT && victimRole == TTT_TEAM_DETECTIVE);
-	}
-
-	property int Karma {
-		public get() {
-			char steamID[64];
-			this.Auth(AuthId_SteamID64, steamID);
-
-			DBStatement playerKarma = PrepareStatement(databaseTTT, "SELECT `karma` FROM `ttt` WHERE communityid=? LIMIT 1");
-			SQL_BindParamString(playerKarma, 0, steamID, false);
-			if (!SQL_Execute(playerKarma)) { PrintToServer("User Karma Grab Failed."); return -1; }
-
-			if (SQL_FetchRow(playerKarma)) {
-				return SQL_FetchInt(playerKarma, 0);
-			} else {
-				return 100;
-			}
-		}
-	}
+    property int Karma {
+        public get() { return TTT_GetClientKarma(that); }
+        public set(int karma) { TTT_SetClientKarma(that, karma, true); }
+    }
 
 	property int Level {
 		public get()
@@ -402,8 +387,8 @@ methodmap Player {
 	}
 
     public void Spectate(int target) {
-        SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", target);
-    	SetEntProp(client, Prop_Send, "m_iObserverMode", 4);
+        SetEntPropEnt(that, Prop_Send, "m_hObserverTarget", target);
+    	SetEntProp(that, Prop_Send, "m_iObserverMode", 4);
     }
 
 	public void SetScreenColor(int color[4], int duration, int holdTime, int flags)
@@ -413,7 +398,7 @@ methodmap Player {
 			g_FadeUserMsgId = GetUserMessageId("Fade");
 		}
 
-		int clients[2];
+		int clients[1];
 		clients[0] = that;
 
 		Handle message = StartMessageEx(g_FadeUserMsgId, clients, 1);

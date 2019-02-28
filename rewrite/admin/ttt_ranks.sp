@@ -58,6 +58,7 @@ public OnPluginStart() {
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
     RegPluginLibrary("ttt_ranks");
 
+    CreateNative("TTT_Ranks_IsStaff", Native_IsStaff)
     CreateNative("GetRankName", Native_GetRankName);
     CreateNative("GetPermission", Native_GetPermission);
     CreateNative("GetPlayerRank", Native_GetPlayerRank);
@@ -172,6 +173,11 @@ public Action Command_RankTemp(int client, int args) {
 
 public Action Command_RankCheck(int client, int args) {
     return Plugin_Handled;
+}
+
+public int Native_IsStaff(Handle plugin, int numParams) {
+    int client = GetNativeCell(1);
+    return playerRanks[client] >= RANK_INFORMER;
 }
 
 public int Native_GetRankName(Handle plugin, int numParams) {

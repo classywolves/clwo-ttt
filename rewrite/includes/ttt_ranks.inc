@@ -1,7 +1,9 @@
 #if defined _ttt_ranks_included
-  #endinput
+    #endinput
 #endif
 #define _ttt_ranks_included
+
+#include <colorvariables>
 
 public SharedPlugin __pl_ttt_ranks =
 {
@@ -46,6 +48,25 @@ public __pl_ttt_upgrades_SetNTVOptional()
 #define USER_RANK_CHAT_NAME  4
 #define USER_RANK_DEV_NAME   5
 
+native bool TTT_Ranks_IsStaff(int client);
+
 native bool GetPermission(int client, int requiredRank);
 native void GetRankName(int rank, char name[64], int type);
 native int GetPlayerRank(int client);
+
+stock void CPrintToChatStaff(const char[] message, any ...)
+{
+    for (int iClient = 1; iClient <= MaxClients; iClient++) {
+        if (!IsClientInGame(iClient)) {
+            continue;
+        }
+
+        if (!TTT_Ranks_IsStaff(iClient)) {
+            continue;
+        }
+
+        char buffer[1024];
+    	VFormat(buffer, 1024, message, 2);
+        CPrintToChat(iClient, buffer);
+    }
+}

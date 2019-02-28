@@ -169,3 +169,20 @@ stock int GenericOnSQLConnectCallback(Handle owner, Handle hndl, char [] error, 
 		return;
 	}
 }
+
+stock void IntToChar4(int value, char[] array,  int index = 0) {
+    array[index] = (value >> 24) & 0xFF;
+    array[index + 1] = (value >> 16) & 0xFF;
+    array[index + 2] = (value >> 8) & 0xFF;
+    array[index + 3] = value & 0xFF;
+}
+
+stock int Char4ToInt(const char[] array, int index = 0) {
+    int value = 0;
+    value |= array[index]     << 24;
+    value |= array[index + 1] << 16;
+    value |= array[index + 2] << 8;
+    value |= array[index + 3];
+
+    return value;
+}
