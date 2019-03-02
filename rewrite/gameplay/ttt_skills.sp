@@ -216,7 +216,7 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective)
 
 public void TTT_OnRoundEnd(int winner) {
     if (winner == TTT_TEAM_TRAITOR) {
-        float undiscovered = 0.0;
+        int undiscovered;
         LoopDeadClients(i) {
             if (!TTT_GetFoundStatus(i)) {
                 if (TTT_GetClientRole(i) != TTT_TEAM_TRAITOR)
@@ -226,7 +226,7 @@ public void TTT_OnRoundEnd(int winner) {
             }
         }
 
-        int gainedXP = RoundFloat(40 * (undiscovered / startingNoneTraitors));
+        int gainedXP = 40 * (undiscovered / startingNoneTraitors);
         LoopAliveClients(i) {
             if (TTT_GetClientRole(i) == TTT_TEAM_TRAITOR) {
                 CPrintToChat(i, "{purple}[TTT] {yellow}You gained %d experience for hiding %d bodies!", gainedXP, undiscovered);
