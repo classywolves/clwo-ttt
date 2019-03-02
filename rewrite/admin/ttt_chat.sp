@@ -33,15 +33,8 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
     if (message[0] != '@') // Not staff / all say or pm.
     {
         char buffer[64];
-        char deadTag[16];
         char teamColor[6];
         char staffTag[32];
-
-        // Tags
-        if (!IsPlayerAlive(author))
-        {
-            Format(deadTag, 16, "{default}[Dead]");
-        }
 
         GetRankName(GetPlayerRank(author), buffer, USER_RANK_CHAT_NAME);
         if (buffer[0] != 0x00)
@@ -66,7 +59,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         }
 
         // Format message name
-        Format(name, MAXLENGTH_NAME, "%s%s{%s}%s", deadTag, staffTag, teamColor, name);
+        Format(name, MAXLENGTH_NAME, "%s {%s}%s", staffTag, teamColor, name);
     }
 
     return Plugin_Changed;
