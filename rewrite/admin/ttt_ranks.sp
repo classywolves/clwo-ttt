@@ -24,25 +24,51 @@ public Plugin myinfo = {
     url = ""
 };
 
+/*
+enum struct Rank
+{
+    char command[32];
+    bool isStaff;
+    char name[32];
+    char chatTag[16];
+};
+
+Rank ranks[MAX_USER_RANKS] =
+{
+    {   "rank_normal",      false,       "Normal",           "",        },
+    {   "rank_vip",         false,       "VIP",              "♥",       },
+    {   "rank_informer",    true,        "Informer",         "+",       },
+    {   "rank_trialmod",    true,        "Trial Moderator",  "T.Mod",   },
+    {   "rank_moderator",   true,        "Moderator",        "M",       },
+    {   "rank_seniormod",   true,        "Senior Moderator", "S.Mod",   },
+    {   "rank_guardian",    true,        "Guardian",         "G",       },
+    {   "rank_admin",       true,        "Admin",            "A",       },
+    // SteamID Ranks.
+    {   "rank_senioradmin", true,        "Senior Admin",     "S. Admin" },
+    {   "rank_developer",   true,        "Developer",        "Δ"        },
+    {   "rank_senator",     true,        "Senator",          "S"        }
+};
+*/
+
 char userRanks[MAX_USER_RANKS][MAX_USER_TYPES][64] = {
     //  "command",          "is staff", "name",             "score name", "chat name", "dev name"
     {   "rank_normal",      "0",        "Normal",           "",           "",          "pleb"     },
     {   "rank_vip",         "0",        "VIP",              "VIP",        "♥",         "vip"      },
     {   "rank_informer",    "1",        "Informer",         "+",          "+",         "informer" },
-    {   "rank_trialmod",    "1",        "Trial Moderator",  "Trial Mod",  "ζ",         "tmod"     },
-    {   "rank_moderator",   "1",        "Moderator",        "Moderator",  "ε",         "mod"      },
-    {   "rank_seniormod",   "1",        "Senior Moderator", "Sen. Mod",   "δ",         "smod"     },
-    {   "rank_guardian",    "1",        "Guardian",         "Guarian",    "Ω",         "guardian" },
-    {   "rank_admin",       "1",        "Admin",            "Admin",      "γ",         "admin"    },
+    {   "rank_trialmod",    "1",        "Trial Moderator",  "Trial Mod",  "T.Mod",     "tmod"     },
+    {   "rank_moderator",   "1",        "Moderator",        "Moderator",  "M",         "mod"      },
+    {   "rank_seniormod",   "1",        "Senior Moderator", "Sen. Mod",   "S.Mod",     "smod"     },
+    {   "rank_guardian",    "1",        "Guardian",         "Guarian",    "G",         "guardian" },
+    {   "rank_admin",       "1",        "Admin",            "Admin",      "A",         "admin"    },
     // SteamID Ranks.
-    {   "rank_senioradmin", "1",        "Senior Admin",     "Sen. Admin", "β",         "sadmin"   },
+    {   "rank_senioradmin", "1",        "Senior Admin",     "Sen. Admin", "S. Admin",  "sadmin"   },
     {   "rank_developer",   "1",        "Developer",        "Dev",        "Δ",         "dev"      },
-    {   "rank_senator",     "1",        "Senator",          "Senator",    "α",         "senator"  }
+    {   "rank_senator",     "1",        "Senator",          "Senator",    "S",         "senator"  }
 };
 
 int playerRanks[MAXPLAYERS + 1] = { 0, ... };
 
-StringMap ranks;
+StringMap ranksMap;
 
 public OnPluginStart() {
     RegisterCmds();
@@ -50,7 +76,7 @@ public OnPluginStart() {
     LoadTranslations("common.phrases");
 
     // Initialise Rank Overrides.
-    ranks = new StringMap();
+    ranksMap = new StringMap();
 
     PrintToServer("[RNK] Loaded successfully");
 }
@@ -78,7 +104,7 @@ public void RegisterCmds() {
 public void OnConfigsExecuted()
 {
     CPrintToChatAll("{purple}[TTT] {yellow}Reloading custom ranks");
-    ranks.Clear();
+    ranksMap.Clear();
     ParseConfig();
 }
 
@@ -95,7 +121,7 @@ public void ParseConfig() {
     do {
         kv.GetString("SteamID", steamId, 64);
         customRank = kv.GetNum("RankIndex", 0);
-        ranks.SetValue(steamId, customRank);
+        ranksMap.SetValue(steamId, customRank);
         CPrintToChatAll("{purple}[TTT] {yellow}Added new custom rank to {blue}%s{yellow}: {green}%i", steamId, customRank);
     } while (kv.GotoNextKey());
 
@@ -103,7 +129,7 @@ public void ParseConfig() {
 }
 
 public void OnMapLoad() {
-    ranks.Clear();
+    ranksMap.Clear();
     ParseConfig();
 
     LoopClients(i) {
@@ -126,7 +152,7 @@ public void OnClientPostAdminCheck(int client) {
 }
 
 public Action Command_RefreshRanks(int args) {
-    ranks.Clear();
+    ranksMap.Clear();
     ParseConfig();
 
     LoopClients(i) {
@@ -224,7 +250,7 @@ public int Internal_GetPlayerRank(int client) {
     player.Auth(AuthId_Steam2, steamId);
 
     int specifiedRank;
-    if (ranks.GetValue(steamId, specifiedRank)) {
+    if (ranksMap.GetValue(steamId, specifiedRank)) {
         return specifiedRank;
     }
 
