@@ -34,12 +34,12 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
     {
         char buffer[64];
         char teamColor[6];
-        char staffTag[32];
+        char staffTag[64];
 
         GetRankName(GetPlayerRank(author), buffer, USER_RANK_CHAT_NAME);
         if (buffer[0] != 0x00)
         {
-            Format(staffTag, 32, "{default}[{blue}%s{default}]", buffer);
+            Format(staffTag, 64, "{default}[{blue}%s{default}]", buffer);
         }
 
         switch (GetClientTeam(author))
