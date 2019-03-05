@@ -63,7 +63,7 @@ public void RdmDeathInsert(int victim, int victimKarma, int attacker, int attack
     playerAttacker.Auth(AuthId_Steam2, attackerId);
     attackerRole = playerAttacker.Role;
 
-    rdmDb.Format(query, sizeof(query), "INSERT INTO `deaths` (`death_index`, `death_time`, `victim_name`, `victim_id`, `victim_role`, `victim_karma`, `killer_name`, `killer_id`, `killer_role`, `killer_karma`, `last_gun_fire`, `round_no`, `reported_death`) VALUES ('%d', '%d', '%s', '%s', '%d', '%d', '%s', '%s', '%d', '%d', '%d', '%d', '0');",
+    rdmDb.Format(query, sizeof(query), "INSERT INTO `deaths` (`death_index`, `death_time`, `victim_name`, `victim_id`, `victim_role`, `victim_karma`, `killer_name`, `killer_id`, `killer_role`, `killer_karma`, `last_gun_fire`, `round_no`) VALUES ('%d', '%d', '%s', '%s', '%d', '%d', '%s', '%s', '%d', '%d', '%d', '%d');",
     ++lastDeathIndex, GetTime(), victimName, victimId, victimRole, victimKarma, attackerName, attackerId, attackerRole, attackerKarma, lastGunFired[victim], currentRound);
 
     rdmDb.Query(RdmDeathInsertCallback, query);
@@ -71,7 +71,7 @@ public void RdmDeathInsert(int victim, int victimKarma, int attacker, int attack
 
 public void RdmDeathInsertCallback(Database db, DBResultSet results, const char[] error, int data) {
     if (results == null) {
-        LogError("RdmGetLastDeathsCallback: %s", error);
+        LogError("RdmDeathInsertCallback: %s", error);
     }
 }
 
