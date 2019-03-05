@@ -1,27 +1,22 @@
 /*
- * Base CS:GO plugin requirements.
- */
+* Base CS:GO plugin requirements.
+*/
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
 /*
- * Custom include files.
- */
+* Custom include files.
+*/
 #include <ttt>
 #include <colorvariables>
 #include <generics>
 #include <datapack>
 
 /*
- * Custom methodmaps.
- */
+* Custom methodmaps.
+*/
 #include <player_methodmap>
-
-/*
- * Custom Defines.
- */
-
 
 public Plugin myinfo = {
     name = "TTT Staff Commands",
@@ -51,12 +46,12 @@ public void RegisterCmds() {
 public Action Command_BanTimes(int client, int args) {
     if (!Player(client).Access(RANK_INFORMER, true)) { return Plugin_Handled; }
 
-	CPrintToChat(client, "{purple}[TTT] {yellow}The following are some common ban times:");
-	CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}hour  --> {blue}60    {yellow}minutes");
-	CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}day   --> {blue}1440  {yellow}minutes");
-	CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}2 {yellow}days  --> {blue}2880  {yellow}minutes");
-	CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}week  --> {blue}10080 {yellow}minutes");
-	CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}month --> {blue}40320 {yellow}minutes");
+    CPrintToChat(client, "{purple}[TTT] {yellow}The following are some common ban times:");
+    CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}hour  --> {blue}60    {yellow}minutes");
+    CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}day   --> {blue}1440  {yellow}minutes");
+    CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}2 {yellow}days  --> {blue}2880  {yellow}minutes");
+    CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}week  --> {blue}10080 {yellow}minutes");
+    CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}month --> {blue}40320 {yellow}minutes");
 
     return Plugin_Handled;
 }
@@ -114,11 +109,13 @@ public Action Command_SlayNextRound(int client, int args) {
         return Plugin_Handled;
     }
 
-    char targetName[64];
+    char targetName[128];
     GetCmdArg(1, targetName, sizeof(targetName));
     Player playerTarget = player.TargetOne(targetName);
 
     TTT_AddRoundSlays(playerTarget.Client, 1, false);
+
+    return Plugin_Handled;
 }
 
 public Action Command_Teleport(int client, int args) {
