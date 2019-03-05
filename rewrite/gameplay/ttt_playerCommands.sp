@@ -188,26 +188,26 @@ public Action Commnand_Give(int client, int args) {
     GetCmdArg(2, buffer, MAX_NAME_LENGTH);
     int credits = StringToInt(buffer);
     if (credits < 1 || credits > player.Credits) {
-        CPrintToChat(client, "{purple}[TTT] {red}You have an insufficient amount of credits to give {blue}%N {green}%i {yellow}credits.", targer.Client, credits);
+        CPrintToChat(client, "{purple}[TTT] {red}You have an insufficient amount of credits to give {blue}%N {green}%i {yellow}credits.", target.Client, credits);
     }
 
     return Plugin_Handled;
 }
 
-public Action MenuHandler_Spectate(Menu menu, MenuAction action, int client, int data) {
+public int MenuHandler_Spectate(Menu menu, MenuAction action, int client, int data) {
     switch (action) {
         case MenuAction_Select: {
             char indexChars[4];
             menu.GetItem(data, indexChars, 4);
             int index = Char4ToInt(indexChars);
             if (Player(index).ValidClient) {
-                Player(client).Msg("You started specating {blue}%N", target);
-                Player.Spectate(index);
+                Player(client).Msg("You started specating {blue}%N", index);
+                Player(client).Spectate(index);
             }
         }
     }
 
-    return Plugin_Handled;
+    return 0;
 }
 
 public void TTTGetRank(char auth[64], int userID) {
