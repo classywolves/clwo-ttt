@@ -12,12 +12,12 @@
 #include <ttt>
 #include <colorvariables>
 #include <generics>
+#include <ttt_specialDays>
 
 /*
  * Custom methodmaps.
  */
 #include <player_methodmap>
-#include <ttt_specialDays>
 
 #define OITC_ROUNDS_MIN 3
 #define OITC_ROUNDS_MAX 10

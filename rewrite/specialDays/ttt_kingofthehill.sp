@@ -12,12 +12,12 @@
 #include <ttt>
 #include <colorvariables>
 #include <generics>
+#include <ttt_specialDays>
 
 /*
  * Custom methodmaps.
  */
 #include <player_methodmap>
-#include <ttt_specialDays>
 
 #define KOTH_ROUNDS_MIN 5
 #define KOTH_ROUNDS_MAX 10

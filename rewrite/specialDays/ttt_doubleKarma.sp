@@ -19,14 +19,14 @@
  */
 #include <player_methodmap>
 
-#define AUTO_BHOP_ROUNDS_MIN 1
-#define AUTO_BHOP_ROUNDS_MAX 5
+#define DOUBLE_KARMA_ROUNDS_MIN 5
+#define DOUBLE_KARMA_ROUNDS_MAX 20
 
 public Plugin myinfo =
 {
-    name = "TTT BHop Day",
+    name = "TTT Double Karma Day",
     author = "c0rp3n",
-    description = "TTT Special Day of auto BHop.",
+    description = "Grants all players double karma from there actions when running.",
     version = "1.0.0",
     url = ""
 };
@@ -34,30 +34,25 @@ public Plugin myinfo =
 bool isDayRunning = false;
 int remainingRounds = -1;
 
-ConVar autoBHop;
-ConVar enableBHop;
-
 public OnPluginStart()
 {
-    GetCVars();
+    //GetCVars();
 
-    PrintToServer("[SDB] Loaded successfully");
+    PrintToServer("[SDE] Loaded successfully");
 }
 
+/*
 public void GetCVars()
 {
-    autoBHop = FindConVar("sv_autobunnyhopping");
-    enableBHop = FindConVar("sv_enablebunnyhopping");
+
 }
+*/
 
 public Action TTT_StartSpecialDay(int specialDay)
 {
-    if (specialDay != SPECIAL_DAY_BHOP) return Plugin_Continue;
+    if (specialDay != SPECIAL_DAY_DOUBLE_KARMA) return Plugin_Continue;
 
-    remainingRounds = GetRandomInt(AUTO_BHOP_MIN_ROUNDS, AUTO_BHOP_MAX_ROUNDS);
-
-    autoBHop.SetBool(true);
-    enableBHop.SetBool(true);
+    remainingRounds = GetRandomInt(EXAMPLE_ROUNDS_MIN, EXAMPLE_ROUNDS_MAX);
     isDayRunning = true;
 
     return Plugin_Changed;
@@ -67,8 +62,6 @@ public Action TTT_StopSpecialDay()
 {
     if (!isDayRunning) return Plugin_Continue;
 
-    autoBHop.SetBool(false);
-    enableBHop.SetBool(false);
     isDayRunning = false;
 
     return Plugin_Changed;
@@ -90,8 +83,8 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective)
             return;
         }
 
-        if (remainingRounds > 1) { CPrintToChatAll("{purple}[TTT] {yellow}For the next {blue}%n {yellow}rounds auto BHop will be enabled.", remainingRounds); }
-        else { CPrintToChatAll("{purple}[TTT] {yellow}For the next round auto BHop will be enabled."); }
+        if (remainingRounds > 1) { CPrintToChatAll("{purple}[TTT] {yellow}For the next {blue}%n {yellow}rounds Example will be enabled.", remainingRounds); }
+        else { CPrintToChatAll("{purple}[TTT] {yellow}For the next round auto Example will be enabled."); }
 
         remainingRounds--;
     }
