@@ -72,12 +72,14 @@ public void RdmDeathInsert(int victim, int victimKarma, int attacker, int attack
 public void RdmDeathInsertCallback(Database db, DBResultSet results, const char[] error, int data) {
     if (results == null) {
         LogError("RdmDeathInsertCallback: %s", error);
+        return;
     }
 }
 
 public void RdmGetLastDeathsCallback(Database db, DBResultSet results, const char[] error, int client) {
     if (results == null) {
         LogError("RdmGetLastDeathsCallback: %s", error);
+        return;
     }
 
     Menu rdmMenu = new Menu(MenuHandler_RDM);
@@ -101,11 +103,13 @@ public void RdmGetLastDeathsCallback(Database db, DBResultSet results, const cha
     rdmMenu.Display(client, 240);
 }
 
-public void RdmReportCallback(Database db, DBResultSet results, const char[] error, int data) {
+public void RdmReportCallback(Database db, DBResultSet results, const char[] error, int client) {
     if (results == null) {
         LogError("RdmReportCallback: %s", error);
         return;
     }
+
+    CPrintToChat(client, "{purple}[TTT] {yellow}Thanks for submitting a case, a staff member shall be in contact shortly.");
 }
 
 public void RdmInfoCallback(Database db, DBResultSet results, const char[] error, int client) {
@@ -190,6 +194,7 @@ public void RdmHandleCallback(Database db, DBResultSet results, const char[] err
 public void RdmHandleInsertCallback(Database db, DBResultSet results, const char[] error, DataPack data) {
     if (results == null) {
         LogError("RdmHandleInsertCallback: %s", error);
+        return;
     }
 
     data.Reset();
@@ -204,6 +209,7 @@ public void RdmHandleInsertCallback(Database db, DBResultSet results, const char
 public void RdmHandleResponseCallback(Database db, DBResultSet results, const char[] error, int handler) {
     if (results == null) {
         LogError("RdmHandleResponseCallback: %s", error);
+        return;
     }
 
     if (results.FetchRow())
@@ -219,58 +225,67 @@ public void RdmHandleResponseCallback(Database db, DBResultSet results, const ch
 
 public void RdmVerdictCallback(Database db, DBResultSet results, const char[] error, int handler) {
     if (results == null) {
-        LogError("RdmHandleResponseCallback: %s", error);
+        LogError("RdmVerdictCallback: %s", error);
+        return;
     }
 
     char query[768];
-    rdmDb.Format(query, sizeof(query), "SELECT `deaths`.`victim_name`, `deaths`.`victim_id`, `deaths`.`killer_name`, `deaths`.`killer_id`, `reports`.`punishment`, `handles`.`verdict` FROM `deaths` LEFT JOIN `reports` ON `deaths`.`death_index` = `reports`.`death_index` LEFT JOIN `handles` ON `deaths`.`death_index` = `handles`.`death_index` WHERE `deaths`.`death_index` = '1' LIMIT 1;", currentCase[handler]);
-    rdmDb.Query(RdmHandleResponseCallback, query, handler);
+    rdmDb.Format(query, sizeof(query), "SELECT `deaths`.`death_index`, `deaths`.`victim_name`, `deaths`.`victim_id`, `deaths`.`killer_name`, `deaths`.`killer_id`, `reports`.`punishment`, `handles`.`verdict` FROM `deaths` LEFT JOIN `reports` ON `deaths`.`death_index` = `reports`.`death_index` LEFT JOIN `handles` ON `deaths`.`death_index` = `handles`.`death_index` WHERE `deaths`.`death_index` = '%d' LIMIT 1;", currentCase[handler]);
+    rdmDb.Query(RdmVerdictResponseCallback, query, handler);
+    currentCase[handler] = -1;
 }
 
 public void RdmVerdictResponseCallback(Database db, DBResultSet results, const char[] error, int handler) {
     if (results == null) {
         LogError("RdmVerdictResponseCallback: %s", error);
+        return;
     }
 
     if (results.FetchRow())
     {
-        char accuserName[64]; results.FetchString(0, accuserName, 64);
-        char accuserAuth[128]; results.FetchString(1, accuserAuth, 128);
-        char accusedName[64]; results.FetchString(2, accusedName, 64);
-        char accusedAuth[128]; results.FetchString(3, accusedAuth, 128);
-        int punishment = results.FetchInt(4);
-        int verdict = results.FetchInt(5);
+        int deathId = results.FetchInt(0);
+        char accuserName[64]; results.FetchString(1, accuserName, 64);
+        char accuserAuth[128]; results.FetchString(2, accuserAuth, 128);
+        char accusedName[64]; results.FetchString(3, accusedName, 64);
+        char accusedAuth[128]; results.FetchString(4, accusedAuth, 128);
+        int punishment = results.FetchInt(5);
+        int verdict = results.FetchInt(6);
 
         Player accuser = Player(0).TargetOne(accuserAuth);
         Player accused = Player(0).TargetOne(accusedAuth);
 
-        if (verdict == CASE_VERDICT_INNOCENT) {
-            if (accuser.ValidClient) {
+        if (verdict == CASE_VERDICT_INNOCENT)
+        {
+            if (accuser.ValidClient)
+            {
                 accuser.Msg("%N has handled your case against %s and has concluded them to be innocent if you have any questions please message staff using an @ before your message.", handler, accusedName);
             }
-            if (accused.ValidClient) {
+            if (accused.ValidClient)
+            {
                 accused.Msg("%N has found you innocent in your defense against %s have a nice day.", handler, accuserName);
             }
             Player(handler).Msg("You have concluded the defendant innocent for case %d.");
         }
-        else if (verdict == CASE_VERDICT_GUILTY) {
-            if (accuser.ValidClient) {
+        else if (verdict == CASE_VERDICT_GUILTY)
+        {
+            if (accuser.ValidClient)
+            {
                 accuser.Msg("%N has handled your case against %s and has concluded them to be guilty. Thanks for your report.", handler, accusedName);
             }
-            if (punishment == CASE_CHOICE_SLAY) {
-                if (accused.Client) {
+            if (accused.ValidClient)
+            {
+                if (punishment == CASE_CHOICE_SLAY)
+                {
                     accused.Msg("You are being slayed next round by %N for killing %s. If you have any questions about this please message staff by using an @ before your message.", handler, accuserName);
                     TTT_AddRoundSlays(accused.Client, 1, false);
                 }
-            }
-            else if (punishment == CASE_CHOICE_WARN) {
-                if (accused) {
+                else if (punishment == CASE_CHOICE_WARN)
+                {
                     accused.Msg("You have been found guilty of RDM by %N for killing %s further action may be taken. If you have any questions about this please message staff by using an @ before your message in team chat.", handler, accuserName);
                 }
             }
-            Player(handler).Msg("You have concluded the defendant guilty for case %d.");
+            Player(handler).Msg("You have concluded the defendant guilty for case %d.", deathId);
         }
-        currentCase[handler] = -1;
     }
 }
 

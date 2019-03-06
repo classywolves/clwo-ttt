@@ -173,30 +173,28 @@ int MenuHandler_PunishChoice(Menu menu, MenuAction action, int client, int punis
         case MenuAction_Select: {
             char query[768];
             rdmDb.Format(query, sizeof(query), "INSERT INTO `reports` (`death_index`, `punishment`) VALUES ('%d', '%d');", currentlySelectedDeath[client], punishment);
-            rdmDb.Query(RdmReportCallback, query);
+            rdmDb.Query(RdmReportCallback, query, client);
         }
     }
 }
 
-int MenuHandler_Verdict(Menu menu, MenuAction action, int client, int verdict) {
+int MenuHandler_Verdict(Menu menu, MenuAction action, int client, int choice) {
     switch (action) {
-        case MenuAction_Select: {
-            if (verdict > 0) {
-                if (verdict == CASE_VERDICT_INNOCENT) {
-
-                }
-                else if (verdict == CASE_VERDICT_GUILTY) {
-
-                }
-
-                DataPack data = new DataPack();
-                data.WriteCell(client);
-                data.WriteCell(verdict);
-
-                char query[768];
-                rdmDb.Format(query, sizeof(query), "UPDATE `handles` SET `handles`.`verdict` = '%d' WHERE `death_index` = '%d';", verdict, currentCase[client]);
-                rdmDb.Query(RdmVerdictCallback, query, data);
+        case MenuAction_Select:
+        {
+            int verdict;
+            if (choice == 0)
+            {
+                verdict = CASE_VERDICT_INNOCENT;
             }
+            else if (choice == 1)
+            {
+                verdict = CASE_VERDICT_GUILTY;
+            }
+
+            char query[768];
+            rdmDb.Format(query, sizeof(query), "UPDATE `handles` SET `handles`.`verdict` = '%d' WHERE `death_index` = '%d';", verdict, currentCase[client]);
+            rdmDb.Query(RdmVerdictCallback, query, client);
         }
     }
 }
