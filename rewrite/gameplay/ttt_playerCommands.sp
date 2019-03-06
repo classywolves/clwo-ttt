@@ -12,6 +12,7 @@
 #include <colorvariables>
 #include <generics>
 #include <datapack>
+#include <mostactive>
 
 /*
 * Custom methodmaps.
@@ -165,10 +166,26 @@ public Action Command_Rank(int client, int args)
 
 public Action Command_Playtime(int client, int args)
 {
-    Player player = Player(client);
-    char steamID[64];
-    player.Auth(AuthId_SteamID64, steamID);
-    TTTGetPlaytime(steamID, GetClientUserId(client));
+    int playTime = MostActive_GetPlayTimeTotal(client);
+    int minutes, hours, days;
+    while (playTime >= 86400)
+    {
+        playTime -= 86400;
+        days++;
+    }
+    while (playTime >= 3600)
+    {
+        playTime -= 3600;
+        hours++;
+    }
+    while (playTime >= 60)
+    {
+        playTime -= 60;
+        minutes++;
+    }
+    if (days > 0) { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}days and {green}%i {yellow}hours.", client, days, hours); }
+    else if (hours > 0) { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}hours.", client, hours); }
+    else { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}minutes.", client, minutes); }
 
     return Plugin_Handled;
 }
@@ -246,45 +263,6 @@ public void TTTKarmaRankCallback(Database db, DBResultSet results, const char[] 
 
         CPrintToChatAll("{purple[TTT] {blue}%N {yellow}has {green}%d {yellow}karma making them rank {green}%d/%d. {yellow}They need {green}%d {yellow}more karma to get to rank {green}%s!", client, karma, rank, playerCount, nextKarma, nextRank);
     }
-}
-
-public void TTTGetPlaytime(char auth[64], int userID) {
-    if (tttConnected == false) return;
-
-    char query[768];
-    tttDb.Format(query, sizeof(query), "SELECT SUM(`duration`) FROM `player_analytics` WHERE `auth`='%s';", auth);
-    tttDb.Query(TTTKarmaRankCallback, query, userID);
-}
-
-public void TTTPlaytimeCallback(Database db, DBResultSet results, const char[] error, any userID) {
-    if (results == null) {
-        LogError("TTTPlaytimeCallback: %s", error);
-        return;
-    }
-
-    int client = GetClientOfUserId(userID);
-
-    results.FetchRow();
-    int playTime = results.FetchInt(0);
-    int minutes, hours, days;
-    while (playTime >= 86400)
-    {
-        playTime -= 86400;
-        days++;
-    }
-    while (playTime >= 3600)
-    {
-        playTime -= 3600;
-        hours++;
-    }
-    while (playTime >= 60)
-    {
-        playTime -= 60;
-        minutes++;
-    }
-    if (days > 0) { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}days and {green}%i {yellow}hours.", client, days, hours); }
-    else if (hours > 0) { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}hours.", client, hours); }
-    else { CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}has played for {green}%i {yellow}minutes.", client, minutes); }
 }
 
 public Action Command_Give(int client, int args) {
