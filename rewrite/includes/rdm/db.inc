@@ -4,6 +4,8 @@
 #define _rdm_db_included
 
 #include <generics>
+#include <player_methodmap>
+#include <ttt_ranks>
 
 #define CASE_CHOICE_NONE            0
 #define CASE_CHOICE_SLAY            1
@@ -110,6 +112,35 @@ public void RdmReportCallback(Database db, DBResultSet results, const char[] err
     }
 
     CPrintToChat(client, "{purple}[TTT] {yellow}Thanks for submitting a case, a staff member shall be in contact shortly.");
+
+    char query[768];
+    rdmDb.Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `reports` LEFT JOIN `handles` ON `reports`.`death_index` = `handles`.`death_index` WHERE `handles`.`verdict` IS NULL;");
+    rdmDb.Query(RdmStaffReportCallback, query, client);
+}
+
+public void RdmStaffReportCallback(Database db, DBResultSet results, const char[] error, int client)
+{
+    if (results == null) {
+        LogError("RdmReportCallback: %s", error);
+        return;
+    }
+
+    if (results.FetchRow())
+    {
+        int caseCount = results.FetchInt(0);
+        if (caseCount < 1)
+        {
+            CPrintToChatStaff("{purple}[TTT] {yellow}There are currently no unhandled cases.");
+        }
+        else if (caseCount < 2)
+        {
+            CPrintToChatStaff("{purple}[TTT] {yellow}There is now %d unhandled case.");
+        }
+        else
+        {
+            CPrintToChatStaff("{purple}[TTT] {yellow}There are now %d unhandled cases.");
+        }
+    }
 }
 
 public void RdmInfoCallback(Database db, DBResultSet results, const char[] error, int client) {
