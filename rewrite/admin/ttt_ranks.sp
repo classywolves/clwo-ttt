@@ -24,6 +24,8 @@ public Plugin myinfo = {
     url = ""
 };
 
+Database sourcebansDb;
+
 /*
 enum struct Rank
 {
@@ -68,96 +70,103 @@ char userRanks[MAX_USER_RANKS][MAX_USER_TYPES][64] = {
 
 int playerRanks[MAXPLAYERS + 1] = { 0, ... };
 
-StringMap ranksMap;
-
-public OnPluginStart() {
-    RegisterCmds();
-
+public OnPluginStart()
+{
     LoadTranslations("common.phrases");
 
-    // Initialise Rank Overrides.
-    ranksMap = new StringMap();
+    RegisterCmds();
+    DbInit();
 
     PrintToServer("[RNK] Loaded successfully");
 }
 
-public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max) {
+public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
+{
     RegPluginLibrary("ttt_ranks");
 
     CreateNative("TTT_Ranks_IsStaff", Native_IsStaff)
     CreateNative("GetRankName", Native_GetRankName);
     CreateNative("GetPermission", Native_GetPermission);
     CreateNative("GetPlayerRank", Native_GetPlayerRank);
+
     return APLRes_Success;
 }
 
-public void RegisterCmds() {
-    RegServerCmd("sm_refreshcr", Command_RefreshRanks, "Refreshes the custom ranks from the config file.");
-    RegConsoleCmd("sm_rankcheck", Command_Rank, "Outputs a users current rank.");
-    RegConsoleCmd("sm_ranktemp", Command_RankTemp, "Sets a temporary rank on the caller.");
-
-    for (int i = 0; i < MAX_USER_STANDARD_RANKS; i++) {
-        RegAdminCmd(userRanks[i][USER_RANK_COMMAND], Command_RankCheck, ADMFLAG_ROOT, "");
-    }
-}
-
-public void OnConfigsExecuted()
+public void DbInit()
 {
-    CPrintToChatAll("{purple}[TTT] {yellow}Reloading custom ranks");
-    ranksMap.Clear();
-    ParseConfig();
+    Database.Connect(DbInitCallback, "sourcebans");
 }
 
-public void ParseConfig() {
-    KeyValues kv = new KeyValues("TTT_Ranks");
-    char config[PLATFORM_MAX_PATH];
+public void DbInitCallback(Database db, const char[] error, any data)
+{
+    if (db == null)
+    {
+        LogError("DbInitCallback: %s", error);
+        return;
+    }
 
-    BuildPath(Path_SM, config, sizeof(config), "configs/ttt/ttt_ranks.cfg");
-    kv.ImportFromFile(config);
-    kv.GotoFirstSubKey();
+    sourcebansDb = db;
+    sourcebansDb.SetCharset("utf8");
 
-    char steamId[64];
-    int customRank;
-    do {
-        kv.GetString("SteamID", steamId, 64);
-        customRank = kv.GetNum("RankIndex", 0);
-        ranksMap.SetValue(steamId, customRank);
-        CPrintToChatAll("{purple}[TTT] {yellow}Added new custom rank to {blue}%s{yellow}: {green}%i", steamId, customRank);
-    } while (kv.GotoNextKey());
-
-    delete kv;
-}
-
-public void OnMapLoad() {
-    ranksMap.Clear();
-    ParseConfig();
-
-    LoopClients(i) {
+    LoopClients(i)
+    {
         Player player = view_as<Player>(i);
-        if (player.ValidClient) {
+        if (player.ValidClient)
+        {
             playerRanks[i] = Internal_GetPlayerRank(i);
         }
-        else {
+        else
+        {
             playerRanks[i] = 0;
         }
     }
 }
 
-public void OnClientPutInServer(int client) {
+public void RegisterCmds()
+{
+    RegConsoleCmd("sm_refreshranks", Command_RefreshRanks, "Refreshes the custom ranks from the config file.");
+    RegConsoleCmd("sm_rankcheck", Command_Rank, "Outputs a users current rank.");
+}
+
+public void OnMapLoad()
+{
+    LoopClients(i)
+    {
+        Player player = view_as<Player>(i);
+        if (player.ValidClient)
+        {
+            playerRanks[i] = Internal_GetPlayerRank(i);
+        }
+        else
+        {
+            playerRanks[i] = 0;
+        }
+    }
+}
+
+public void OnClientPutInServer(int client)
+{
     playerRanks[client] = 0;
 }
 
-public void OnClientPostAdminCheck(int client) {
+public void OnClientPostAdminCheck(int client)
+{
     playerRanks[client] = Internal_GetPlayerRank(client);
 }
 
-public Action Command_RefreshRanks(int args) {
-    ranksMap.Clear();
-    ParseConfig();
+public Action Command_RefreshRanks(int client, int args)
+{
+    if (playerRanks[client] < RANK_ADMIN)
+    {
+        CPrintToChatAll("{purple}[TTT] {red}You do not have access to this command!");
+        return Plugin_Handled;
+    }
 
-    LoopClients(i) {
+    LoopClients(i)
+    {
         Player player = view_as<Player>(i);
-        if (player.ValidClient) {
+        if (player.ValidClient)
+        {
             playerRanks[i] = Internal_GetPlayerRank(i);
         }
     }
@@ -165,7 +174,8 @@ public Action Command_RefreshRanks(int args) {
     return Plugin_Handled;
 }
 
-public Action Command_Rank(int client, int args) {
+public Action Command_Rank(int client, int args)
+{
     Player player = view_as<Player>(client);
     char steamId[64];
     player.Auth(AuthId_Steam2, steamId);
@@ -175,90 +185,74 @@ public Action Command_Rank(int client, int args) {
     return Plugin_Handled;
 }
 
-public Action Command_RankTemp(int client, int args) {
-    Player player = view_as<Player>(client);
-    if (!player.Access(RANK_SENATOR, true)) return Plugin_Handled;
-
-    if (args < 1) {
-        player.Error("Invalid Command Usage: sm_ranktest <rank>.");
-        return Plugin_Handled;
-    }
-
-    char buffer[64];
-    GetCmdArg(1, buffer, 64);
-    int rank = StringToInt(buffer);
-    if (rank < 0 || rank >= MAX_USER_RANKS) {
-        player.Error("Invalid Command Parameter 'rank' expected an integer of the range 0 - 10.");
-        return Plugin_Handled;
-    }
-
-    playerRanks[client] = rank;
-
-    return Plugin_Handled;
-}
-
-public Action Command_RankCheck(int client, int args) {
-    return Plugin_Handled;
-}
-
-public int Native_IsStaff(Handle plugin, int numParams) {
+public int Native_IsStaff(Handle plugin, int numParams)
+{
     int client = GetNativeCell(1);
     return playerRanks[client] >= RANK_INFORMER;
 }
 
-public int Native_GetRankName(Handle plugin, int numParams) {
+public int Native_GetRankName(Handle plugin, int numParams)
+{
     int rank = GetNativeCell(1);
-    //char name[64];
-    //GetNativeString(2, name, sizeof(name));
     int type = GetNativeCell(3);
 
-    //Internal_GetRankName(rank, name, type); Inlined.
     SetNativeString(2, userRanks[rank][type], 64, false);
 }
 
-public int Native_GetPermission(Handle plugin, int numParams) {
+public int Native_GetPermission(Handle plugin, int numParams)
+{
     int client = GetNativeCell(1);
     int rank = GetNativeCell(2);
 
-    //return view_as<int>(Internal_GetPermission(client, rank)); Inlined.
     return playerRanks[client] >=  rank;
 }
 
-public int Native_GetPlayerRank(Handle plugin, int numParams) {
+public int Native_GetPlayerRank(Handle plugin, int numParams)
+{
     int client = GetNativeCell(1);
 
     return playerRanks[client];
 }
 
-/*
-public Internal_GetRankName(int rank, char name[64], int type) {
-SetNativeString(2, userRanks[rank][type], 64, false);
-}
-*/
-
-/*
-public int Internal_GetPermission(int client, int rank) {
-//return Internal_GetPlayerRank(client) >=  rank;
-return playerRanks[client] >=  rank;
-}
-*/
-
-public int Internal_GetPlayerRank(int client) {
+public int Internal_GetPlayerRank(int client)
+{
     Player player = view_as<Player>(client);
 
     char steamId[64];
     player.Auth(AuthId_Steam2, steamId);
 
-    int specifiedRank;
-    if (ranksMap.GetValue(steamId, specifiedRank)) {
-        return specifiedRank;
+    char query[768];
+    sourcebansDb.Format(query, sizeof(query), "SELECT `sb_admins`.`srv_group` as `rank` FROM `sb_admins` WHERE `sb_admins`.`authid` REGEXP '^STEAM_[0-9]:%s$' LIMIT 1;", steamId[8]);
+    sourcebansDb.Query(DbCallback_GetPlayerRank, query, client);
+}
+
+public void DbCallback_GetPlayerRank(Database db, DBResultSet results, const char[] error, int client)
+{
+    if (results == null)
+    {
+        LogError("GetPlayerRankCallback: %s", error);
+        return;
     }
 
-    int rank;
-    for (rank = 1; rank < MAX_USER_STANDARD_RANKS; rank++) {
-        if (!player.HasCommandAccess(userRanks[rank][USER_RANK_COMMAND], ADMFLAG_ROOT)) return rank - 1;
-    }
-    if (!player.HasCommandAccess(userRanks[rank][USER_RANK_COMMAND], ADMFLAG_ROOT)) return rank - 1;
+    if (results.FetchRow())
+    {
+        char rankName[64];
+        results.FetchString(0, rankName, 64);
+        if (rankName[0] == 0)
+        {
+            playerRanks[client] = RANK_PLEB;
+        }
 
-    return rank;
+        for (int rank = 1; rank < MAX_USER_RANKS; rank++)
+        {
+            if (strcmp(rankName, userRanks[rank][USER_RANK_NAME], true) == 0)
+            {
+                playerRanks[client] = rank;
+            }
+        }
+    }
+    else
+    {
+        playerRanks[client] = RANK_PLEB;
+    }
 }
