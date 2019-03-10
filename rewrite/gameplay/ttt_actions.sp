@@ -34,14 +34,14 @@ public OnPluginStart()
     LoadTranslations("common.phrases");
 
     HookEvent("round_end", Event_OnRoundEnd, EventHookMode_Post);
-    Database.Connect(DbCallback, "skills");
+    Database.Connect(DbCallback, "actions");
 
     PrintToServer("[ACT] Loaded succcessfully");
 }
 
 public void DbCallback(Database db, const char[] error, any data) {
     if (db == null) {
-        LogError("RdmCallback: %s", error);
+        LogError("DbCallback: %s", error);
         return;
     }
 
@@ -57,6 +57,16 @@ public void DbCallback(Database db, const char[] error, any data) {
         actionsDb.Format(query, sizeof(query), "SELECT `good_actions`, `bad_actions` FROM `actions` WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' LIMIT 1;", steamId[8]);
         actionsDb.Query(SelectActionsCallback, query, i);
     }
+}
+
+public void OnClientAuthorized(int client, const char[] auth)
+{
+    char steamId[32];
+    GetClientAuthId(client, AuthId_Steam2, steamId, 32);
+
+    char query[768];
+    actionsDb.Format(query, sizeof(query), "SELECT `good_actions`, `bad_actions` FROM `actions` WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' LIMIT 1;", steamId[8]);
+    actionsDb.Query(SelectActionsCallback, query, client);
 }
 
 public void TTT_OnClientDeath(int victim, int attacker)

@@ -74,7 +74,7 @@ public void RegisterCmds()
 
 public void DbCallback(Database db, const char[] error, any data) {
     if (db == null) {
-        LogError("RdmCallback: %s", error);
+        LogError("DbCallback: %s", error);
         return;
     }
 
@@ -95,6 +95,13 @@ public void DbCallback(Database db, const char[] error, any data) {
 public void OnClientAuthorized(int client, const char[] auth)
 {
     experienceTimers[client] = CreateTimer(1800.0, Timer_GiveExperience, client, TIMER_REPEAT);
+
+    char steamId[32];
+    GetClientAuthId(client, AuthId_Steam2, steamId, 32);
+
+    char query[768];
+    skillsDb.Format(query, sizeof(query), "SELECT `level`, `experience`, `points`, `skill_0`, `skill_1`, `skill_2`, `skill_3`, `skill_4`, `skill_5`, `skill_6`, `skill_7`, `skill_8`, `skill_9`, `skill_10`, `skill_11`, `skill_12`, `skill_13`, `skill_14`, `skill_15`, `skill_16`, `skill_17`, `skill_18`, `skill_19`, `skill_20`, `skill_21`, `skill_22`, `skill_23`, `skill_24`, `skill_25`, `skill_26`, `skill_27`, `skill_28`, `skill_29`, `skill_30`, `skill_31` FROM `skills` WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' LIMIT 1;", steamId[8]);
+    skillsDb.Query(SelectSkillsCallback, query, client);
 }
 
 public void OnClientDisconnect(int client)
