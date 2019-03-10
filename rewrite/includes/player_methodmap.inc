@@ -20,7 +20,6 @@
 #include <generics>
 #include <ttt_ranks>
 #include <ttt_shop>
-#include <ttt_skills>
 #include <generics>
 
 #define MAX_MESSAGE_LENGTH			1024
@@ -30,10 +29,6 @@
 #define that view_as<int>(this)
 
 Database databaseTTT;
-
-bool g_invisible[MAXPLAYERS + 1];
-bool g_invulnerable[MAXPLAYERS + 1];
-bool g_blockShoot[MAXPLAYERS + 1];
 
 int g_traitorKills[MAXPLAYERS + 1];
 int g_errorTimeout[MAXPLAYERS + 1];
@@ -58,37 +53,23 @@ methodmap Player {
 		GetClientAuthId(that, idType, auth, sizeof(auth));
 	}
 
-	public int Skill(int skill, int min, int max) {
-		return Skills_Limit(Skills_GetPoints(that, skill), min, max);
-	}
-
-	public int GetSkill(int skill)
-	{
-		return Skills_GetPoints(that, skill);
-	}
-
-	public int SetSkill(int skill, int points)
-	{
-		Skills_SetPoints(that, skill, points);
-	}
-
 	public void Name(char name[64]) {
 		GetClientName(that, name, sizeof(name));
 	}
 
-	public void Msg(const char[] msg, any ...) {
-			char buffer[MAX_MESSAGE_LENGTH], formatted[MAX_MESSAGE_LENGTH];
-			VFormat(buffer, sizeof(buffer), msg, 2);
+	public void Msg(const char[] msg, any ...)
+    {
+		char buffer[MAX_MESSAGE_LENGTH], formatted[MAX_MESSAGE_LENGTH];
+		VFormat(buffer, sizeof(buffer), msg, 2);
 
-			StrCat(formatted, sizeof(formatted), "{purple}[TTT] {yellow}");
-			StrCat(formatted, sizeof(formatted), buffer);
+		StrCat(formatted, sizeof(formatted), "{purple}[TTT] {yellow}");
+		StrCat(formatted, sizeof(formatted), buffer);
 
-			CPrintToChat(that, formatted);
+		CPrintToChat(that, formatted);
 	}
 
 	public bool ErrorTimeout(int timeout) {
 		int currentTime = GetTime();
-
 		if (currentTime - g_errorTimeout[that] < timeout) {
 			return true;
 		}
@@ -113,7 +94,8 @@ methodmap Player {
         int attackerRole = TTT_GetClientRole(that);
         int victimRole = TTT_GetClientRole(victim);
         if (attackerRole == victimRole) return true;
-        else if (attackerRole == TTT_TEAM_TRAITOR || victimRole == TTT_TEAM_TRAITOR) return false;
+        //else if (attackerRole == TTT_TEAM_TRAITOR || victimRole == TTT_TEAM_TRAITOR) return false;
+        else if ((attackerRole | victimRole) & TTT_TEAM_TRAITOR) return false;
         else return true;
     }
 
@@ -135,35 +117,6 @@ methodmap Player {
         public set(int karma) { TTT_SetClientKarma(that, karma, true); }
     }
 
-	property int Level {
-		public get()
-		{
-			return Skills_GetLevel(that);
-		}
-		public set(int level)
-		{
-			Skills_SetLevel(that, level);
-		}
-	}
-
-	property int Experience {
-		public get()
-		{
-			return Skills_GetExperience(that);
-		}
-		public set(int experience)
-		{
-            Skills_SetExperience(that, experience);
-		}
-	}
-
-	property int LevelUpExperience {
-		public get()
-		{
-			return RoundToFloor(this.Level + 600 * Pow(2.0, (float(this.Level) / 4.0)));
-		}
-	}
-
 	property int Playtime {
 		public get()
 		{
@@ -180,16 +133,6 @@ methodmap Player {
 				return 0;
 			}
 		}
-	}
-
-	property int GoodActions {
-		public get() { return this.GetCookieInt(cookieGoodActions, 0); }
-		public set(int goodActions) { this.SetCookieInt(cookieGoodActions, goodActions); }
-	}
-
-	property int BadActions {
-		public get() { return this.GetCookieInt(cookieBadActions, 0); }
-		public set(int badActions) { this.SetCookieInt(cookieBadActions, badActions); }
 	}
 
 	property int TraitorWins {
@@ -453,36 +396,6 @@ methodmap Player {
 		}
 	}
 
-	property bool Invisible {
-		public get() {
-			return g_invisible[that];
-		}
-
-		public set(bool invisible) {
-			if (invisible) {
-				SetEntityRenderMode(that, RENDER_NONE); // RENDER_NONE
-			} else {
-				SetEntityRenderMode(that, RENDER_NORMAL); // RENDER_NORMAL
-			}
-
-			g_invisible[that] = invisible;
-		}
-	}
-
-	property bool NightVision {
-		public get() {
-			return GetEntProp(that, Prop_Send, "m_bNightVisionOn") == 1;
-		}
-
-		public set(bool nightVision) {
-			if (nightVision) {
-				SetEntProp(that, Prop_Send, "m_bNightVisionOn", 1); // Night Vision On
-			} else {
-				SetEntProp(that, Prop_Send, "m_bNightVisionOn", 0); // Night Vision Off
-			}
-		}
-	}
-
 	property int Armour {
 		public get() {
 			return GetEntProp(that, Prop_Data, "m_ArmorValue");
@@ -504,30 +417,6 @@ methodmap Player {
 	property int MaxHealth {
 		public get() {
 			return GetEntProp(that, Prop_Data, "m_iMaxHealth", 4);
-		}
-	}
-
-	// This also needs a handler within the plugin calling it to block damage.
-	// It only stores whether a player is invulnerable or not.
-	property bool Invulnerable {
-		public get() {
-			return g_invulnerable[that];
-		}
-
-		public set(bool invulnerable) {
-			g_invulnerable[that] = invulnerable;
-		}
-	}
-
-	// This also needs a handler within the plugin calling it to block shooting.
-	// It only stores whether a player can shoot or not.
-	property bool BlockShoot {
-		public get() {
-			return g_blockShoot[that];
-		}
-
-		public set(bool blockShoot) {
-			g_blockShoot[that] = blockShoot;
 		}
 	}
 

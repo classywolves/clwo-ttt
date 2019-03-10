@@ -1,34 +1,15 @@
 #pragma semicolon 1
 
-/*
- * Base CS:GO plugin requirements.
- */
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
-/*
- * Custom include files.
- */
 #include <ttt>
 #include <colorvariables>
 #include <generics>
-
-/*
- * Custom methodmap includes.
- */
-#include <player_methodmap>
+#include <ttt_skills>
 
 #define SPEED_MAX_LEVEL 4
-
-float lastTime[MAXPLAYERS+1] = { 0.0, ... };
-int cooldownEndTime[MAXPLAYERS+1] = { 0, ... };
-
-bool isInCooldown[MAXPLAYERS+1] = { false, ... };
-bool isUsingSpeed[MAXPLAYERS+1] = { false, ... };
-bool keyPressed[MAXPLAYERS+1] = { false, ... };
-
-Handle speedCooldownTimers[MAXPLAYERS+1] = { INVALID_HANDLE, ... };
 
 public Plugin myinfo =
 {
@@ -39,15 +20,27 @@ public Plugin myinfo =
     url = ""
 };
 
+int errorTimeout[MAXPLAYERS + 1];
+
+float lastTime[MAXPLAYERS+1] = { 0.0, ... };
+int cooldownEndTime[MAXPLAYERS+1] = { 0, ... };
+
+bool isInCooldown[MAXPLAYERS+1] = { false, ... };
+bool isUsingSpeed[MAXPLAYERS+1] = { false, ... };
+bool keyPressed[MAXPLAYERS+1] = { false, ... };
+
+Handle speedCooldownTimers[MAXPLAYERS+1] = { INVALID_HANDLE, ... };
+
 public OnPluginStart()
 {
-    //RegisterCmds();
-    //HookEvents();
-    //InitDBs();
-
     LoadTranslations("common.phrases");
 
     PrintToServer("[SPD] Loaded successfully");
+}
+
+public OnAllPluginsLoaded()
+{
+    Skills_RegisterSkill(Skill_Speed, "Speed", "Grants the player double movement speed for a short period of time.", SPEED_MAX_LEVEL);
 }
 
 public OnClientDisconnect(int client)
@@ -71,9 +64,9 @@ public void TTT_OnRoundEnd(int winner)
     }
 }
 
-public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon) {
-    Player player = Player(client);
-    if (!player.Alive || !TTT_IsRoundActive()) { return Plugin_Continue; }
+public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon)
+{
+    if (!IsAliveClient(client) || !TTT_IsRoundActive()) { return Plugin_Continue; }
 
     if (isUsingSpeed[client]) { return Plugin_Continue; }
 
@@ -99,12 +92,14 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 
         lastTime[client] = currentTime;
 
-        int upgradeLevel = player.Skill(Skill_Speed, 0, SPEED_MAX_LEVEL);
+        int upgradeLevel = Skills_GetSkill(client, Skill_Speed, 0, SPEED_MAX_LEVEL);
         if (upgradeLevel == 0)
-        return Plugin_Continue;
+        {
+            return Plugin_Continue;
+        }
 
         if (isInCooldown[client]) {
-            if (!player.ErrorTimeout(2))
+            if (!ErrorTimeout(client, 2))
             CPrintToChat(client, "{purple}[TTT] {red}Sprint is on cooldown for another {blue}%d {red}seconds.", cooldownEndTime[client] - GetTime());
 
             return Plugin_Continue;
@@ -139,7 +134,7 @@ public Action SpeedIncrease(Handle timer, Handle pack)
 {
     ResetPack(pack);
     int client = GetClientFromSerial(ReadPackCell(pack));
-    if (!Player(client).ValidClient) return Plugin_Stop;
+    if (!IsValidClient(client)) return Plugin_Stop;
 
     float speed = 1.0 + ReadPackFloat(pack);
 
@@ -152,7 +147,7 @@ public Action SpeedIncrease(Handle timer, Handle pack)
 public Action RevokeSpeed(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
-    if (!Player(client).ValidClient) return Plugin_Stop;
+    if (!IsValidClient(client)) return Plugin_Stop;
 
     isUsingSpeed[client] = false;
     SetClientSpeed(client, 1.0);
@@ -176,4 +171,16 @@ public Action CooldownEnd(Handle timer, int userid)
 public SetClientSpeed(int client, float speed)
 {
     SetEntPropFloat(client, Prop_Send, "m_flLaggedMovementValue", speed);
+}
+
+public bool ErrorTimeout(int client, int timeout)
+{
+    int currentTime = GetTime();
+    if (currentTime - errorTimeout[client] < timeout)
+    {
+        return true;
+    }
+
+    errorTimeout[client] = currentTime;
+    return false;
 }

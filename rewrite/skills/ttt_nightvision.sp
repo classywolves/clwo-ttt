@@ -1,23 +1,12 @@
 #pragma semicolon 1
 
-/*
- * Base CS:GO plugin requirements.
- */
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
-/*
- * Custom include files.
- */
-#include <ttt>
 #include <colorvariables>
 #include <generics>
-
-/*
- * Custom methodmap includes.
- */
-#include <player_methodmap>
+#include <ttt_skills>
 
 #define NIGHTVISION_MAX_LEVEL 1
 
@@ -37,12 +26,15 @@ char soundTurnOn[PLATFORM_MAX_PATH] = "ttt_clwo/nightvision/nvon.mp3";
 public OnPluginStart()
 {
     PreCache();
-
     GetConVars();
-
     RegisterCmds();
 
     PrintToServer("[NVS] Loaded successfully");
+}
+
+public OnAllPluginsLoaded()
+{
+    Skills_RegisterSkill(Skill_NightVision, "Night Vision", "Allows the player to see clearly even in the darkest of places.", REDUCED_FALLING_MAX_LEVEL);
 }
 
 public void PreCache()
@@ -64,43 +56,26 @@ public void RegisterCmds()
     RegConsoleCmd("sm_nv", Command_NightVision, "Toggles Night Vision for the player.");
 }
 
-/*
-public void TTT_OnRoundStart(int innocents, int traitors, int detective)
-{
-int iFlags = GetCommandFlags("give");
-SetCommandFlags("give", iFlags &~ FCVAR_CHEAT);
-
-LoopAliveClients(i)
-{
-if (Player(i).Upgrade(Upgrade_Night_Vision, 0, 1))
-{
-ClientCommand(i, "give item_nvgs");
-}
-}
-
-SetCommandFlags(give);
-}
-*/
-
 public Action Command_NightVision(int client, int args)
 {
-    Player player = Player(client);
-    if (player.Skill(Skill_NightVision, 0, NIGHTVISION_MAX_LEVEL))
+    if (Skills_GetSkill(client, Skill_NightVision, 0, NIGHTVISION_MAX_LEVEL))
     {
         int iFlags = matFullbright.Flags;
         matFullbright.Flags = iFlags &~ FCVAR_CHEAT;
 
-        if (player.NightVision)
+        if (nightvisionEnabled[client])
         {
-            player.NightVision = false;
-            player.Msg("NV is {red}deactivated{yellow}.");
+            nightvisionEnabled[client] = false;
+            //CPrintToChat(client, "{yellow}[TTT] {yellow}NV is {red}deactivated{yellow}.");
+            SetEntProp(that, Prop_Send, "m_bNightVisionOn", 0); // Night Vision Off
             matFullbright.ReplicateToClient(client, "0");
         }
         else
         {
-            player.NightVision = true;
-            player.Msg("NV is {green}activated{yellow}.");
+            nightvisionEnabled[client] = true;
+            //CPrintToChat(client, "{yellow}[TTT] {yellow}NV is {green}activated{yellow}.");
             EmitSoundToClient(client, soundTurnOn);
+            SetEntProp(that, Prop_Send, "m_bNightVisionOn", 1); // Night Vision On
             matFullbright.ReplicateToClient(client, "1");
         }
 
@@ -108,6 +83,6 @@ public Action Command_NightVision(int client, int args)
     }
     else
     {
-        player.Error("You have not yet unlocked the night vision skill.");
+        CPrintToChat(client, "{purple}[TTT] {orchid}You have not yet unlocked the night vision skill.");
     }
 }

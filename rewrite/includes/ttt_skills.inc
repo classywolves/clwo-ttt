@@ -18,34 +18,47 @@ public SharedPlugin __pl_ttt_upgrades =
 public __pl_ttt_upgrades_SetNTVOptional()
 {
 	MarkNativeAsOptional("Skills_GetPoints");
-	MarkNativeAsOptional("Skills_SetPoints");
     MarkNativeAsOptional("Skills_GetLevel");
-	MarkNativeAsOptional("Skills_SetLevel");
     MarkNativeAsOptional("Skills_GetExperience");
-	MarkNativeAsOptional("Skills_SetExperience");
+	MarkNativeAsOptional("Skills_AddExperience");
 }
 #endif
 
-#define Skill_Health 1
-#define Skill_Invisibility 2
-#define Skill_ReducedFallDamage 6
-#define Skill_Speed 7
-#define Skill_Binoculars 8
-#define Skill_NightVision 9
-#define Skill_Flash 11
-#define Skill_Scavenger 12
-#define Skill_Vampire 18
-#define Skill_Necrophilia 21
+#define Skill_Health                1
+#define Skill_Invisibility          2
+#define Skill_ReducedFallDamage     3
+#define Skill_Speed                 4
+#define Skill_Binoculars            5
+#define Skill_NightVision           6
+#define Skill_Flash                 7
+#define Skill_Scavenger             8
+#define Skill_Vampire               9
+#define Skill_Necrophilia           10
 
-native int Skills_GetPoints(int client, int upgrade);
-native void Skills_SetPoints(int client, int upgrade, int points);
+native void Skills_RegisterSkill(int skill, char[] name, char[] description, int max);
 
+native int Skills_GetPoints(int client, int skill);
 native int Skills_GetLevel(int client);
-native void Skills_SetLevel(int client, int level);
 native int Skills_GetExperience(int client);
-native void Skills_SetExperience(int client, int experience);
+native void Skills_AddExperience(int client, int experience);
 
-public int Skills_Limit(int value, int min, int max) {
+stock int Skills_GetSkill(int client, int skill, int min, int max)
+{
+    int rank = Skills_GetPoints(client, skill);
+    if (rank < min)
+    {
+        rank = min;
+    }
+    if (rank > max)
+    {
+        rank = max;
+    }
+
+    return rank;
+}
+
+stock int Skills_Limit(int value, int min, int max)
+{
 	if (value < min) return min;
 	if (value > max) return max;
 	return value;

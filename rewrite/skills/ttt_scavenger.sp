@@ -1,29 +1,17 @@
 #pragma semicolon 1
 
-/*
- * Base CS:GO plugin requirements.
- */
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
-/*
- * Custom include files.
- */
 #include <ttt>
 #include <colorvariables>
 #include <generics>
+#include <ttt_skills>
 
-/*
- * Custom methodmap includes.
- */
 #include <math_methodmap>
-#include <player_methodmap>
 
 #define SCAVENGER_MAX_LEVEL 2
-
-int offsetAmmo = -1;
-int offsetPrimaryAmmoType = -1;
 
 public Plugin myinfo =
 {
@@ -34,44 +22,30 @@ public Plugin myinfo =
     url = ""
 };
 
+int offsetAmmo = -1;
+int offsetPrimaryAmmoType = -1;
+
 public OnPluginStart()
 {
-    //RegisterCmds();
     HookEvents();
-    //InitDBs();
 
     LoadTranslations("common.phrases");
 
     PrintToServer("[SCV] Loaded successfully");
 }
 
-/*
-public void RegisterCmds() {
-
-}
-*/
-
 public void HookEvents()
 {
     HookEvent("player_death", OnPlayerDeath);
 }
 
-/*
-public void InitDBs()
-{
-
-}
-*/
-
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
-    int victim = GetClientOfUserId(GetEventInt(event, "userid"));
-    int attacker = GetClientOfUserId(GetEventInt(event, "attacker", victim));
+    int victim = GetClientOfUserId(event.GetInt("userid"));
+    int attacker = GetClientOfUserId(event.GetInt("attacker"));
 
-    Player playerAttacker = Player(attacker);
-
-    int upgradeLevel = playerAttacker.Skill(Skill_Scavenger, 0, SCAVENGER_MAX_LEVEL);
-    if (attacker == victim || !playerAttacker.ValidClient || upgradeLevel == 0)	{ return Plugin_Continue; }
+    int upgradeLevel = Skills_GetSkill(attacker, Skill_Scavenger, 0, SCAVENGER_MAX_LEVEL);
+    if (attacker == victim || !IsValidClient(attacker) || upgradeLevel == 0)	{ return Plugin_Continue; }
 
     int entityIndex = GetEntPropEnt(attacker, Prop_Send, "m_hActiveWeapon");
 
@@ -93,7 +67,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
         }
     }
 
-    CPrintToChat(attacker, "{purple}[TTT] {yellow}You Scavenged {blue}%n {yellow}bullets.", ammoGained);
+    CPrintToChat(attacker, "{purple}[TTT] {yellow}You Scavenged {green}%n {yellow}bullets.", ammoGained);
 
     return Plugin_Continue;
 }
@@ -242,11 +216,6 @@ public void GetAmmoValues(char[] item, int ammoOut[2])
         case 0x6E656765:		// negev
         {
             ammoOut = {150, 200};
-        }
-
-        default:
-        {
-            ammoOut = {0, 0};
         }
     }
 }

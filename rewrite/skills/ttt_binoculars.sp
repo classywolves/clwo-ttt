@@ -1,33 +1,14 @@
 #pragma semicolon 1
 
-/*
- * Base CS:GO plugin requirements.
- */
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
-/*
- * Custom include files.
- */
-#include <ttt>
 #include <colorvariables>
 #include <generics>
+#include <ttt_skills>
 
-/*
- * Custom methodmap includes.
- */
-#include <player_methodmap>
-
-#define BINOCULARS_MAX_LEVEL 3
-
-char soundBinoActivation[PLATFORM_MAX_PATH] = "ttt_clwo/ttt_binoculars_activate.mp3";
-char soundBinoZoom[PLATFORM_MAX_PATH] = "ttt_clwo/ttt_binoculars_switch.mp3";
-char soundBinoDeactivation[PLATFORM_MAX_PATH] = "ttt_clwo/ttt_binoculars_deactivate.mp3";
-
-int initialFov[MAXPLAYERS + 1];
-int lastTime[MAXPLAYERS + 1] = {0, ...};
-int zoomLevel[MAXPLAYERS + 1] = {0, ...};
+#define BINOCULARS_MAX_LEVEL 1
 
 public Plugin myinfo =
 {
@@ -37,6 +18,13 @@ public Plugin myinfo =
     version = "0.0.1",
     url = ""
 };
+
+char soundBinoActivation[PLATFORM_MAX_PATH] = "ttt_clwo/ttt_binoculars_activate.mp3";
+char soundBinoZoom[PLATFORM_MAX_PATH] = "ttt_clwo/ttt_binoculars_switch.mp3";
+char soundBinoDeactivation[PLATFORM_MAX_PATH] = "ttt_clwo/ttt_binoculars_deactivate.mp3";
+
+int initialFov[MAXPLAYERS + 1];
+int zoomLevel[MAXPLAYERS + 1] = {0, ...};
 
 public OnPluginStart()
 {
@@ -48,6 +36,11 @@ public OnPluginStart()
     LoadTranslations("common.phrases");
 
     PrintToServer("[BNO] Loaded successfully");
+}
+
+public OnAllPluginsLoaded()
+{
+    Skills_RegisterSkill(Skill_Binoculars, "Binoculars", "Allows the player to zoom in with any weapon.", BINOCULARS_MAX_LEVEL);
 }
 
 public void PreCache()
@@ -86,17 +79,17 @@ public void InitDBs()
 }
 */
 
-public Action CommandBinoculars(int client, int args) {
-    Player player = Player(client);
-    if (player.Skill(Skill_Binoculars, 0, BINOCULARS_MAX_LEVEL))
+public Action CommandBinoculars(int client, int args)
+{
+    if (Skills_GetSkill(client, Skill_Binoculars, 0, BINOCULARS_MAX_LEVEL))
     {
-        CPrintToChat(client, "{purple}[TTT] {orchid}You do not have five skill points in this skill.");
+        CPrintToChat(client, "{purple}[TTT] {orchid}You do not have a skill point in this skill.");
         return Plugin_Handled;
     }
 
-    if (!player.Alive)
+    if (IsPlayerAlive(client))
     {
-        player.Error("You must be alive to use this skill.");
+        CPrintToChat(client, "{purple}[TTT] {orchid}You must be alive to use this skill.");
         return Plugin_Handled;
     }
 
