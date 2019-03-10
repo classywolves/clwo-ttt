@@ -28,8 +28,6 @@ public Plugin myinfo = {
 
 public OnPluginStart() {
     RegisterCmds();
-    //HookEvents();
-    //InitDBs();
 
     PrintToServer("[SCM] Loaded successfully");
 }
@@ -39,6 +37,8 @@ public void RegisterCmds() {
     RegConsoleCmd("sm_forcespec", Command_ForceSpectator, "Moves a player to spectator.");
     RegConsoleCmd("sm_reloadplugin", Command_ReloadPlugin, "Reloads the passed plugin.");
     RegConsoleCmd("sm_slaynr", Command_SlayNextRound, "Slay a player before roles are assigned for the next round.");
+    RegConsoleCmd("sm_scsay", Command_SCSay, "Targeted CSay.");
+    RegConsoleCmd("sm_smsay", Command_SMSay, "Targeted MSay.");
     RegConsoleCmd("sm_tp", Command_Teleport, "Allows a staff member to teleport another player.");
     RegConsoleCmd("sm_teleport", Command_Teleport, "Allows a staff member to teleport another player.");
 }
@@ -116,6 +116,79 @@ public Action Command_SlayNextRound(int client, int args) {
     TTT_AddRoundSlays(playerTarget.Client, 1, false);
 
     return Plugin_Handled;
+}
+
+public Action Command_SMSay(int client, int args)
+{
+	Player player = Player(client);
+
+	if (!Player(client).Access(RANK_INFORMER, true)) {
+		return Plugin_Handled;
+	}
+
+	if (args < 2) {
+		player.Error("Invalid Usage: /smsay <player> <message>")
+		return Plugin_Handled;
+	}
+
+	char message[255], arg1[128], buffer[128], title[128];
+
+	GetCmdArg(1, arg1, sizeof(arg1));
+	Player target = player.TargetOne(arg1, true)
+
+	if (target.Client == -1) {
+		return Plugin_Handled;
+	}
+
+	if (args >= 2) {
+		// They've included a message!
+		GetCmdArg(2, message, sizeof(message));
+
+		for (int i = 3; i <= args; i++) {
+			GetCmdArg(i, buffer, sizeof(buffer));
+			Format(message, sizeof(message), "%s %s", message, buffer);
+		}
+	}
+
+	Format(title, sizeof(title), "%N: ", player.Client);
+	target.SendPanelMsg(title, message);
+
+	return Plugin_Handled;
+}
+
+public Action Command_SCSay(int client, int args)
+{
+	Player player = Player(client);
+	if (!Player(client).Access(RANK_INFORMER, true)) {
+		return Plugin_Handled;
+	}
+
+	if (args < 2) {
+		player.Error("Invalid Usage: /scsay <player> <message>")
+		return Plugin_Handled;
+	}
+
+	char message[255], arg1[128], buffer[128];
+
+	GetCmdArg(1, arg1, sizeof(arg1));
+	Player target = player.TargetOne(arg1, true)
+
+	if (target.Client == -1) {
+		return Plugin_Handled;
+	}
+
+	if (args >= 2) {
+		// They've included a message!
+		GetCmdArg(2, message, sizeof(message));
+
+		for (int i = 3; i <= args; i++) {
+			GetCmdArg(i, buffer, sizeof(buffer));
+			Format(message, sizeof(message), "%s %s", message, buffer);
+		}
+	}
+
+	target.CSay(message);
+	return Plugin_Handled;
 }
 
 public Action Command_Teleport(int client, int args) {

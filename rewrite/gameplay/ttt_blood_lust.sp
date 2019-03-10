@@ -23,82 +23,56 @@ public Plugin myinfo =
     name = "TTT Blood Lust",
     author = "c0rp3n",
     description = "TTT Bloodlust Traitor anti delaying mechanism.",
-    version = "0.0.1",
+    version = "1.0.0",
     url = ""
 };
 
 Handle bloodLustTimers[MAXPLAYERS+1] = { INVALID_HANDLE, ... };
 
-//char traitorOverlay[PLATFORM_MAX_PATH] = "darkness/ttt/overlayTraitor";
-//char traitorBloodLustOverlay[PLATFORM_MAX_PATH] = "corpen/ttt/overlayTraitorBloodLust";
-
 float bloodLustStartTime = 45.0;
 float bloodLustFinalTime = 30.0;
 
-public OnPluginStart() {
-    //PreCache();
-    //HookEvents();
-
-    PrintToServer("[BLM] Loaded successfully");
+public OnPluginStart()
+{
+    PrintToServer("[BLO] Loaded successfully");
 }
 
-public void OnAllPluginsLoaded() {
-    /*
-    if (!LibraryExists("ttt_overlay")) {
-    char sBuffer[PLATFORM_MAX_PATH];
-
-    Format(sBuffer, sizeof(sBuffer), "materials/%s.vmt", traitorOverlay);
-    AddFileToDownloadsTable(sBuffer);
-    Format(sBuffer, sizeof(sBuffer), "materials/%s.vtf", traitorOverlay);
-    AddFileToDownloadsTable(sBuffer);
-    PrecacheDecal(traitorOverlay, true);
-}
-*/
-}
-
-public void PreCache() {
-    /*
-    char sBuffer[PLATFORM_MAX_PATH];
-
-    Format(sBuffer, sizeof(sBuffer), "materials/%s.vmt", traitorBloodLustOverlay);
-    AddFileToDownloadsTable(sBuffer);
-    Format(sBuffer, sizeof(sBuffer), "materials/%s.vtf", traitorBloodLustOverlay);
-    AddFileToDownloadsTable(sBuffer);
-    PrecacheDecal(traitorBloodLustOverlay, true);
-    */
-}
-
-public void TTT_OnRoundStart(int innocents, int traitors) {
-    LoopClients(i) {
-        if (TTT_GetClientRole(i) == TTT_TEAM_TRAITOR) {
-            bloodLustTimers[i] = CreateTimer(bloodLustStartTime, BloodLustStart, i);
+public void TTT_OnRoundStart(int innocents, int traitors)
+{
+    LoopClients(i)
+    {
+        if (TTT_GetClientRole(i) == TTT_TEAM_TRAITOR)
+        {
+            bloodLustTimers[i] = CreateTimer(bloodLustStartTime, BloodLustStart, GetClientUserId(i));
         }
-        else {
+        else
+        {
             ClearTimer(bloodLustTimers[i]);
         }
     }
 }
 
-public void TTT_OnClientDeath(int victim, int attacker) {
+public void TTT_OnClientDeath(int victim, int attacker)
+{
     if (TTT_GetClientRole(attacker) == TTT_TEAM_TRAITOR)
     {
-        ClearTimer(bloodLustTimers[attacker]);
-
         BloodLustReset(attacker);
-        bloodLustTimers[attacker] = CreateTimer(bloodLustStartTime, BloodLustStart, GetClientUserId(attacker));
     }
 }
 
-public void TTT_OnRoundEnd(int winner) {
+public void TTT_OnRoundEnd(int winner)
+{
     LoopValidClients(i)
     {
         ClearTimer(bloodLustTimers[i]);
     }
 }
 
-public Action BloodLustStart(Handle timer, int userid) {
+public Action BloodLustStart(Handle timer, int userid)
+{
     int client = GetClientOfUserId(userid);
-    if (!(TTT_GetClientRole(client) == TTT_TEAM_TRAITOR || IsAliveClient(client))) {
+    if (!TTT_GetClientRole(client) == TTT_TEAM_TRAITOR || !IsAliveClient(client))
+    {
         ClearTimer(bloodLustTimers[client]);
 
         return Plugin_Continue;
@@ -115,7 +89,7 @@ public Action BloodLustStart(Handle timer, int userid) {
 
 public Action BloodLustFinal(Handle timer, int userid) {
     int client = GetClientOfUserId(userid);
-    if (!(TTT_GetClientRole(client) == TTT_TEAM_TRAITOR || IsAliveClient(client))) {
+    if (!TTT_GetClientRole(client) == TTT_TEAM_TRAITOR || !IsAliveClient(client)) {
         ClearTimer(bloodLustTimers[client]);
 
         return Plugin_Continue;
@@ -130,8 +104,10 @@ public Action BloodLustFinal(Handle timer, int userid) {
 
 public void BloodLustReset(int client) {
     SetEntityRenderColor(client, 255, 255, 255, 255);
-    //ShowOverlayToClient(client, traitorOverlay);
     ClearScreenColor(client);
+
+    ClearTimer(bloodLustTimers[client]);
+    bloodLustTimers[client] = CreateTimer(bloodLustStartTime, BloodLustStart, GetClientUserId(client));
 }
 
 public void BloodLustScreenColor(int client) {

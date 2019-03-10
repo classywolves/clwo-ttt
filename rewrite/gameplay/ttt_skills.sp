@@ -215,10 +215,13 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective)
 }
 
 public void TTT_OnRoundEnd(int winner) {
-    if (winner == TTT_TEAM_TRAITOR) {
+    if (winner == TTT_TEAM_TRAITOR)
+    {
         int undiscovered;
-        LoopDeadClients(i) {
-            if (!TTT_GetFoundStatus(i)) {
+        LoopDeadClients(i)
+        {
+            if (!TTT_GetFoundStatus(i))
+            {
                 if (TTT_GetClientRole(i) != TTT_TEAM_TRAITOR)
                 {
                     undiscovered++;
@@ -227,8 +230,10 @@ public void TTT_OnRoundEnd(int winner) {
         }
 
         int gainedXP = 40 * (undiscovered / startingNoneTraitors);
-        LoopAliveClients(i) {
-            if (TTT_GetClientRole(i) == TTT_TEAM_TRAITOR) {
+        LoopAliveClients(i)
+        {
+            if (TTT_GetClientRole(i) == TTT_TEAM_TRAITOR)
+            {
                 CPrintToChat(i, "{purple}[TTT] {yellow}You gained %d experience for hiding %d bodies!", gainedXP, undiscovered);
                 Player(i).Experience += gainedXP;
             }
@@ -236,7 +241,7 @@ public void TTT_OnRoundEnd(int winner) {
     }
     else
     {
-        float innocentsAlive = 0.0;
+        int innocentsAlive = 0;
         LoopAliveClients(i)
         {
             if (TTT_GetClientRole(i) == TTT_TEAM_INNOCENT)
@@ -244,7 +249,7 @@ public void TTT_OnRoundEnd(int winner) {
                 innocentsAlive++;
             }
         }
-        int gainedXP = RoundFloat(40.0 * (innocentsAlive / startingInnocents));
+        int gainedXP = 40 * (innocentsAlive / startingInnocents);
         LoopAliveClients(i)
         {
             if (TTT_GetClientRole(i) == TTT_TEAM_DETECTIVE)
@@ -261,8 +266,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     int victim = GetClientOfUserId(GetEventInt(event, "userid"));
     int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 
-    if (victim == attacker || victim == 0 || attacker == 0)
-    return Plugin_Continue;
+    if (victim == attacker || victim == 0 || attacker == 0) { return Plugin_Continue; }
 
     Player playerAtacker = Player(attacker);
 
@@ -271,8 +275,7 @@ public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast)
     {
         alivePlayers++;
     }
-    if (alivePlayers < 4)
-    return Plugin_Continue;
+    if (alivePlayers < 4) { return Plugin_Continue; }
 
     if (playerAtacker.BadKill(victim))
     {
@@ -306,7 +309,7 @@ public Action Command_DisplayExperience(int client, int args) {
     }
 
     Player targetPlayer = player.TargetOne(target);
-    if (!targetPlayer.ValidClient) return Plugin_Handled;
+    if (!targetPlayer.ValidClient) { return Plugin_Handled; }
 
     CPrintToChat(client, "{purple}[TTT] {yellow}%N currently has %d experience and is level %d.", targetPlayer.Client, targetPlayer.Experience, 1);
 
@@ -324,7 +327,7 @@ public Action Command_DisplayUpgrades(int client, int args) {
     Player targetPlayer;
 
     targetPlayer = Player(client).TargetOne(target);
-    if (!targetPlayer.ValidClient) return Plugin_Handled;
+    if (!targetPlayer.ValidClient) { return Plugin_Handled; }
 
     CPrintToChat(client, "{purple}[TTT] {yellow}Upgrades for {green}%N {yellow}printed in console.", targetPlayer.Client);
 
@@ -350,7 +353,7 @@ public Action Command_SetExperience(int client, int args) {
     GetCmdArg(2, experienceString, sizeof(experienceString));
 
     Player targetPlayer = player.TargetOne(target);
-    if (!targetPlayer.ValidClient) return Plugin_Handled;
+    if (!targetPlayer.ValidClient) { return Plugin_Handled; }
 
     int experience = StringToInt(experienceString);
 
@@ -374,7 +377,7 @@ public Action Command_SetLevel(int client, int args) {
     GetCmdArg(2, levelString, sizeof(levelString));
 
     Player targetPlayer = Player(client).TargetOne(target);
-    if (!targetPlayer.ValidClient) return Plugin_Handled;
+    if (!targetPlayer.ValidClient) { return Plugin_Handled; }
 
     int level = StringToInt(levelString);
     if (level == 0) level = 0;
@@ -562,97 +565,100 @@ public void DisplayUrl(int client, char url[512], bool display) {
     }
 }
 
-    public void DisplaySkillsPage(int client) {
-        char url[512], session[63], hash[127];
-        SessionAndHash(client, session, hash);
-        Format(url, sizeof(url), "http://ttt.clwo.eu:3000/#^%s^%s", hash, session);
-        DisplayUrl(client, url, true);
-        PrintToConsole(client, "Opening: %s", url);
-    }
+public void DisplaySkillsPage(int client) {
+    char url[512], session[63], hash[127];
+    SessionAndHash(client, session, hash);
+    Format(url, sizeof(url), "http://ttt.clwo.eu:3000/#^%s^%s", hash, session);
+    DisplayUrl(client, url, true);
+    PrintToConsole(client, "Opening: %s", url);
+}
 
-    public void ResetSkills(int client) {
+public void ResetSkills(int client) {
+    char auth[64], query[255];
+    Player(client).Auth(AuthId_SteamID64, auth);
+    FormatEx(query, sizeof(query), "DELETE FROM `sessions` WHERE `steam_id`=\"%s\"", auth);
+    PrintToServer("Running query: %s", query);
+    SQL_FastQuery(databaseTTT, query);
+}
+
+public void CheckLevel(int client)
+{
+    Player player = view_as<Player>(client);
+    if (player.Experience > player.LevelUpExperience)
+    {
+        player.Experience -= player.LevelUpExperience;
+        int newLevel = player.Level + 1;
+        player.Level = newLevel;
+        CPrintToChat(client, "{purple}[TTT] {green}Congratulations!  You've leveled up to level %d", newLevel);
+
+        char msg[255];
+        Format(msg, sizeof(msg), "You are now lvl %i.", newLevel);
+
+        Panel lvlPanel = new Panel();
+        lvlPanel.SetTitle("Level Up!");
+        lvlPanel.DrawItem("", ITEMDRAW_SPACER);
+        lvlPanel.DrawText(msg);
+        lvlPanel.DrawText("You have gained a skill point to use in /skills.");
+        lvlPanel.DrawItem("", ITEMDRAW_SPACER);
+        lvlPanel.CurrentKey = GetMaxPageItems(lvlPanel.Style);
+        lvlPanel.DrawItem("Exit", ITEMDRAW_CONTROL);
+
+        lvlPanel.Send(client, HandlerDoNothing, 10);
+
+        ClientCommand(client, "play */ttt_clwo/ttt_levelup.mp3");
+
         char auth[64], query[255];
-        Player(client).Auth(AuthId_SteamID64, auth);
-        FormatEx(query, sizeof(query), "DELETE FROM `sessions` WHERE `steam_id`=\"%s\"", auth);
+        player.Auth(AuthId_SteamID64, auth);
+        FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = \"%s\"", newLevel, auth);
         PrintToServer("Running query: %s", query);
-        SQL_FastQuery(databaseTTT, query);
-    }
-
-    public void CheckLevel(int client)
-    {
-        Player player = view_as<Player>(client);
-        if (player.Experience > player.LevelUpExperience)
+        if (!SQL_FastQuery(databaseTTT, query))
         {
-            player.Experience -= player.LevelUpExperience;
-            int newLevel = player.Level + 1;
-            player.Level = newLevel;
-            CPrintToChat(client, "{purple}[TTT] {green}Congratulations!  You've leveled up to level %d", newLevel);
-
-            char msg[255];
-            Format(msg, sizeof(msg), "You are now lvl %i.", newLevel);
-
-            Panel lvlPanel = new Panel();
-            lvlPanel.SetTitle("Level Up!");
-            lvlPanel.DrawItem("", ITEMDRAW_SPACER);
-            lvlPanel.DrawText(msg);
-            lvlPanel.DrawText("You have gained a skill point to use in /skills.");
-            lvlPanel.DrawItem("", ITEMDRAW_SPACER);
-            lvlPanel.CurrentKey = GetMaxPageItems(lvlPanel.Style);
-            lvlPanel.DrawItem("Exit", ITEMDRAW_CONTROL);
-
-            lvlPanel.Send(client, HandlerDoNothing, 10);
-
-            ClientCommand(client, "play */ttt_clwo/ttt_levelup.mp3");
-
-            char auth[64], query[255];
-            player.Auth(AuthId_SteamID64, auth);
-            FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = \"%s\"", newLevel, auth);
-            PrintToServer("Running query: %s", query);
-            if (!SQL_FastQuery(databaseTTT, query))
-            {
-                char error[255];
-                SQL_GetError(databaseTTT, error, sizeof(error));
-                PrintToServer("Failed to query (error: %s)", error);
-            }
+            char error[255];
+            SQL_GetError(databaseTTT, error, sizeof(error));
+            PrintToServer("Failed to query (error: %s)", error);
         }
     }
+}
 
-    public void ShowExperienceBar(int client)
+public void ShowExperienceBar(int client)
+{
+    char unicodeBar[80];
+    char introduction[100] = "Exp: ";
+    GetExperienceBar(client, unicodeBar);
+    StrCat(introduction, sizeof(introduction), unicodeBar);
+    Handle hHudText = CreateHudSynchronizer();
+    SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 0, 0.0, 0.0, 0.0);
+    ShowSyncHudText(client, hHudText, introduction);
+    CloseHandle(hHudText);
+}
+
+public void GetExperienceBar(int client, char unicodeBar[80])
+{
+    Player player = Player(client);
+
+    const int barSize = 80;
+    const float numBars = 20.0;
+
+    float levelUpPercentage = float(player.Experience) / float(player.LevelUpExperience);
+    int colouredSquares = RoundFloat(numBars * levelUpPercentage);
+
+    for (int i = 0; i < numBars; i++)
     {
-        char unicodeBar[80];
-        char introduction[100] = "Exp: ";
-        GetExperienceBar(client, unicodeBar);
-        StrCat(introduction, sizeof(introduction), unicodeBar);
-        Handle hHudText = CreateHudSynchronizer();
-        SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 0, 0.0, 0.0, 0.0);
-        ShowSyncHudText(client, hHudText, introduction);
-        CloseHandle(hHudText);
-    }
-
-    public void GetExperienceBar(int client, char unicodeBar[80])
-    {
-        Player player = Player(client);
-
-        const int barSize = 80;
-        const int numBars = 20;
-
-        float levelUpPercentage = float(player.Experience) / float(player.LevelUpExperience);
-        int colouredSquares = RoundFloat(numBars * levelUpPercentage);
-
-        for (int i = 0; i < numBars; i++) {
-            if (i <= colouredSquares) {
-                StrCat(unicodeBar, barSize, "▰");
-            }
-            else {
-                StrCat(unicodeBar, barSize, "▱");
-            }
+        if (i <= colouredSquares)
+        {
+            StrCat(unicodeBar, barSize, "▰");
+        }
+        else
+        {
+            StrCat(unicodeBar, barSize, "▱");
         }
     }
+}
 
-    public void GenerateSession(char newSession[62]) {
-        int randomIndex;
-        for (int i = 0; i < 60; i++) {
-            randomIndex = GetRandomInt(0, 61);
-            Format(newSession, sizeof(newSession), "%s%c", newSession, chars[randomIndex]);
-        }
+public void GenerateSession(char newSession[62]) {
+    int randomIndex;
+    for (int i = 0; i < 60; i++) {
+        randomIndex = GetRandomInt(0, 61);
+        Format(newSession, sizeof(newSession), "%s%c", newSession, chars[randomIndex]);
     }
+}

@@ -21,7 +21,7 @@ public OnPluginStart()
 	RegisterCmds();
 	HookEvents();
 	InitDBs();
-	
+
 	PrintToServer("[GEN] Loaded succcessfully");
 }
 

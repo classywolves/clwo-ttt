@@ -34,7 +34,6 @@ public Plugin myinfo = {
 
 public OnPluginStart() {
     RegisterCmds();
-    //HookEvents();
     InitDBs();
 
     PrintToServer("[PCM] Loaded successfully");
@@ -43,6 +42,8 @@ public OnPluginStart() {
 public void RegisterCmds() {
     RegConsoleCmd("sm_staff", Command_Staff, "List the all of the staff who are currently online.");
     RegConsoleCmd("sm_admins", Command_Staff, "List the all of the staff who are currently online.");
+
+    //RegConsoleCmd("sm_alive", Command_Alive, "Displays the currently alive / undiscovered players.");
 
     RegConsoleCmd("sm_spec", Command_Spectate, "Choose which of the alive players you would like to spectate.");
 
@@ -73,8 +74,6 @@ public Action Command_Staff(int client, int args) {
         CPrintToChat(client, "{purple}[w] {darkred}There are no staff online");
     }
     else {
-        // PrintToChat(client, "%L", staff);
-        // iMod_GetUserTypeString(int UserType,int type, char[] output, int maxlen)
         CPrintToChat(client, "{purple}[Staff] {yellow}There are currently {green}%i {yellow}staff online:", staffCount);
 
         for (int i = 0; i < staffCount; i++) {
@@ -94,6 +93,25 @@ public Action Command_Staff(int client, int args) {
 
     return Plugin_Handled;
 }
+
+/*
+public Action Command_Alive(int client, int args) {
+	Player player = Player(client);
+
+	char playerNames[MAXPLAYERS][64];
+	int unfound = GetUnfoundPlayers(playerNames);
+
+	char message[1024];
+
+	Format(message, sizeof(message), "Players Alive: %s", playerNames[0]);
+
+	for(int i = 1; i < unfound; i++) {
+		Format(message, sizeof(message), "%s, %s", message, playerNames[i]);
+	}
+
+	player.Msg(message);
+}
+*/
 
 public Action Command_Spectate(int client, int args) {
     Menu menu = new Menu(MenuHandler_Spectate);

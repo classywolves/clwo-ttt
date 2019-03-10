@@ -4,6 +4,7 @@
 #define _ttt_ranks_included
 
 #include <colorvariables>
+#include <generics>
 
 public SharedPlugin __pl_ttt_ranks =
 {
@@ -48,25 +49,60 @@ public __pl_ttt_upgrades_SetNTVOptional()
 #define USER_RANK_CHAT_NAME  4
 #define USER_RANK_DEV_NAME   5
 
+#define LoopStaff(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(IsValidClient(%1) && TTT_Ranks_IsStaff(i))
+
 native bool TTT_Ranks_IsStaff(int client);
 
 native bool GetPermission(int client, int requiredRank);
 native void GetRankName(int rank, char name[64], int type);
 native int GetPlayerRank(int client);
 
+stock int GetStaffArray(int staff[32])
+{
+    int staffCount = 0;
+    LoopValidClients(i)
+    {
+        if (TTT_Ranks_IsStaff(i))
+        {
+            staff[staffCount] = i;
+            staffCount++;
+        }
+    }
+
+    return staffCount;
+}
+
+stock int GetStaffCount()
+{
+    int staffCount = 0;
+    LoopStaff(i)
+    {
+        staffCount++;
+    }
+
+    return staffCount;
+}
+
+stock int GetActiveStaffCount()
+{
+    int staffCount = 0;
+    LoopStaff(i)
+    {
+        int team = GetClientTeam(i);
+        if (team == CS_TEAM_T || team == CS_TEAM_CT)
+        {
+            staffCount++;
+        }
+    }
+
+    return staffCount;
+}
+
 stock void CPrintToChatStaff(const char[] message, any ...)
 {
-    for (int iClient = 1; iClient <= MaxClients; iClient++) {
-        if (!IsClientInGame(iClient)) {
-            continue;
-        }
-
-        if (!TTT_Ranks_IsStaff(iClient)) {
-            continue;
-        }
-
+    LoopStaff(i) {
         char buffer[1024];
     	VFormat(buffer, 1024, message, 2);
-        CPrintToChat(iClient, buffer);
+        CPrintToChat(i, buffer);
     }
 }
