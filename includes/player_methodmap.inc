@@ -1,236 +1,129 @@
-#if defined _player_methodmap_included
-	#endinput
+#if defined _player_methodmap_include
+  #endinput
 #endif
-#define _player_methodmap_included
+#define _player_methodmap_include
+
+/*
+ * Base CS:GO plugin requirements.
+ */
+#include <clientprefs>
+#include <sourcemod>
+#include <sdktools>
+#include <cstrike>
+
+/*
+ * Custom include files.
+ */
+#include <colorvariables>
+#include <sourcecomms>
+#include <ttt>
+#include <generics>
+#include <ttt_ranks>
+#include <ttt_shop>
+#include <generics>
+
+#define MAX_MESSAGE_LENGTH			1024
+#define MAX_MSAY_LENGTH				255
+#define ERROR_TIMEOUT				2
 
 #define that view_as<int>(this)
 
-/* User Type */
-#define USER_TYPE_COMMAND      0
-#define USER_TYPE_IS_STAFF     1
-#define USER_TYPE_BROADCAST    2
-#define USER_TYPE_GROUPNAME    3
-#define USER_TYPE_FULLNAME     4
-#define USER_TYPE_SCORENAME    5
-#define USER_TYPE_CHATNAME     6
-#define USER_TYPE_MULTI_TARGET 7
+Database databaseTTT;
 
-#include <sourcemod> 			// Default Sourcemod Includes
-#include <sdktools>				// ┫
-#include <clientprefs>			// ┛
-#include <general>				// General Definitions
-#include <ttt>					// Interact with TTT
-#include <ttt_shop>				// Interact with TTT Shop
-#include <smlib>				// Larger Standard Library
-#include <imod>
+int g_traitorKills[MAXPLAYERS + 1];
+int g_errorTimeout[MAXPLAYERS + 1];
 
-Handle cookie_player_volume;
-Handle cookie_player_experience;
-Handle cookie_player_level;
-Handle cookie_player_slaynr;
-Handle cookie_player_slayed_by;
-Handle cookie_player_verbose_log;
+UserMsg g_FadeUserMsgId = INVALID_MESSAGE_ID;
 
-int sprite_beam = -1;
-int sprite_halo = -1;
-
-bool player_beacon[MAXPLAYERS + 1];
-bool third_person[MAXPLAYERS + 1];
-
-bool website_payload[MAXPLAYERS + 1];
-
-Database database_ttt;
-Database database_player_analytics;
-
-char chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890";
-
-native int GetActions(int client, int actions[2]);
-native int get_upgrade_points(int client_id, int upgrade_id);
-native set_upgrade_points(int client_id, int upgrade_id, int points);
-
-/*======== Upgrades ========*/
-#define AllUpgrades for(int i = 1; i <= MaxClients; i++) for(int j = 1; j <= 64; j++)
-#define PlayerUpgrades(%1) for(int %1 = 1; %1 <= 64; %1++)
-
-#if defined _is_main_upgrade
-	int upg_points[MAXPLAYERS+1][64];
-#endif
+Handle cookieInnocentWins;
+Handle cookieDetectiveWins;
+Handle cookieTraitorWins;
+Handle cookieInnocentLosses;
+Handle cookieDetectiveLosses;
+Handle cookieTraitorLosses;
+Handle cookieGoodActions;
+Handle cookieBadActions;
 
 methodmap Player {
 	public Player(int client) {
 		return view_as<Player>(client);
 	}
 
-	property int id {
-		public get() { return that; }
-	}
-	
-	public void Name(char buffer[64])
-	{
-		GetClientName(view_as<int>(this), buffer, sizeof(buffer));
-	}
-	
-	public void get_auth(AuthIdType auth_id_type , char output[255]) {
-		GetClientAuthId(view_as<int>(this), auth_id_type, output, sizeof(output));
+	public void Auth(AuthIdType idType, char auth[64]) {
+		GetClientAuthId(that, idType, auth, sizeof(auth));
 	}
 
-	public void slayed_by(int client, char admin_name[256]) {
-		GetClientCookie(client, cookie_player_slayed_by, admin_name, sizeof(admin_name));
+	public void Name(char name[64]) {
+		GetClientName(that, name, sizeof(name));
 	}
 
-	public void set_slayed_by(int client, char admin_name[256]) {
-		SetClientCookie(client, cookie_player_slayed_by, admin_name);
+	public void Msg(const char[] msg, any ...)
+    {
+		char buffer[MAX_MESSAGE_LENGTH], formatted[MAX_MESSAGE_LENGTH];
+		VFormat(buffer, sizeof(buffer), msg, 2);
+
+		StrCat(formatted, sizeof(formatted), "{purple}[TTT] {yellow}");
+		StrCat(formatted, sizeof(formatted), buffer);
+
+		CPrintToChat(that, formatted);
 	}
 
-	property bool beacon_enabled {
-		public get() { return player_beacon[this]; }
-		public set(bool enable) { player_beacon[this] = enable; }
+	public bool ErrorTimeout(int timeout) {
+		int currentTime = GetTime();
+		if (currentTime - g_errorTimeout[that] < timeout) {
+			return true;
+		}
+
+		g_errorTimeout[that] = currentTime;
+		return false;
 	}
 
-	property bool dev {
-		public get() {
-			char steam_id[255];
-			this.get_auth(AuthId_SteamID64, steam_id);
-			return strcmp("STEAM_1:0:39463079", steam_id) || strcmp("STEAM_1:1:206820868", steam_id);
+	public void Error(const char[] msg, any ...) {
+		if (!this.ErrorTimeout(ERROR_TIMEOUT)) {
+			char buffer[MAX_MESSAGE_LENGTH], formatted[MAX_MESSAGE_LENGTH];
+			VFormat(buffer, sizeof(buffer), msg, 2);
+
+			StrCat(formatted, sizeof(formatted), "{purple}[TTT] {red}");
+			StrCat(formatted, sizeof(formatted), buffer);
+
+			CPrintToChat(that, formatted);
 		}
 	}
 
-	property bool valid_client {
-		public get() {
-			return !(that <= 0 || that > MaxClients || !IsClientConnected(that) || !IsClientInGame(that) || IsFakeClient(that));
-		}
+    public bool BadKill(int victim) {
+        int attackerRole = TTT_GetClientRole(that);
+        int victimRole = TTT_GetClientRole(victim);
+        if (attackerRole == victimRole) return true;
+        //else if (attackerRole == TTT_TEAM_TRAITOR || victimRole == TTT_TEAM_TRAITOR) return false;
+        else if ((attackerRole | victimRole) & TTT_TEAM_TRAITOR) return false;
+        else return true;
+    }
+
+	public int GetCookieInt(Handle cookie, int defaultValue) {
+		char cookieValue[128];
+		GetClientCookie(that, cookie, cookieValue, sizeof(cookieValue));
+		if (cookieValue[0] == '\0') return defaultValue;
+		return StringToInt(cookieValue);
 	}
 
-	property bool alive {
-		public get() { return IsPlayerAlive(that); }
+	public int SetCookieInt(Handle cookie, int value) {
+		char cookieValue[128];
+		IntToString(value, cookieValue, sizeof(cookieValue));
+		SetClientCookie(that, cookie, cookieValue);
 	}
 
-	public void pos(float loc[3]) {
-		GetClientAbsOrigin(that, loc);
-	}
+    property int Karma {
+        public get() { return TTT_GetClientKarma(that); }
+        public set(int karma) { TTT_SetClientKarma(that, karma, true); }
+    }
 
-	property int armour {
-		public get() { return GetEntProp(that, Prop_Data, "m_ArmorValue"); }
-		public set(int armour) { SetEntProp(that, Prop_Data, "m_ArmorValue", armour, 1); }
-	}
+	property int Playtime {
+		public get()
+		{
+			char auth[64];
+			this.Auth(AuthId_Steam2, auth);
 
-	property int team {
-		public get() { return GetClientTeam(that); }
-		public set(int team) { ChangeClientTeam(that, team); }
-	}
-
-	property bool staff {
-		public get() { return iMod_IsStaff(that); }
-	}
-
-	property bool has_clan_tag {
-		public get() {
-			char player_clan_id[64];
-			GetClientInfo(that, "cl_clanid", player_clan_id, sizeof(player_clan_id));
-			return StrEqual(player_clan_id, "5157979");
-		}
-	}
-
-	public bool has_weapon(const char[] weapon) {
-		return Client_HasWeapon(that, weapon);
-	}
-
-	public int has_upgrade(int upgrade_id) {
-		return get_upgrade_points(that, upgrade_id);
-	}
-
-	public int set_upgrade(int upgrade_id, int points) {
-		set_upgrade_points(that, upgrade_id, points);
-	}
-
-	public bool bad_kill(int victim) {
-		int attacker_role = TTT_GetClientRole(that);
-		int victim_role = TTT_GetClientRole(victim);
-
-		if (victim == that || victim == 0 || that == 0) return false;
-
-		return !(victim_role - attacker_role == 1 || attacker_role - victim_role == 1);
-	}
-
-	property int role {
-		public get() { return TTT_GetClientRole(that); }
-	}
-
-	public void staff_name(char name[255]) {
-		iMod_GetUserTypeString(iMod_GetUserType(that), USER_TYPE_FULLNAME, name, sizeof(name));
-	}
-
-	property bool third_person {
-		public get() { return third_person[this]; }
-		public set(bool enable) {
-			third_person[this] = enable;
-			if (enable) {
-				ClientCommand(that, "thirdperson");
-			} else {
-				ClientCommand(that, "firstperson");
-			}
-		}
-	}
-
-	public int get_cookie_int(Handle cookie, int default_value) {
-		char cookie_value[128];
-		GetClientCookie(that, cookie, cookie_value, sizeof(cookie_value));
-		if (cookie_value[0] == '\0') return default_value;
-		return StringToInt(cookie_value);
-	}
-
-	public int set_cookie_int(Handle cookie, int value) {
-		char cookie_value[64];
-		IntToString(value, cookie_value, sizeof(cookie_value));
-		SetClientCookie(that, cookie, cookie_value);
-	}
-
-	property int credits {
-		public get() { return TTT_GetClientCredits(that); }
-		public set(int amount) { TTT_SetClientCredits(that, amount); }
-	}
-
-	property int level {
-		public get() { return this.get_cookie_int(cookie_player_level, 1); }
-		public set(int level) { this.set_cookie_int(cookie_player_level, level); }
-	}
-
-	property int slaynr {
-		public get() { return this.get_cookie_int(cookie_player_slaynr, 0); }
-		public set(int slaynr) { this.set_cookie_int(cookie_player_slaynr, slaynr); }
-	}
-
-	property int verbose_log {
-		public get() { return this.get_cookie_int(cookie_player_verbose_log, 0); }
-		public set(int verbose) { this.set_cookie_int(cookie_player_verbose_log, verbose); }
-	}
-
-	property int skill_points {
-		public get() { return this.level; }
-		public set(int skill_points) { this.level = skill_points; }
-	}
-
-	property float volume {
-		public get() {
-			char player_volume[64];
-			GetClientCookie(that, cookie_player_volume, player_volume, sizeof(player_volume));
-			if (player_volume[0] == '\0') return 100.0;
-			return StringToFloat(player_volume);
-		}
-		public set(float volume) {
-			char player_volume[64];
-			FloatToString(volume, player_volume, sizeof(player_volume));
-			SetClientCookie(that, cookie_player_volume, player_volume);
-			FadeClientVolume(that, volume, 0.5, 99999.0, 0.5);
-		}
-	}
-
-	property int playtime {
-		public get() {
-			char auth[255];
-			this.get_auth(AuthId_Steam2, auth);
-
-			DBStatement player_playtime = PrepareStatement(database_player_analytics, "SELECT SUM(`duration`) FROM `player_analytics` WHERE auth=? LIMIT 1");
+			DBStatement player_playtime = PrepareStatement(databaseTTT, "SELECT SUM(`duration`) FROM `player_analytics` WHERE auth=? LIMIT 1");
 			SQL_BindParamString(player_playtime, 0, auth, false);
 			if (!SQL_Execute(player_playtime)) { PrintToServer("Player Analaytics Sum Failed."); return -1; }
 
@@ -242,309 +135,411 @@ methodmap Player {
 		}
 	}
 
-	property int level_up_experience {
-		public get() {
-			//return this.level * 1000;
-			return RoundToFloor(this.level + 600 * Pow(2.0, (float(this.level) / 4.0)));
-		}
+	property int TraitorWins {
+		public get() { return this.GetCookieInt(cookieTraitorWins, 0); }
+		public set(int wins) { this.SetCookieInt(cookieTraitorWins, wins); }
 	}
 
-	property bool cookie_cache {
-		public get() {
-			return AreClientCookiesCached(that);
-		}
+	property int InnocentWins {
+		public get() { return this.GetCookieInt(cookieInnocentWins, 0); }
+		public set(int wins) { this.SetCookieInt(cookieInnocentWins, wins); }
 	}
 
-	property int karma {
-		public get() {
-			char auth[255];
-			this.get_auth(AuthId_SteamID64, auth);
-
-			DBStatement player_karma = PrepareStatement(database_ttt, "SELECT `karma` FROM `ttt` WHERE communityid=? LIMIT 1");
-			SQL_BindParamString(player_karma, 0, auth, false);
-			if (!SQL_Execute(player_karma)) { PrintToServer("User Karma Grab Failed."); return -1; }
-
-			if (SQL_FetchRow(player_karma)) {
-				return SQL_FetchInt(player_karma, 0);
-			} else {
-				return 100;
-			}
-		}
+	property int DetectiveWins {
+		public get() { return this.GetCookieInt(cookieDetectiveWins, 0); }
+		public set(int wins) { this.SetCookieInt(cookieDetectiveWins, wins); }
 	}
 
-	property int health {
-		public get() { return GetEntProp(this.id, Prop_Data, "m_iHealth", 4); }
-		public set(int new_health) { SetEntProp(this.id, Prop_Send, "m_iHealth", new_health); }
-	}
-	
-	property int max_health {
-		public get() { return GetEntProp(this.id, Prop_Data, "m_iMaxHealth", 4); }
-		public set(int new_max_health) { SetEntProp(this.id, Prop_Send, "m_iMaxHealth", new_max_health); }
+	property int TraitorLosses {
+		public get() { return this.GetCookieInt(cookieTraitorLosses, 0); }
+		public set(int losses) { this.SetCookieInt(cookieTraitorLosses, losses); }
 	}
 
-	// WIP
-	public void populate() {
-		char steam_id[255];
-		this.get_auth(AuthId_SteamID64, steam_id);
-		DBStatement player_skill_points = PrepareStatement(database_ttt, "SELECT * FROM `upgrades` WHERE steam_id=? LIMIT 1");
-		SQL_BindParamString(player_skill_points, 0, steam_id, false);
-		if (!SQL_Execute(player_skill_points)) { PrintToServer("User Skills grab failed."); return; }
-		if (SQL_FetchRow(player_skill_points)) {
-			int latest_value;
-			for (int upgrade_id = 1; upgrade_id < 32; upgrade_id++) {
-				latest_value = SQL_FetchInt(player_skill_points, upgrade_id);
-				this.set_upgrade(upgrade_id, latest_value);
-			}
-		}
-		return;
+	property int InnocentLosses {
+		public get() { return this.GetCookieInt(cookieInnocentLosses, 0); }
+		public set(int losses) { this.SetCookieInt(cookieInnocentLosses, losses); }
 	}
 
-	public void toggle_beacon() {
-		player_beacon[this] = !player_beacon[this];
+	property int DetectiveLosses {
+		public get() { return this.GetCookieInt(cookieDetectiveLosses, 0); }
+		public set(int losses) { this.SetCookieInt(cookieDetectiveLosses, losses); }
 	}
 
-	public void toggle_third_person() {
-		this.third_person = !this.third_person;
-	}
-
-	public void display_url(char url[512], bool display=true) {
-		char web_url[512];
-		Crypt_Base64Encode(url, web_url, sizeof(web_url));
-
-		char buffer[512];
-		if (website_payload[this]) {
-			Format(buffer, sizeof(buffer), "http://clwo.inilo.net/webredirect/payload/direct.php?website=%s", web_url);
-		} else {
-			Format(buffer, sizeof(buffer), "http://clwo.eu/webredirect/payload/direct.php?website=%s", web_url);
-		}
-
-		website_payload[this] = !website_payload[this];
-
-		ShowMOTDPanel(that, "Displaying Page...", buffer, MOTDPANEL_TYPE_URL);
-		if (display) {
-			CPrintToChat(that, "{purple}[URL] {yellow}Loading {green}%s", url);
-		}
-	}
-
-	public void beacon_ping(int color[4]) {
-		float vec[3];
-		GetClientAbsOrigin(that, vec);
-		vec[2] += 10;
-
-		TE_SetupBeamRingPoint(vec, 10.0, 600.0, sprite_beam, sprite_halo, 0, 15, 0.5, 5.0, 0.0, color, 10, 0);
-		TE_SendToAll();
-	}
-
-	public int target(char target[128], int targets[MAXPLAYERS], char target_name[128], bool alive, bool immunity) {
+	public int Target(char target[128], int targets[MAXPLAYERS], char target_name[128], bool alive, bool immunity) {
+		int filter = (alive ? COMMAND_FILTER_ALIVE : 0) | (immunity ? 0 : COMMAND_FILTER_NO_IMMUNITY);
 		bool translation;
-		int filter = 0;
-		if (alive) { filter = COMMAND_FILTER_ALIVE; }
-		if (!immunity) { filter = filter | COMMAND_FILTER_NO_IMMUNITY; }
+
 		int response = ProcessTargetString(target, that, targets, sizeof(targets), filter, target_name, sizeof(target_name), translation);
 
 		if (response == 0 || response == -5) {
-			CPrintToChat(that, "{purple}[TTT] {orchid}No targets were found.");
+			this.Error("No targets were found.");
 			return 0;
 		} else if (response == -7) {
-			CPrintToChat(that, "{purple}[TTT] {orchid}Partial name had too many targets.");
+			this.Error("Partial name had too many targets.");
 			return 0;
 		}
 
 		return response;
 	}
 
-	public bool has_informer_block() {
-		char name[200];
-		iMod_GetUserTypeString(iMod_GetUserType(that), USER_TYPE_FULLNAME, name, sizeof(name));
-		if (!StrEqual(name, "Informer")) return false;
-		if (!Count_Staff(false)) return false;
-		return true;
+    public bool RayTrace(float pos[3]) {
+        float vOrigin[3], vAngles[3];
+
+        GetClientEyePosition(that, vOrigin);
+        GetClientEyeAngles(that, vAngles);
+
+        Handle trace = TR_TraceRayFilterEx(vOrigin, vAngles, MASK_SOLID, RayType_Infinite, TraceEntityFilterPlayer);
+        if(TR_DidHit(trace)) {
+            TR_GetEndPosition(pos, trace);
+            CloseHandle(trace);
+
+            return true;
+        }
+
+        CloseHandle(trace);
+        return false;
+    }
+
+	public void GetRankName(char rankName[64], int type) {
+		GetRankName(GetPlayerRank(that), rankName, type);
 	}
 
-	public int target_one(char target[128]) {
-		int target_index = FindTarget(that, target, true, false);
+	public void Pos(float pos[3]) {
+		GetClientEyePosition(that, pos);
+	}
 
-		if (target_index == -1) {
-			CPrintToChat(that, "{purple}[TTT] {orchid}No targets were found.");
+    public void SetPos(float pos[3]) {
+		TeleportEntity(that, pos, NULL_VECTOR, NULL_VECTOR);
+	}
+
+	public Player TargetOne(char target[128], bool respond = false, bool immunity = true) {
+		//int targetIndex = FindTarget(that, target, true, immunity);
+
+		int targets[MAXPLAYERS];
+
+		char targetName[256];
+		bool tnIsMl;
+
+		int targetIndex = ProcessTargetString(target, that, targets, sizeof(targets), COMMAND_FILTER_NO_IMMUNITY | COMMAND_FILTER_NO_MULTI, targetName, sizeof(targetName), tnIsMl);
+
+		if (targetIndex == 1) {
+			return view_as<Player>(targets[0]);
 		}
 
-		return target_index;
-	}
-
-	public void get_actions(int actions[2]) {
-		GetActions(that, actions);
-		//char auth[255];
-		//this.get_auth(AuthId_Steam2, auth);
-
-		//DBStatement player_actions = PrepareStatement(database_ttt, "SELECT bad_action,COUNT(*) AS count FROM `deaths` WHERE `killer_id`=? GROUP BY bad_action ORDER BY bad_action;");
-		//SQL_BindParamString(player_actions, 0, auth, false);
-		//if (!SQL_Execute(player_actions)) { PrintToServer("User Action Grab Failed."); return; }
-
-		//while (SQL_FetchRow(player_actions)) {
-		//	actions[SQL_FetchInt(player_actions, 0)] = SQL_FetchInt(player_actions, 1);
-		//}
-	}
-
-	public void session_and_hash(char string[63], char hash[127]) {
-		char auth[255];
-		this.get_auth(AuthId_SteamID64, auth);
-		DBStatement statement = PrepareStatement(database_ttt, "SELECT * FROM sessions WHERE steam_id=?");
-		SQL_BindParamString(statement, 0, auth, false);
-		if (!SQL_Execute(statement)) { PrintToServer("Session Search SQL Execute Failed..."); return; }
-
-		if (SQL_FetchRow(statement)) {
-			// A row was found!  Return the session.
-			SQL_FetchString(statement, 1, string, sizeof(string));
-			SQL_FetchString(statement, 2, hash, sizeof(hash));
-		} else {
-			// A row was not found.  Generate the session and insert it into the DB.
-			char session_string[62];
-			generate_session(session_string);
-			DBStatement insert_statement = PrepareStatement(database_ttt, "INSERT INTO sessions (steam_id, session_id, skill_hash, skill_points) VALUES (?, ?, \"\", ?);");
-			SQL_BindParamString(insert_statement, 0, auth, false);
-			SQL_BindParamString(insert_statement, 1, session_string, false);
-			SQL_BindParamInt(insert_statement, 2, this.skill_points, false);
-			if (!SQL_Execute(insert_statement)) { PrintToServer("Session Set SQL Execute Failed..."); return; }
+		if (respond) {
+			if (targetIndex == -1) this.Error("No targets were found.");
+			if (targetIndex == -2) this.Error("Target is not alive.");
+			if (targetIndex == -3) this.Error("Target is not dead.");
+			if (targetIndex == -4) this.Error("Target is not in game.");
+			if (targetIndex == -5) this.Error("Target is immune.");
+			if (targetIndex == -6) this.Error("Target is not human.");
+			if (targetIndex == -7) this.Error("Ambiguous target string.");
 		}
 
-		return;
+		return view_as<Player>(targetIndex);
 	}
 
-	public void display_skills_page() {
-		char url[512], session[63], hash[127];
-		this.session_and_hash(session, hash);
-		Format(url, sizeof(url), "http://ttt.clwo.eu:3000/#^%s^%s", hash, session);
-		CPrintToChat(that, "{purple}[TTT] {red}Beta user? Go to: {blue}%s", url);
-		this.display_url(url, false);
+	public void SetName(char name[64]) {
+		// Currently, this does not work in CS:GO.  So we're being awkward
+		// and using the command version.
+		//SetClientName(that, name);
+
+		char command[128];
+		Format(command, sizeof(command), "sm_rename #%i %s", GetClientUserId(that), name);
+		ServerCommand(command);
 	}
 
-	property int experience {
-		public get() { 
-			return this.get_cookie_int(cookie_player_experience, 0);
+	public void Weapon(char weapon[64]) {
+		GetClientWeapon(that, weapon, sizeof(weapon));
+	}
+
+	// This command returns true when only informers are on a non-spectator team.
+	public bool ActiveInformer(bool response = true) {
+		// A good addition to this function would be some way for staff to specify that they want
+		// the informers help for a command.  A similar system to "adopt" on JB.
+		bool activeInformer = GetPlayerRank(that) == RANK_INFORMER;
+
+		if (activeInformer && !GetActiveStaffCount()) {
+			return true;
 		}
-		public set(int experience) {
-			this.set_cookie_int(cookie_player_experience, experience);
-			check_level(this);
-			show_experience_bar(this);
+
+		if (!activeInformer) {
+			char msg[255];
+			Format(msg, sizeof(msg), "Access denied, not an informer.");
+			this.Error(msg);
 		}
+
+		if (GetActiveStaffCount()) {
+			char msg[255];
+			Format(msg, sizeof(msg), "Access denied, %i staff active.", GetActiveStaffCount());
+			this.Error(msg);
+		}
+
+		return false;
 	}
 
-	public void profile(int client) {
-		Player player = Player(client);
+	public bool Access(int rank, bool response = false) {
+		bool access = GetPermission(that, rank);
 
-		// We still need to get colours sorted out.
-		int actions[2];
-		char exp_bar[80];
-		player.get_actions(actions);
-		get_experience_bar(player, exp_bar);
+		if (!access && response) {
+			this.Msg("{red}You do not have access to this command!");
+		}
 
-		int good_action_percentage = RoundFloat(float(actions[0]) * 100 / float(actions[0] + actions[1]));
-		// Fix for azure's report where having a 0 in the total actions will cause a very large negative percentage.
-		if (actions[0] + actions[1] < 1) { good_action_percentage = 50; }
-		char good_action_colour[32] = "{GREEN}";
-
-		// We have nine lines to work with...
-		CPrintToChat(that, "┏━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
-		CPrintToChat(that, "┃ Playtime: %d hours", RoundFloat(float(player.playtime) / 3600));
-		CPrintToChat(that, "┃ Karma: %d ({GREEN}+%d{DEFAULT}, {RED}-%d{DEFAULT}, %s%d%s)", player.karma, actions[0], actions[1], good_action_colour, good_action_percentage, "%%");
-		CPrintToChat(that, "┃ Level: %d (%d / %d | %d%s)", player.level, player.experience, player.level_up_experience, Percentage(player.experience, player.level_up_experience - player.experience), "%%");
-		CPrintToChat(that, "┃ EXP: %s", exp_bar);
-		CPrintToChat(that, "┃ ");
-		CPrintToChat(that, "┃ ");
-		CPrintToChat(that, "┃ ");
-		CPrintToChat(that, "┗━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
+		return access;
 	}
 
-	public void reset_skills() {
-		char auth[255], query[255];
-		this.get_auth(AuthId_SteamID64, auth);
-		FormatEx(query, sizeof(query), "DELETE FROM `sessions` WHERE `steam_id`=\"%s\"", auth);
-		PrintToServer("Running query: %s", query);
-		SQL_FastQuery(database_ttt, query);
+	public void SendPanelMsg(char[] title, char[] message) {
+		ReplaceString(message, MAX_MSAY_LENGTH, "\\n", "\n");
+
+		Panel panel = new Panel();
+		panel.SetTitle(title);
+		panel.DrawItem("", ITEMDRAW_SPACER);
+		panel.DrawText(message);
+		panel.DrawItem("", ITEMDRAW_SPACER);
+		panel.CurrentKey = GetMaxPageItems(panel.Style);
+		panel.DrawItem("Exit", ITEMDRAW_CONTROL);
+
+		if(IsValidClient(that)) {
+			panel.Send(that, HandlerDoNothing, 10);
+		}
+
+		delete panel;
 	}
-}
 
-public void check_level(Player player) {
-	//PrintToServer("Check level called on %N: %d > %d", player.id, player.experience, player.level_up_experience)
-	if (player.experience > player.level_up_experience) {
-		player.experience -= player.level_up_experience;
-		int new_level = player.level + 1;
-		player.level = new_level;
-		CPrintToChat(player.id, "{purple}[TTT] {green}Congratulations!  You've leveled up to level %d", new_level);
+	// Is this expected usage for natives within methodmaps?
+	// native void AddSpeed(float speed, float maxSpeed);
 
-		char msg[255];
-		Format(msg, sizeof(msg), "You are now lvl %i.", new_level);
+	public void Give(char weapon[64]) {
+		GivePlayerItem(that, weapon);
+	}
 
-		Panel lvlPanel = new Panel();
-		lvlPanel.SetTitle("Level Up!")
-		lvlPanel.DrawItem("", ITEMDRAW_SPACER);
-		lvlPanel.DrawText(msg);
-		lvlPanel.DrawText("You have gained a skill point to use in /skills.");
-		lvlPanel.DrawItem("", ITEMDRAW_SPACER);
-		lvlPanel.CurrentKey = GetMaxPageItems(lvlPanel.Style);
-		lvlPanel.DrawItem("Exit", ITEMDRAW_CONTROL);
+	public void Mute(int time, const char[] reason) {
+		SourceComms_SetClientMute(that, true, time, true, reason);
+	}
 
-		lvlPanel.Send(player.id, HandlerDoNothing, 10);
+	public void CSay(char[] msg) {
+		PrintCenterText(that, msg);
+	}
 
-		ClientCommand(player.id, "play */ttt_clwo/ttt_levelup.mp3");
+	public void Gag(int time, const char[] reason) {
+		SourceComms_SetClientGag(that, true, time, true, reason);
+	}
 
-		char auth[255], query[255];
-		player.get_auth(AuthId_SteamID64, auth);
-		FormatEx(query, sizeof(query), "UPDATE `sessions` SET `skill_points` = %d WHERE `steam_id` = \"%s\"", new_level, auth);
-		PrintToServer("Running query: %s", query);
-		if (!SQL_FastQuery(database_ttt, query))
+	public void Kick(const char[] reason) {
+		KickClient(that, reason);
+	}
+
+    public void Spectate(int target) {
+        SetEntPropEnt(that, Prop_Send, "m_hObserverTarget", target);
+    	SetEntProp(that, Prop_Send, "m_iObserverMode", 4);
+    }
+
+	public void SetScreenColor(int color[4], int duration, int holdTime, int flags)
+	{
+		if (g_FadeUserMsgId == INVALID_MESSAGE_ID)
 		{
-			char error[255];
-			SQL_GetError(database_ttt, error, sizeof(error));
-			PrintToServer("Failed to query (error: %s)", error);
+			g_FadeUserMsgId = GetUserMessageId("Fade");
+		}
+
+		int clients[1];
+		clients[0] = that;
+
+		Handle message = StartMessageEx(g_FadeUserMsgId, clients, 1);
+		if (GetUserMessageType() == UM_Protobuf)
+		{
+			PbSetInt(message, "duration", duration);
+			PbSetInt(message, "hold_time", holdTime);
+			PbSetInt(message, "flags", flags);
+			PbSetColor(message, "clr", color);
+		}
+		else
+		{
+			BfWriteShort(message, duration);
+			BfWriteShort(message, holdTime);
+			BfWriteShort(message, flags);
+			BfWriteByte(message, color[0]);
+			BfWriteByte(message, color[1]);
+			BfWriteByte(message, color[2]);
+			BfWriteByte(message, color[3]);
+		}
+
+		EndMessage();
+	}
+
+	property int Rank {
+		public get() {
+			return GetPlayerRank(that);
+		}
+	}
+
+	property bool Informer {
+		public get() {
+			return GetPlayerRank(that) == RANK_INFORMER;
+		}
+	}
+
+	property bool Found {
+		public get() {
+			return TTT_GetFoundStatus(that);
+		}
+		public set(bool found) {
+			TTT_SetFoundStatus(that, found);
+		}
+	}
+
+	property int TraitorKills {
+		public get() {
+			return g_traitorKills[that];
+		}
+		public set(int kills) {
+			g_traitorKills[that] = kills;
+		}
+	}
+
+	property int Armour {
+		public get() {
+			return GetEntProp(that, Prop_Data, "m_ArmorValue");
+		}
+		public set(int armour) {
+			SetEntProp(that, Prop_Data, "m_ArmorValue", armour, 1);
+		}
+	}
+
+	property int Health {
+		public get() {
+			return GetClientHealth(that);
+		}
+		public set(int health) {
+			SetEntityHealth(that, health);
+		}
+	}
+
+	property int MaxHealth {
+		public get() {
+			return GetEntProp(that, Prop_Data, "m_iMaxHealth", 4);
+		}
+	}
+
+	property int Client {
+		public get() {
+			return that;
+		}
+	}
+
+	property int Role {
+		public get() {
+			return TTT_GetClientRole(that);
+		}
+	}
+
+	property bool Traitor {
+		public get() {
+			return this.Role == TTT_TEAM_TRAITOR;
+		}
+	}
+
+	property bool Innocent {
+		public get() {
+			return this.Role == TTT_TEAM_INNOCENT;
+		}
+	}
+
+	property bool Detective {
+		public get() {
+			return this.Role == TTT_TEAM_DETECTIVE;
+		}
+	}
+
+	property bool Muted {
+		public get() {
+			return SourceComms_GetClientMuteType(that) != bNot;
+		}
+	}
+
+	public bool HasCommandAccess (char commandName[64], int defaultFlags) {
+		return CheckCommandAccess(that, commandName, defaultFlags);
+	}
+
+	property bool Gagged {
+		public get() {
+			return SourceComms_GetClientGagType(that) != bNot;
+		}
+	}
+
+	property int Team {
+		public get() {
+			return GetClientTeam(that);
+		}
+		public set(int team) {
+			CS_SwitchTeam(that, team);
+		}
+	}
+
+	property bool CounterTerrorist {
+		public get() {
+			return this.Team == CS_TEAM_CT;
+		}
+	}
+
+	property bool Terrorist {
+		public get() {
+			return this.Team == CS_TEAM_T;
+		}
+	}
+
+	property bool Spectator {
+		public get() {
+			return this.Team == CS_TEAM_SPECTATOR;
+		}
+	}
+
+	property bool Staff {
+		public get() {
+			// Returns true, even for blocked informers.
+			return GetPlayerRank(that) >= RANK_INFORMER;
+		}
+	}
+
+	property bool Alive {
+		public get() {
+			return IsPlayerAlive(that);
+		}
+		public set(bool alive) {
+			if (alive) {
+				ForcePlayerSuicide(that);
+				TTT_SetFoundStatus(that, true);
+			} else {
+				CS_RespawnPlayer(that);
+				TTT_SetFoundStatus(that, false);
+			}
+		}
+	}
+
+	property int Credits {
+		public get() {
+			return TTT_GetClientCredits(that);
+		}
+		public set(int amount) {
+			TTT_SetClientCredits(that, amount);
+		}
+	}
+
+	property bool ValidClient {
+		public get() {
+			if(!IsValidClient(that))
+				return false;
+
+			return true;
 		}
 	}
 }
 
 public int HandlerDoNothing(Menu menu, MenuAction action, int param1, int param2) {
-	/* Do nothing */
+	// Do nothing.  It's really exciting.
+	return;
 }
 
-public void show_experience_bar(Player player)
+public bool TraceEntityFilterPlayer(entity, contentsMask)
 {
-	char unicode_bar[80];
-	char introduction[100] = "Exp: ";
-	get_experience_bar(player, unicode_bar);
-	StrCat(introduction, sizeof(introduction), unicode_bar);
-	Handle hHudText = CreateHudSynchronizer();
-	SetHudTextParams(0.01, 0.01, 5.0, 255, 128, 0, 255, 0, 0.0, 0.0, 0.0);
-	ShowSyncHudText(player.id, hHudText, introduction);
-	CloseHandle(hHudText);
-}
-
-public void generate_session(char session_string[62]) {
-	for (int i = 0; i < 16; i++) {
-		int random_int = GetRandomInt(0, 61);
-		Format(session_string, sizeof(session_string), "%s%c", session_string, chars[random_int]);
-	}
-}
-
-public void get_experience_bar(Player player, char unicode_bar[80]) {
-	const int bar_size = 80;
-	const int num_bars = 20;
-
-	float level_up_percentage = float(player.experience) / float(player.level_up_experience);
-	int coloured_squares = RoundFloat(num_bars * level_up_percentage);
-
-	//CPrintToChat(player.id, "Bar Size: %d, Levelup Percentage: %f, Total Bars: %d", bar_size, level_up_percentage, coloured_squares, num_bars);
-
-	for (int i = 0; i < num_bars; i++) {
-		//CPrintToChat(player.id, "Bar: %s", unicode_bar);
-		if (i <= coloured_squares) {
-			StrCat(unicode_bar, bar_size, "▰");
-			//CPrintToChat(player.id, "Adding filled in bar: %d", i);
-		}
-		else {
-			StrCat(unicode_bar, bar_size, "▱");
-			//CPrintToChat(player.id, "Adding empty in bar: %d", i);
-		}
-		//CPrintToChat(player.id, "Bar: %s", unicode_bar);
-	}
-
-	//CPrintToChat(player.id, "Bar: %s", unicode_bar);
+    return entity > MaxClients;
 }
