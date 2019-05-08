@@ -20,15 +20,13 @@ public SharedPlugin __pl_ttt_ranks =
 #if !defined REQUIRE_PLUGIN
 public __pl_ttt_upgrades_SetNTVOptional()
 {
+    MarkNativeAsOptional("TTT_Ranks_IsStaff");
 	MarkNativeAsOptional("GetRankName");
 	MarkNativeAsOptional("GetPermission");
     MarkNativeAsOptional("GetPlayerRank");
+    MarkNativeAsOptional("GetRankTag");
 }
 #endif
-
-#define MAX_USER_STANDARD_RANKS 8
-#define MAX_USER_RANKS 11
-#define MAX_USER_TYPES 6
 
 #define RANK_PLEB 			0
 #define RANK_VIP 			1
@@ -54,7 +52,8 @@ public __pl_ttt_upgrades_SetNTVOptional()
 native bool TTT_Ranks_IsStaff(int client);
 
 native bool GetPermission(int client, int requiredRank);
-native void GetRankName(int rank, char name[64], int type);
+native void GetRankName(int rank, char name[32]);
+native void GetRankTag(int rank, char tag[16])
 native int GetPlayerRank(int client);
 
 stock int GetStaffArray(int staff[32])

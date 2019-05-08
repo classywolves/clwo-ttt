@@ -39,13 +39,14 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 {
     if (message[0] != '@') // Not staff / all say or pm.
     {
-        char buffer[64];
+        char buffer[16];
         char teamColor[6];
         char staffTag[64];
 
-        GetRankName(GetPlayerRank(author), buffer, USER_RANK_CHAT_NAME);
-        if (buffer[0] != 0x00)
+        int rank = GetPlayerRank(author);
+        if (rank > RANK_PLEB)
         {
+            GetRankTag(rank, buffer)
             Format(staffTag, 64, "{default}[{blue}%s{default}]", buffer);
         }
 
