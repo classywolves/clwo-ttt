@@ -33,19 +33,17 @@ public OnPluginStart() {
 }
 
 public void RegisterCmds() {
-    RegConsoleCmd("sm_bantimes", Command_BanTimes, "List Common Time Lengths.");
-    RegConsoleCmd("sm_forcespec", Command_ForceSpectator, "Moves a player to spectator.");
-    RegConsoleCmd("sm_reloadplugin", Command_ReloadPlugin, "Reloads the passed plugin.");
-    RegConsoleCmd("sm_slaynr", Command_SlayNextRound, "Slay a player before roles are assigned for the next round.");
-    RegConsoleCmd("sm_scsay", Command_SCSay, "Targeted CSay.");
-    RegConsoleCmd("sm_smsay", Command_SMSay, "Targeted MSay.");
-    RegConsoleCmd("sm_tp", Command_Teleport, "Allows a staff member to teleport another player.");
-    RegConsoleCmd("sm_teleport", Command_Teleport, "Allows a staff member to teleport another player.");
+    RegAdminCmd("sm_bantimes", Command_BanTimes, ADMFLAG_GENERIC, "List Common Time Lengths.");
+    RegAdminCmd("sm_forcespec", Command_ForceSpectator, ADMFLAG_GENERIC, "Moves a player to spectator.");
+    RegAdminCmd("sm_reloadplugin", Command_ReloadPlugin, ADMFLAG_RCON, "Reloads the passed plugin.");
+    RegAdminCmd("sm_slaynr", Command_SlayNextRound, ADMFLAG_SLAY, "Slay a player before roles are assigned for the next round.");
+    RegAdminCmd("sm_scsay", Command_SCSay, ADMFLAG_CHAT, "Targeted CSay.");
+    RegAdminCmd("sm_smsay", Command_SMSay, ADMFLAG_CHAT, "Targeted MSay.");
+    RegAdminCmd("sm_tp", Command_Teleport, ADMFLAG_GENERIC, "Allows a staff member to teleport another player.");
+    RegAdminCmd("sm_teleport", Command_Teleport, ADMFLAG_GENERIC, "Allows a staff member to teleport another player.");
 }
 
 public Action Command_BanTimes(int client, int args) {
-    if (!Player(client).Access(RANK_INFORMER, true)) { return Plugin_Handled; }
-
     CPrintToChat(client, "{purple}[TTT] {yellow}The following are some common ban times:");
     CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}hour  --> {blue}60    {yellow}minutes");
     CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}day   --> {blue}1440  {yellow}minutes");
@@ -58,8 +56,6 @@ public Action Command_BanTimes(int client, int args) {
 
 public Action Command_ForceSpectator(int client, int args) {
     Player player = Player(client);
-    if (!player.Access(RANK_INFORMER, true)) { return Plugin_Handled; }
-
     if (args < 1) {
         player.Error("Usage: sm_forcespec <target>.");
         return Plugin_Handled;
@@ -78,8 +74,6 @@ public Action Command_ForceSpectator(int client, int args) {
 
 public Action Command_ReloadPlugin(int client, int args) {
     Player player = Player(client);
-    if (!player.Access(RANK_ADMIN, true)) { return Plugin_Handled; }
-
     if (args < 1) {
         player.Error("Usage: sm_reload <plugin>.");
         return Plugin_Handled;
@@ -100,10 +94,6 @@ public Action Command_ReloadPlugin(int client, int args) {
 
 public Action Command_SlayNextRound(int client, int args) {
     Player player = Player(client);
-    if (!player.Access(RANK_INFORMER, true)) {
-        return Plugin_Handled;
-    }
-
     if (args < 1) {
         player.Error("Invalid Usage: sm_slaynr <target name>");
         return Plugin_Handled;
@@ -121,11 +111,6 @@ public Action Command_SlayNextRound(int client, int args) {
 public Action Command_SMSay(int client, int args)
 {
 	Player player = Player(client);
-
-	if (!Player(client).Access(RANK_INFORMER, true)) {
-		return Plugin_Handled;
-	}
-
 	if (args < 2) {
 		player.Error("Invalid Usage: /smsay <player> <message>")
 		return Plugin_Handled;
@@ -159,10 +144,6 @@ public Action Command_SMSay(int client, int args)
 public Action Command_SCSay(int client, int args)
 {
 	Player player = Player(client);
-	if (!Player(client).Access(RANK_INFORMER, true)) {
-		return Plugin_Handled;
-	}
-
 	if (args < 2) {
 		player.Error("Invalid Usage: /scsay <player> <message>")
 		return Plugin_Handled;
@@ -193,8 +174,6 @@ public Action Command_SCSay(int client, int args)
 
 public Action Command_Teleport(int client, int args) {
     Player player = Player(client);
-    if (!player.Access(RANK_INFORMER, true)) { return Plugin_Handled; }
-
     if (args < 1) {
         player.Error("Usage: sm_teleport <target> [player].");
         return Plugin_Handled;

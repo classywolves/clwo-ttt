@@ -74,11 +74,11 @@ public OnPluginStart()
 }
 
 public void RegisterCmds() {
-  RegConsoleCmd("sm_spawngun", Command_SpawnGun, "Spawn a gun!");
-  RegConsoleCmd("sm_spawnguns", Command_SpawnGuns, "Spawn all guns!");
-  RegConsoleCmd("sm_addloc", Command_AddLoc, "Add a position for a gun to spawn!");
-  RegConsoleCmd("sm_loadlocs", Command_LoadLocs, "Load locations for guns to spawn!");
-  RegConsoleCmd("sm_showlocs", Command_ShowLocs, "Show all locations on a map!");
+  RegAdminCmd("sm_spawngun", Command_SpawnGun, ADMFLAG_CONVARS, "Spawn a gun!");
+  RegAdminCmd("sm_spawnguns", Command_SpawnGuns, ADMFLAG_CONVARS, "Spawn all guns!");
+  RegAdminCmd("sm_addloc", Command_AddLoc, ADMFLAG_CONVARS, "Add a position for a gun to spawn!");
+  RegAdminCmd("sm_loadlocs", Command_LoadLocs, ADMFLAG_CONVARS, "Load locations for guns to spawn!");
+  RegAdminCmd("sm_showlocs", Command_ShowLocs, ADMFLAG_CONVARS, "Show all locations on a map!");
 }
 
 public void HookEvents() {
@@ -107,10 +107,6 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
 
 public Action Command_SpawnGun(int client, int args) {
   Player player = Player(client);
-
-  if (!player.Access(RANK_SENATOR, true)) {
-    return Plugin_Handled;
-  }
 
   char name[128], mode[128], ipos[256];
   float pos[3];
@@ -143,10 +139,6 @@ public Action Command_SpawnGun(int client, int args) {
 public Action Command_SpawnGuns(int client, int args) {
   Player player = Player(client);
 
-  if (!player.Access(RANK_SENATOR, true)) {
-    return Plugin_Handled;
-  }
-
   SpawnGuns();
 
   return Plugin_Handled;
@@ -154,10 +146,6 @@ public Action Command_SpawnGuns(int client, int args) {
 
 public Action Command_AddLoc(int client, int args) {
   Player player = Player(client);
-
-  if (!player.Access(RANK_SENATOR, true)) {
-    return Plugin_Handled;
-  }
 
   float pos[3];
   player.Pos(pos);
@@ -173,10 +161,6 @@ public Action Command_AddLoc(int client, int args) {
 
 public Action Command_LoadLocs(int client, int args) {
   Player player = Player(client);
-
-  if (!player.Access(RANK_SENATOR, true)) {
-    return Plugin_Handled;
-  }
 
   LoadPoints();
 

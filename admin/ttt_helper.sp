@@ -50,7 +50,7 @@ public Action Command_HMsg(int client, int args)
     Player target;
 	if (args > 1)
 	{
-		if (!player.Access(RANK_INFORMER, true))
+		if (!(GetUserFlagBits(client) & ADMFLAG_GENERIC == ADMFLAG_GENERIC))
 		{
 			player.Error("You do not have access to target players with this command!");
 			return Plugin_Handled;
@@ -85,7 +85,7 @@ public Action Command_HR(int client, int args)
     Player target;
 	if (args > 1)
 	{
-		if (!player.Access(RANK_INFORMER, true))
+		if (!(GetUserFlagBits(client) & ADMFLAG_GENERIC == ADMFLAG_GENERIC))
 		{
 			player.Error("You do not have access to target players with this command!");
 			return Plugin_Handled;

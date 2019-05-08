@@ -36,10 +36,10 @@ public OnPluginStart() {
 
 public void RegisterCmds() {
     RegConsoleCmd("sm_rdm", Command_RDM, "Shows the RDM report window for all recent killers.");
-    RegConsoleCmd("sm_cases", Command_CaseCount, "Shows the current amount of cases to staff.");
-    RegConsoleCmd("sm_handle", Command_Handle, "Handles the next case or a user inputted case.");
-    RegConsoleCmd("sm_info", Command_Info, "Displays all of the information for a given case.");
-    RegConsoleCmd("sm_verdict", Command_Verdict, "Shows a member of staff the availible verdicts for there current case.");
+    RegAdminCmd("sm_cases", Command_CaseCount, ADMFLAG_GENERIC, "Shows the current amount of cases to staff.");
+    RegAdminCmd("sm_handle", Command_Handle, ADMFLAG_SLAY, "Handles the next case or a user inputted case.");
+    RegAdminCmd("sm_info", Command_Info, ADMFLAG_SLAY, "Displays all of the information for a given case.");
+    RegAdminCmd("sm_verdict", Command_Verdict, ADMFLAG_SLAY, "Shows a member of staff the availible verdicts for there current case.");
 }
 
 public void HookEvents() {
@@ -73,8 +73,6 @@ public void TTT_OnClientDeath(int victim, int attacker)
 public Action Command_CaseCount(int client, int args)
 {
     Player player = Player(client);
-    if (!player.Access(RANK_INFORMER, true)) { return Plugin_Handled; }
-
     char query[768];
     rdmDb.Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `reports` LEFT JOIN `handles` ON `reports`.`death_index` = `handles`.`death_index` WHERE `handles`.`verdict` IS NULL;");
     rdmDb.Query(RdmStaffReportCallback, query, client);
@@ -84,8 +82,6 @@ public Action Command_CaseCount(int client, int args)
 
 public Action Command_Handle(int client, int args) {
     Player player = Player(client);
-    if (!player.Access(RANK_INFORMER, true)) { return Plugin_Handled; }
-
     if (currentCase[client] != -1) {
         player.Error("You cannot handle a new case whilst you still have a case awaiting your verdict.");
         return Plugin_Handled;
@@ -126,8 +122,6 @@ public Action Command_RDM(int client, int args) {
 
 public Action Command_Verdict(int client, int args) {
     Player player = Player(client);
-    if (!player.Access(RANK_INFORMER, true)) { return Plugin_Handled; }
-
     if (currentCase[client] < 0) {
         player.Error("You do not currently have a case to cast a verdict upon.");
         return Plugin_Handled;
