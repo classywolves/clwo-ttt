@@ -183,6 +183,7 @@ public Action Command_Teleport(int client, int args) {
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
     Player target = player.TargetOne(buffer, true);
     if (!target.ValidClient) { return Plugin_Handled; }
+    if (!IsPlayerAlive(client)) { return Plugin_Handled; }
 
     float pos[3];
     if (args == 1) {
