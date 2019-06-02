@@ -46,7 +46,7 @@ char chatTags[rankCount][16] =
     "S.Mod",
     "G",
     "A",
-    "S. Admin",
+    "S.Admin",
     "Δ",
     "S"
 }
