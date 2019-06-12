@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 /*
  * Base CS:GO plugin requirements.
  */
@@ -11,12 +13,8 @@
 #include <colorvariables>
 #include <sourcecomms>
 #include <generics>
-#include <commands_helper>
-
-/*
- * Custom methodmaps
- */
-#include <player_methodmap>
+#include <ttt_messages>
+#include <ttt_targeting>
 
 /*
  * Custom databases
@@ -48,31 +46,24 @@ public InitDBs() {
 // SteamID, Timestamp, Message, MsgType AdminID, AdminName
 
 public void RegisterCmds() {
-  RegConsoleCmd("sm_addhistory", Command_AddHistory, "Add a message to a players log");
-  RegConsoleCmd("sm_history", Command_History, "List a players history")
+  RegAdminCmd("sm_addhistory", Command_AddHistory, ADMFLAG_CHAT, "Add a message to a players log");
+  RegAdminCmd("sm_history", Command_History, ADMFLAG_CHAT, "List a players history");
 }
 
 public Action Command_AddHistory(int client, int args) {
 	// Usage is "/addhistory <target> <message>"
-	Player player = Player(client);
-
-	// Player is not tmod or above AND is not an active informer.
-	if (!player.Informer && player.Staff) {
-		player.Error("You do not have access to this command!");
-		return Plugin_Handled;
-	}
-
 	if (args < 2) {
-		player.Error("Invalid Usage: /addhistory <target> <message>")
+		TTT_Error(client, "Invalid Usage: /addhistory <target> <message>");
 		return Plugin_Handled;
 	}
 
 	char arg1[128], message[256], buffer[128], auth[64], adminAuth[64], adminName[64];
 
 	GetCmdArg(1, arg1, sizeof(arg1));
-	Player target = player.TargetOne(arg1, true);
+	int target = TTT_Target(arg1, client, true, true, false);
 
-	if (target.Client == -1) {
+	if (target == -1)
+    {
 		return Plugin_Handled;
 	}
 
@@ -83,9 +74,9 @@ public Action Command_AddHistory(int client, int args) {
 		Format(message, sizeof(message), "%s %s", message, buffer);
 	}
 
-	target.Auth(AuthId_Steam2, auth);
-	player.Auth(AuthId_Steam2, adminAuth);
-	player.Name(adminName);
+	GetClientAuthId(target, AuthId_Steam2, auth, sizeof(auth));
+	GetClientAuthId(client, AuthId_Steam2, adminAuth, sizeof(adminAuth));
+	GetClientName(client, adminName, sizeof(adminName));
 
 	HistoryInsert(auth, message, "ADM_NOTE", adminName, adminAuth);
 
@@ -94,25 +85,20 @@ public Action Command_AddHistory(int client, int args) {
 
 public Action Command_History(int client, int args) {
 	// Usage is "/history <target> <page>"
-	Player player = Player(client);
-
-	// Player is not tmod or above AND is not an active informer.
-	if (!player.Informer && player.Staff) {
-		player.Error("You do not have access to this command!");
-		return Plugin_Handled;
-	}
-
 	if (args < 1) {
-		player.Error("Invalid Usage: /addhistory <target> <page>")
+		TTT_Error(client, "Invalid Usage: /addhistory <target> <page>");
 		return Plugin_Handled;
 	}
 
-	char arg1[128]
+	char arg1[128];
 	
 	GetCmdArg(1, arg1, sizeof(arg1));
-	Player target = player.TargetOne(arg1, true);
+	int target = TTT_Target(arg1, client, true, true, false);
 
-	if (target.Client == -1) {
+	if (target == -1)
+    {
 		return Plugin_Handled;
 	}
+
+    return Plugin_Handled;
 }

@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 /*
  * Base CS:GO plugin requirements.
  */
@@ -10,6 +12,9 @@
  */
 #include <colorvariables>
 #include <sourcecomms>
+#include <ttt_messages>
+#include <ttt_ranks>
+#include <ttt_targeting>
 #include <generics>
 
 public OnPluginStart()
@@ -37,16 +42,14 @@ public void InitDBs() {
 
 public Action Command_InformerMute(int client, int args) {
   // Usage is "/imute <target> <time> <reason>"
-  Player player = Player(client);
-
   // Player is not tmod or above AND is not an active informer.
-  if (!player.Informer) {
-    player.Error("You do not have access to this command!");
+  if (GetPlayerRank(client) != RANK_INFORMER) {
+    TTT_Error(client, "You do not have access to this command!");
     return Plugin_Handled;
   }
 
   if (args < 1) {
-    player.Error("Invalid Usage: /imute <target> <time> <reason>")
+    TTT_Error(client, "Invalid Usage: /imute <target> <time> <reason>");
     return Plugin_Handled;
   }
 
@@ -54,14 +57,15 @@ public Action Command_InformerMute(int client, int args) {
   int time;
 
   GetCmdArg(1, arg1, sizeof(arg1));
-  Player target = player.TargetOne(arg1, true)
+  int target = TTT_Target(arg1, client, true, true, false);
 
-  if (target.Client == -1) {
+  if (target == -1) {
     return Plugin_Handled;
   }
 
-  if (target.Muted) {
-    player.Error("This player is already muted!")
+  //Check if client has not been muted already
+  if (SourceComms_GetClientMuteType(target) != bNot) {
+    TTT_Error(client, "This player is already muted!");
     return Plugin_Handled;
   }
 
@@ -76,13 +80,13 @@ public Action Command_InformerMute(int client, int args) {
     time = StringToInt(arg2);
 
     if (time < 1) {
-      player.Error("Invalid time frame entered.");
+      TTT_Error(client, "Invalid time frame entered.");
       return Plugin_Handled;
     }
 
     if (time > 60) {
       time = 60;
-      player.Error("The time has been reduced to 60 minutes, the maximum amount of time an informer can mute for.");
+      TTT_Error(client, "The time has been reduced to 60 minutes, the maximum amount of time an informer can mute for.");
     }
   }
 
@@ -101,11 +105,11 @@ public Action Command_InformerMute(int client, int args) {
 
   Format(reason, sizeof(reason), "%sMuted by %L", reason, client);
 
-  target.Mute(time, reason);
+  SourceComms_SetClientMute(target, true, time, true, reason);
   if (args >= 3) {
-    CPrintToChatAll("{purple}[TTT] {yellow}%N has been muted for %i minutes by %N due to '%s'", target.Client, time, player.Client, mini);
+    CPrintToChatAll("{purple}[TTT] {yellow}%N has been muted for %i minutes by %N due to '%s'", target, time, client, mini);
   } else {
-    CPrintToChatAll("{purple}[TTT] {yellow}%N has been muted for %i minutes by %N", target.Client, time, player.Client);
+    CPrintToChatAll("{purple}[TTT] {yellow}%N has been muted for %i minutes by %N", target, time, client);
   }
 
   return Plugin_Handled;
@@ -113,16 +117,14 @@ public Action Command_InformerMute(int client, int args) {
 
 public Action Command_InformerGag(int client, int args) {
   // Usage is "/igag <target> <time> <reason>"
-  Player player = Player(client);
-
   // Player is not tmod or above AND is not an active informer.
-  if (!player.Informer) {
-    player.Error("You do not have access to this command!");
+  if (GetPlayerRank(client) != RANK_INFORMER) {
+    TTT_Error(client, "You do not have access to this command!");
     return Plugin_Handled;
   }
 
   if (args < 1) {
-    player.Error("Invalid Usage: /igag <target> <time> <reason>")
+    TTT_Error(client, "Invalid Usage: /igag <target> <time> <reason>");
     return Plugin_Handled;
   }
 
@@ -130,14 +132,15 @@ public Action Command_InformerGag(int client, int args) {
   int time;
 
   GetCmdArg(1, arg1, sizeof(arg1));
-  Player target = player.TargetOne(arg1, true)
+  int target = TTT_Target(arg1, client, true, true, false);
 
-  if (target.Client == -1) {
+  if (target == -1) {
     return Plugin_Handled;
   }
 
-  if (target.Gagged) {
-    player.Error("This player is already gagged!")
+  //Check if target is not gagged already
+  if (SourceComms_GetClientGagType(target) != bNot) {
+    TTT_Error(client, "This player is already gagged!");
     return Plugin_Handled;
   }
 
@@ -152,13 +155,13 @@ public Action Command_InformerGag(int client, int args) {
     time = StringToInt(arg2);
 
     if (time < 1) {
-      player.Error("Invalid time frame entered.");
+      TTT_Error(client, "Invalid time frame entered.");
       return Plugin_Handled;
     }
 
     if (time > 60) {
       time = 60;
-      player.Error("The time has been reduced to 60 minutes, the maximum amount of time an informer can gag for.");
+      TTT_Error(client, "The time has been reduced to 60 minutes, the maximum amount of time an informer can gag for.");
     }
   }
 
@@ -177,11 +180,11 @@ public Action Command_InformerGag(int client, int args) {
 
   Format(reason, sizeof(reason), "%sGagged by %L", reason, client);
 
-  target.Gag(time, reason);
+  SourceComms_SetClientGag(target, true, time, true, reason);
   if (args >= 3) {
-    CPrintToChatAll("{purple}[TTT] {yellow}%N has been gagged for %i minutes by %N due to '%s'", target.Client, time, player.Client, mini);
+    CPrintToChatAll("{purple}[TTT] {yellow}%N has been gagged for %i minutes by %N due to '%s'", target, time, client, mini);
   } else {
-    CPrintToChatAll("{purple}[TTT] {yellow}%N has been gagged for %i minutes by %N", target.Client, time, player.Client);
+    CPrintToChatAll("{purple}[TTT] {yellow}%N has been gagged for %i minutes by %N", target, time, client);
   }
 
   return Plugin_Handled;
@@ -189,25 +192,23 @@ public Action Command_InformerGag(int client, int args) {
 
 public Action Command_InformerKick(int client, int args) {
   // Usage is "/ikick <target> <reason>"
-  Player player = Player(client);
-
   // Player is not tmod or above AND is not an active informer.
-  if (!player.Informer) {
-    player.Error("You do not have access to this command!");
+  if (GetPlayerRank(client) != RANK_INFORMER) {
+    TTT_Error(client, "You do not have access to this command!");
     return Plugin_Handled;
   }
 
   if (args < 1) {
-    player.Error("Invalid Usage: /ikick <target> <reason>")
+    TTT_Error(client, "Invalid Usage: /ikick <target> <reason>");
     return Plugin_Handled;
   }
 
   char reason[255], mini[255], arg1[128], buffer[128];
 
   GetCmdArg(1, arg1, sizeof(arg1));
-  Player target = player.TargetOne(arg1, true)
+  int target = TTT_Target(arg1, client, true, true, false);
 
-  if (target.Client == -1) {
+  if (target == -1) {
     return Plugin_Handled;
   }
 
@@ -231,11 +232,11 @@ public Action Command_InformerKick(int client, int args) {
 
   Format(reason, sizeof(reason), "%sKicked by %L", reason, client);
 
-  target.Kick(reason);
+  KickClient(target, reason);
   if (args >= 3) {
-    CPrintToChatAll("{purple}[TTT] {green}%N {yellow}has been kicked by {green}%N{yellow} %s", target.Client, player.Client, mini);
+    CPrintToChatAll("{purple}[TTT] {green}%N {yellow}has been kicked by {green}%N{yellow} %s", target, client, mini);
   } else {
-    CPrintToChatAll("{purple}[TTT] {green}%N {yellow}has been kicked by {green}%N", target.Client, player.Client);
+    CPrintToChatAll("{purple}[TTT] {green}%N {yellow}has been kicked by {green}%N", target, client);
   }
 
   return Plugin_Handled;

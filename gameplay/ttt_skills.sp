@@ -139,7 +139,7 @@ public Action Event_OnRoundEnd(Event event, const char[] name, bool dontBroadcas
     }
 }
 
-public void TTT_OnBodyFound(int client, int victim, int[] ragdoll, bool silentID)
+public void TTT_OnBodyFound(int client, int victim, const char[] deadPlayer, bool silentID)
 {
     playerExperience[client] += 4;
     CheckLevel(client);

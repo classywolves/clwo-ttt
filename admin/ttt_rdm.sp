@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 /*
 * Base CS:GO plugin requirements.
 */
@@ -9,7 +11,9 @@
 * Custom include files.
 */
 #include <colorvariables>
-#include <generics>
+#include <ttt>
+#include <ttt_messages>
+#include <ttt_targeting>
 
 /*
 * Database includes.
@@ -57,13 +61,11 @@ public void Event_OnWeaponFire(Event event, const char[] name, bool dontBroadcas
 
 public void TTT_OnClientDeath(int victim, int attacker)
 {
-    Player playerVictim = Player(victim);
-    Player playerAttacker = Player(attacker);
+    int victimKarma = TTT_GetClientKarma(victim);
+    int attackerKarma = TTT_GetClientKarma(attacker);
 
-    int victimKarma = playerVictim.Karma;
-    int attackerKarma = playerAttacker.Karma;
-
-    if (playerAttacker.BadKill(victim)) {
+    if (BadKill(TTT_GetClientRole(attacker), TTT_GetClientRole(victim)))
+    {
         CPrintToChatStaff("{purple}[TTT] {yellow}Bad Action: [{green}%N{yellow}] ({blue}%d{yellow}) killed [{green}%N{yellow}] ({blue}%d{yellow})", attacker, attackerKarma, victim, victimKarma);
     }
 
@@ -72,7 +74,6 @@ public void TTT_OnClientDeath(int victim, int attacker)
 
 public Action Command_CaseCount(int client, int args)
 {
-    Player player = Player(client);
     char query[768];
     rdmDb.Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `reports` LEFT JOIN `handles` ON `reports`.`death_index` = `handles`.`death_index` WHERE `handles`.`verdict` IS NULL;");
     rdmDb.Query(RdmStaffReportCallback, query, client);
@@ -81,9 +82,8 @@ public Action Command_CaseCount(int client, int args)
 }
 
 public Action Command_Handle(int client, int args) {
-    Player player = Player(client);
     if (currentCase[client] != -1) {
-        player.Error("You cannot handle a new case whilst you still have a case awaiting your verdict.");
+        TTT_Error(client, "You cannot handle a new case whilst you still have a case awaiting your verdict.");
         return Plugin_Handled;
     }
 
@@ -94,8 +94,10 @@ public Action Command_Handle(int client, int args) {
     return Plugin_Handled;
 }
 
-public Action Command_Info(int client, int args) {
-    if (!rdmConnected) {
+public Action Command_Info(int client, int args)
+{
+    if (!rdmConnected)
+    {
         return Plugin_Handled;
     }
 
@@ -106,13 +108,15 @@ public Action Command_Info(int client, int args) {
     return Plugin_Handled;
 }
 
-public Action Command_RDM(int client, int args) {
-    if (!rdmConnected) {
+public Action Command_RDM(int client, int args)
+{
+    if (!rdmConnected)
+    {
         return Plugin_Handled;
     }
 
     char query[768];
-    char auth[64]; Player(client).Auth(AuthId_Steam2, auth);
+    char auth[64]; GetClientAuthId(client, AuthId_Steam2, auth, 64);
 
     rdmDb.Format(query, sizeof(query), "SELECT `deaths`.`death_index` as `death_id`, `deaths`.`round_no` as `round_no`, `deaths`.`killer_name` as `killer_name` FROM `deaths` WHERE `victim_id` = '%s' ORDER BY `deaths`.`death_time`  DESC LIMIT 10;", auth);
     rdmDb.Query(RdmGetLastDeathsCallback, query, client);
@@ -120,10 +124,10 @@ public Action Command_RDM(int client, int args) {
     return Plugin_Handled;
 }
 
-public Action Command_Verdict(int client, int args) {
-    Player player = Player(client);
+public Action Command_Verdict(int client, int args)
+{
     if (currentCase[client] < 0) {
-        player.Error("You do not currently have a case to cast a verdict upon.");
+        TTT_Error(client, "You do not currently have a case to cast a verdict upon.");
         return Plugin_Handled;
     }
 
@@ -151,7 +155,7 @@ public Action Command_Verdict(int client, int args) {
             rdmDb.Query(RdmVerdictCallback, query, client);
         }
         else {
-            player.Error("Please pass either Innocent or Guilty.");
+            TTT_Error(client, "Please pass either Innocent or Guilty.");
         }
     }
 
@@ -204,4 +208,12 @@ int MenuHandler_Verdict(Menu menu, MenuAction action, int client, int choice) {
             rdmDb.Query(RdmVerdictCallback, query, client);
         }
     }
+}
+
+public bool BadKill(int attackerRole, int victimRole)
+{
+    if (attackerRole == victimRole) return true;
+    //else if (attackerRole == TTT_TEAM_TRAITOR || victimRole == TTT_TEAM_TRAITOR) return false;
+    else if ((attackerRole | victimRole) & TTT_TEAM_TRAITOR) return false;
+    else return true;
 }

@@ -51,13 +51,8 @@ public void HookEvents()
 {
     LoopValidClients(i)
     {
-        HookDamage(i);
+        SDKHook(i, SDKHook_OnTakeDamagePost, HookOnTakeDamagePost);
     }
-}
-
-public void HookDamage(int client)
-{
-    SDKHook(client, SDKHook_OnTakeDamagePost, HookOnTakeDamagePost);
 }
 
 /*
@@ -69,7 +64,7 @@ public void InitDBs()
 
 public void OnClientPutInServer(int client)
 {
-    HookDamage(client);
+    SDKHook(client, SDKHook_OnTakeDamagePost, HookOnTakeDamagePost);
 }
 
 // This function will regenerate a persons health by a percentage of any damage

@@ -6,19 +6,9 @@
 #include <colorvariables>
 #include <generics>
 
-public SharedPlugin __pl_ttt_ranks =
-{
-	name = "ttt_ranks",
-	file = "ttt_ranks.smx",
-#if defined REQUIRE_PLUGIN
-	required = 1,
-#else
-	required = 0,
-#endif
-};
 
 #if !defined REQUIRE_PLUGIN
-public __pl_ttt_upgrades_SetNTVOptional()
+public __pl_ttt_ranks_SetNTVOptional()
 {
     MarkNativeAsOptional("TTT_Ranks_IsStaff");
 	MarkNativeAsOptional("GetRankName");
@@ -53,7 +43,7 @@ native bool TTT_Ranks_IsStaff(int client);
 
 native bool GetPermission(int client, int requiredRank);
 native void GetRankName(int rank, char name[32]);
-native void GetRankTag(int rank, char tag[16])
+native void GetRankTag(int rank, char tag[16]);
 native int GetPlayerRank(int client);
 
 stock int GetStaffArray(int staff[32])

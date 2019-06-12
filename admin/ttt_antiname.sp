@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 /*
  * Base CS:GO plugin requirements.
  */
@@ -10,6 +12,7 @@
  */
 #include <colorvariables>
 #include <generics>
+#include <ttt_messages>
 
 int lastChange[MAXPLAYERS + 1];
 
@@ -37,25 +40,26 @@ public Action OnChangeName(Event event, const char[] name, bool dontBroadcast) {
 
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 
-	if (!client) {
+	if (!client)
+    {
 		return Plugin_Continue;
 	}
 
-	int now = GetTime()
-	if (now - lastChange[client] <= 2) {
+	int now = GetTime();
+	if (now - lastChange[client] <= 2)
+    {
 		return Plugin_Continue;
 	}
 
 	lastChange[client] = now;
 
-	Player player = Player(client);
-
 	event.GetString("oldname", oldName, sizeof(oldName));
 	event.GetString("newname", newName, sizeof(newName));
 
-	if (!StrEqual(oldName, newName) && player.Alive) {
-		player.Error("Sorry, you are not allowed to change your name whilst alive.");
-		player.SetName(oldName);
+	if (!StrEqual(oldName, newName) && IsPlayerAlive(client))
+    {
+		TTT_Error(client, "Sorry, you are not allowed to change your name whilst alive.");
+		SetClientName(client, oldName);
 
 		return Plugin_Stop;
 	}

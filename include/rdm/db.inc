@@ -4,7 +4,6 @@
 #define _rdm_db_included
 
 #include <generics>
-#include <player_methodmap>
 #include <ttt_ranks>
 
 #define CASE_CHOICE_NONE            0
@@ -51,19 +50,15 @@ public void RdmDeathInsert(int victim, int victimKarma, int attacker, int attack
 
     char victimName[64];
     char victimId[64];
-    int victimRole;
-    Player playerVictim = Player(victim);
-    playerVictim.Name(victimName);
-    playerVictim.Auth(AuthId_Steam2, victimId);
-    victimRole = playerVictim.Role;
+    int victimRole = TTT_GetClientRole(victim);
+    GetClientName(victim, victimName, sizeof(victimName));
+    GetClientAuthId(victim, AuthId_Steam2, victimId, sizeof(victimId));
 
     char attackerName[64];
     char attackerId[64];
-    int attackerRole;
-    Player playerAttacker = Player(attacker);
-    playerAttacker.Name(attackerName);
-    playerAttacker.Auth(AuthId_Steam2, attackerId);
-    attackerRole = playerAttacker.Role;
+    int attackerRole = TTT_GetClientRole(attacker);
+    GetClientName(attacker, attackerName, sizeof(attackerName));
+    GetClientAuthId(attacker, AuthId_Steam2, attackerId, sizeof(attackerId));
 
     rdmDb.Format(query, sizeof(query), "INSERT INTO `deaths` (`death_index`, `death_time`, `victim_name`, `victim_id`, `victim_role`, `victim_karma`, `killer_name`, `killer_id`, `killer_role`, `killer_karma`, `last_gun_fire`, `round_no`) VALUES ('%d', '%d', '%s', '%s', '%d', '%d', '%s', '%s', '%d', '%d', '%d', '%d');",
     ++lastDeathIndex, GetTime(), victimName, victimId, victimRole, victimKarma, attackerName, attackerId, attackerRole, attackerKarma, lastGunFired[victim], currentRound);
@@ -113,6 +108,8 @@ public void RdmReportCallback(Database db, DBResultSet results, const char[] err
 
     CPrintToChat(client, "{purple}[TTT] {yellow}Thanks for submitting a case, a staff member shall be in contact shortly.");
 
+    CPrintToChatStaff("{purple}[TTT] {yellow}%N opened a new RDM case.", client);
+
     char query[768];
     rdmDb.Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `reports` LEFT JOIN `handles` ON `reports`.`death_index` = `handles`.`death_index` WHERE `handles`.`verdict` IS NULL;");
     rdmDb.Query(RdmStaffReportCallback, query, client);
@@ -134,11 +131,11 @@ public void RdmStaffReportCallback(Database db, DBResultSet results, const char[
         }
         else if (caseCount < 2)
         {
-            CPrintToChatStaff("{purple}[TTT] {yellow}There is now %d unhandled case.");
+            CPrintToChatStaff("{purple}[TTT] {yellow}There is now %d unhandled case.", caseCount);
         }
         else
         {
-            CPrintToChatStaff("{purple}[TTT] {yellow}There are now %d unhandled cases.");
+            CPrintToChatStaff("{purple}[TTT] {yellow}There are now %d unhandled cases.", caseCount);
         }
     }
 }
@@ -205,9 +202,8 @@ public void RdmHandleCallback(Database db, DBResultSet results, const char[] err
         int deathId = results.FetchInt(0);
 
         char query[768], staffName[64], staffSteamId[64];
-        Player player = Player(handler);
-        player.Name(staffName);
-        player.Auth(AuthId_Steam2, staffSteamId);
+        GetClientName(handler, staffName, sizeof(staffName));
+        GetClientAuthId(handler, AuthId_Steam2, staffSteamId, sizeof(staffSteamId));
 
         DataPack data = new DataPack();
         data.WriteCell(handler);
@@ -218,7 +214,7 @@ public void RdmHandleCallback(Database db, DBResultSet results, const char[] err
     }
     else
     {
-        Player(handler).Error("There are currently no available cases.");
+        TTT_Error(handler, "There are currently no available cases.");
     }
 }
 
@@ -282,40 +278,40 @@ public void RdmVerdictResponseCallback(Database db, DBResultSet results, const c
         int punishment = results.FetchInt(5);
         int verdict = results.FetchInt(6);
 
-        Player accuser = Player(0).TargetOne(accuserAuth);
-        Player accused = Player(0).TargetOne(accusedAuth);
+        int accuser = TTT_Target(accuserAuth, 0, false);
+        int accused = TTT_Target(accusedAuth, 0, false);
 
         if (verdict == CASE_VERDICT_INNOCENT)
         {
-            if (accuser.ValidClient)
+            if (IsValidClient(accuser))
             {
-                accuser.Msg("%N has handled your case against %s and has concluded them to be innocent if you have any questions please message staff using an @ before your message.", handler, accusedName);
+                TTT_Message(accuser, "%N has handled your case against %s and has concluded them to be innocent if you have any questions please message staff using an @ before your message.", handler, accusedName);
             }
-            if (accused.ValidClient)
+            if (IsValidClient(accused))
             {
-                accused.Msg("%N has found you innocent in your defense against %s have a nice day.", handler, accuserName);
+                TTT_Message(accused, "%N has found you innocent in your defense against %s have a nice day.", handler, accuserName);
             }
-            Player(handler).Msg("You have concluded the defendant innocent for case %d.");
+            TTT_Message(handler, "You have concluded the defendant innocent for case %d.", deathId);
         }
         else if (verdict == CASE_VERDICT_GUILTY)
         {
-            if (accuser.ValidClient)
+            if (IsValidClient(accuser))
             {
-                accuser.Msg("%N has handled your case against %s and has concluded them to be guilty. Thanks for your report.", handler, accusedName);
+                TTT_Message(accuser, "%N has handled your case against %s and has concluded them to be guilty. Thanks for your report.", handler, accusedName);
             }
-            if (accused.ValidClient)
+            if (IsValidClient(accused))
             {
                 if (punishment == CASE_CHOICE_SLAY)
                 {
-                    accused.Msg("You are being slayed next round by %N for killing %s. If you have any questions about this please message staff by using an @ before your message.", handler, accuserName);
-                    TTT_AddRoundSlays(accused.Client, 1, false);
+                    TTT_Message(accused, "You are being slayed next round by %N for killing %s. If you have any questions about this please message staff by using an @ before your message.", handler, accuserName);
+                    TTT_AddRoundSlays(accused, 1, false);
                 }
                 else if (punishment == CASE_CHOICE_WARN)
                 {
-                    accused.Msg("You have been found guilty of RDM by %N for killing %s further action may be taken. If you have any questions about this please message staff by using an @ before your message in team chat.", handler, accuserName);
+                    TTT_Message(accused, "You have been found guilty of RDM by %N for killing %s further action may be taken. If you have any questions about this please message staff by using an @ before your message in team chat.", handler, accuserName);
                 }
             }
-            Player(handler).Msg("You have concluded the defendant guilty for case %d.", deathId);
+            TTT_Message(handler, "You have concluded the defendant guilty for case %d.", deathId);
         }
     }
 }

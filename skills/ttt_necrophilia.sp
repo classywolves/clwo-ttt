@@ -6,6 +6,7 @@
 
 #include <ttt>
 #include <colorvariables>
+#include <smlib/effects>
 #include <generics>
 #include <ttt_skills>
 

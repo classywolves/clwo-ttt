@@ -23,6 +23,8 @@ ConVar matFullbright;
 
 char soundTurnOn[PLATFORM_MAX_PATH] = "ttt_clwo/nightvision/nvon.mp3";
 
+bool nightVisionEnabled[MAXPLAYERS + 1] = { false, ... };
+
 public OnPluginStart()
 {
     PreCache();
@@ -34,7 +36,7 @@ public OnPluginStart()
 
 public OnAllPluginsLoaded()
 {
-    Skills_RegisterSkill(Skill_NightVision, "Night Vision", "Allows the player to see clearly even in the darkest of places.", REDUCED_FALLING_MAX_LEVEL);
+    Skills_RegisterSkill(Skill_NightVision, "Night Vision", "Allows the player to see clearly even in the darkest of places.", NIGHTVISION_MAX_LEVEL);
 }
 
 public void PreCache()
@@ -63,19 +65,19 @@ public Action Command_NightVision(int client, int args)
         int iFlags = matFullbright.Flags;
         matFullbright.Flags = iFlags &~ FCVAR_CHEAT;
 
-        if (nightvisionEnabled[client])
+        if (nightVisionEnabled[client])
         {
-            nightvisionEnabled[client] = false;
+            nightVisionEnabled[client] = false;
             //CPrintToChat(client, "{yellow}[TTT] {yellow}NV is {red}deactivated{yellow}.");
-            SetEntProp(that, Prop_Send, "m_bNightVisionOn", 0); // Night Vision Off
+            SetEntProp(client, Prop_Send, "m_bNightVisionOn", 0); // Night Vision Off
             matFullbright.ReplicateToClient(client, "0");
         }
         else
         {
-            nightvisionEnabled[client] = true;
+            nightVisionEnabled[client] = true;
             //CPrintToChat(client, "{yellow}[TTT] {yellow}NV is {green}activated{yellow}.");
             EmitSoundToClient(client, soundTurnOn);
-            SetEntProp(that, Prop_Send, "m_bNightVisionOn", 1); // Night Vision On
+            SetEntProp(client, Prop_Send, "m_bNightVisionOn", 1); // Night Vision On
             matFullbright.ReplicateToClient(client, "1");
         }
 

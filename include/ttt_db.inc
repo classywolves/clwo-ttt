@@ -6,8 +6,6 @@
 Database tttDb;
 bool tttConnected = false;
 
-int karma[2];
-
 public void TTTInit() {
     Database.Connect(TTTCallback, "ttt");
 }

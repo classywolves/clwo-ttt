@@ -534,11 +534,6 @@ methodmap Player {
 	}
 }
 
-public int HandlerDoNothing(Menu menu, MenuAction action, int param1, int param2) {
-	// Do nothing.  It's really exciting.
-	return;
-}
-
 public bool TraceEntityFilterPlayer(entity, contentsMask)
 {
     return entity > MaxClients;

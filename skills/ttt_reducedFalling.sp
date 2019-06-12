@@ -5,7 +5,6 @@
 #include <sdktools>
 #include <cstrike>
 
-#include <ttt>
 #include <colorvariables>
 #include <generics>
 #include <ttt_skills>
@@ -56,7 +55,7 @@ public Action HookOnTakeDamage(int victim, int &attacker, int &inflictor, float 
         return Plugin_Continue;
     }
 
-    int upgradeLevel = Skills_GetSkill(client, Skill_ReducedFallDamage, 0, REDUCED_FALLING_MAX_LEVEL);
+    int upgradeLevel = Skills_GetSkill(victim, Skill_ReducedFallDamage, 0, REDUCED_FALLING_MAX_LEVEL);
     if (upgradeLevel <= 0)
     {
         return Plugin_Continue;

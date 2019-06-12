@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
@@ -17,13 +19,15 @@ Handle afkTimers[MAXPLAYERS + 1] =  { INVALID_HANDLE, ... };
 int playerWarningCount[MAXPLAYERS + 1] = { 0, ... };
 float playerLocations[MAXPLAYERS + 1][3];
 
-public OnPluginStart() {
+public OnPluginStart()
+{
     HookEvents();
 
     PrintToServer("[AFK] Loaded successfully");
 }
 
-public void HookEvents() {
+public void HookEvents()
+{
     HookEvent("player_spawn", Event_OnPlayerSpawnPost, EventHookMode_Post);
 }
 

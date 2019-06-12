@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 /*
 * Base CS:GO plugin requirements.
 */
@@ -13,11 +15,6 @@
 #include <colorvariables>
 #include <generics>
 
-/*
-* Custom methodmaps.
-*/
-#include <player_methodmap>
-
 public Plugin myinfo =
 {
     name = "TTT Blood Lust",
@@ -26,6 +23,8 @@ public Plugin myinfo =
     version = "1.0.0",
     url = ""
 };
+
+UserMsg g_FadeUserMsgId = INVALID_MESSAGE_ID;
 
 Handle bloodLustTimers[MAXPLAYERS+1] = { INVALID_HANDLE, ... };
 
@@ -71,7 +70,7 @@ public void TTT_OnRoundEnd(int winner)
 public Action BloodLustStart(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
-    if (!TTT_GetClientRole(client) == TTT_TEAM_TRAITOR || !IsAliveClient(client))
+    if (TTT_GetClientRole(client) != TTT_TEAM_TRAITOR || !IsAliveClient(client))
     {
         ClearTimer(bloodLustTimers[client]);
 
@@ -89,7 +88,7 @@ public Action BloodLustStart(Handle timer, int userid)
 
 public Action BloodLustFinal(Handle timer, int userid) {
     int client = GetClientOfUserId(userid);
-    if (!TTT_GetClientRole(client) == TTT_TEAM_TRAITOR || !IsAliveClient(client)) {
+    if (TTT_GetClientRole(client) != TTT_TEAM_TRAITOR || !IsAliveClient(client)) {
         ClearTimer(bloodLustTimers[client]);
 
         return Plugin_Continue;
@@ -110,24 +109,53 @@ public void BloodLustReset(int client) {
     bloodLustTimers[client] = CreateTimer(bloodLustStartTime, BloodLustStart, GetClientUserId(client));
 }
 
-public void BloodLustScreenColor(int client) {
-    Player player = Player(client);
-
+public void BloodLustScreenColor(int client) 
+{
     int color[4] = { 255, 0, 0 , 63 };
     int duration = 480;
     int holdTime = 120000;
     int flags = 0x0001 | 0x0008; // fade in and stay out.
 
-    player.SetScreenColor(color, duration, holdTime, flags);
+    SetScreenColor(client, color, duration, holdTime, flags);
 }
 
 public void ClearScreenColor(int client) {
-    Player player = Player(client);
-
     int color[4] = { 0, 0, 0 , 0 };
     int duration = 0;
     int holdTime = 0;
     int flags = 0x0010; // purge.
 
-    player.SetScreenColor(color, duration, holdTime, flags);
+    SetScreenColor(client, color, duration, holdTime, flags);
+}
+
+public void SetScreenColor(int client, int color[4], int duration, int holdTime, int flags)
+{
+    if (g_FadeUserMsgId == INVALID_MESSAGE_ID)
+    {
+        g_FadeUserMsgId = GetUserMessageId("Fade");
+    }
+
+    int clients[1];
+    clients[0] = client;
+
+    Handle message = StartMessageEx(g_FadeUserMsgId, clients, 1);
+    if (GetUserMessageType() == UM_Protobuf)
+    {
+        PbSetInt(message, "duration", duration);
+        PbSetInt(message, "hold_time", holdTime);
+        PbSetInt(message, "flags", flags);
+        PbSetColor(message, "clr", color);
+    }
+    else
+    {
+        BfWriteShort(message, duration);
+        BfWriteShort(message, holdTime);
+        BfWriteShort(message, flags);
+        BfWriteByte(message, color[0]);
+        BfWriteByte(message, color[1]);
+        BfWriteByte(message, color[2]);
+        BfWriteByte(message, color[3]);
+    }
+
+    EndMessage();
 }

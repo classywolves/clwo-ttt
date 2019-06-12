@@ -52,8 +52,8 @@ public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast) {
 }
 
 public Action OnPlayerDeath(Event event, const char[] name, bool dontBroadcast) {
-  Player victim = Player(GetClientOfUserId(event.GetInt("userid")));
-  deadPlayers[numDeadPlayers] = victim.Client;
+  int client = GetClientOfUserId(event.GetInt("userid"));
+  deadPlayers[numDeadPlayers] = client;
   numDeadPlayers++;
 
   return Plugin_Continue;
@@ -69,12 +69,6 @@ public void OnMapStart() {
 }
 
 public Action Command_LogBodies(int client, int args) {
-  Player player = Player(client);
-
-  if (!player.Access(RANK_SENATOR, true)) {
-    return Plugin_Handled;
-  }
-
   int entities[MAXPLAYERS];
   float ragdollPositions[MAXPLAYERS][3];
   int ragdolls = GetRagdollPositions(entities, ragdollPositions);
@@ -87,12 +81,6 @@ public Action Command_LogBodies(int client, int args) {
 }
 
 public Action Command_KillBodies(int client, int args) {
-  Player player = Player(client);
-
-  if (!player.Access(RANK_SENATOR, true)) {
-    return Plugin_Handled;
-  }
-
   int entities[MAXPLAYERS];
   float ragdollPositions[MAXPLAYERS][3];
   int ragdolls = GetRagdollPositions(entities, ragdollPositions);
@@ -138,14 +126,12 @@ public void DestroyBody(int entity) {
 }
 
 public Action OnTraceAttack(int victimClient, int &attackerClient, int &inflictor, float &damage, int &damagetype, int &ammotype, int hitbox, int hitgroup) {
-  Player victim = Player(victimClient);
-
   if (victim.Health > damage) {
     return Plugin_Continue;
   }
 
   float playerPos[3];
-  victim.Pos(playerPos);
+  GetClientEyePosition(victimClient, playerPos);
 
   // The player dies from this attack.  We should check if any dead / fake bodies are near them.
   int entities[MAXPLAYERS];

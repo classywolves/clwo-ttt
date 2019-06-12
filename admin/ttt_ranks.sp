@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 /*
 * Base CS:GO plugin requirements.
 */
@@ -35,21 +37,21 @@ char rankNames[rankCount][32] =
     "Senior Admin",
     "Developer",
     "Senator"
-}
+};
 char chatTags[rankCount][16] =
 {
     "",
     "♥",
     "+",
-    "T.Mod",
+    "T.MOD",
     "M",
-    "S.Mod",
+    "S.MOD",
     "G",
     "A",
-    "S.Admin",
+    "SA",
     "Δ",
     "S"
-}
+};
 bool rankStaff[rankCount] =
 {
     false,
@@ -63,7 +65,7 @@ bool rankStaff[rankCount] =
     true,
     true,
     true
-}
+};
 
 int playerRanks[MAXPLAYERS + 1] = { 0, ... };
 
@@ -189,6 +191,8 @@ public int Native_GetRankName(Handle plugin, int numParams)
     int rank = GetNativeCell(1);
 
     SetNativeString(2, rankNames[rank], 32, false);
+
+    return 0;
 }
 
 public int Native_GetRankTag(Handle plugin, int numParams)
@@ -196,6 +200,8 @@ public int Native_GetRankTag(Handle plugin, int numParams)
     int rank = GetNativeCell(1);
 
     SetNativeString(2, chatTags[rank], 16, false);
+
+    return 0;
 }
 
 public int Native_GetPermission(Handle plugin, int numParams)

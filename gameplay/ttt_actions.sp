@@ -61,11 +61,8 @@ public void DbCallback(Database db, const char[] error, any data) {
 
 public void OnClientAuthorized(int client, const char[] auth)
 {
-    char steamId[32];
-    GetClientAuthId(client, AuthId_Steam2, steamId, 32);
-
     char query[768];
-    actionsDb.Format(query, sizeof(query), "SELECT `good_actions`, `bad_actions` FROM `actions` WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' LIMIT 1;", steamId[8]);
+    actionsDb.Format(query, sizeof(query), "SELECT `good_actions`, `bad_actions` FROM `actions` WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' LIMIT 1;", auth[8]);
     actionsDb.Query(SelectActionsCallback, query, client);
 }
 

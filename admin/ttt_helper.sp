@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 /*
  * Base CS:GO plugin requirements.
  */
@@ -11,15 +13,9 @@
 #include <ttt>
 #include <colorvariables>
 #include <generics>
+#include <ttt_messages>
+#include <ttt_targeting>
 
-/*
- * Custom methodmaps.
- */
-#include <player_methodmap>
-
-/*
- * Custom Defines.
- */
 
 public Plugin myinfo =
 {
@@ -46,68 +42,67 @@ public void RegisterCmds() {
 
 public Action Command_HMsg(int client, int args)
 {
-	Player player = Player(client);
-    Player target;
+	int target;
 	if (args > 1)
 	{
 		if (!(GetUserFlagBits(client) & ADMFLAG_GENERIC == ADMFLAG_GENERIC))
 		{
-			player.Error("You do not have access to target players with this command!");
+			TTT_Error(client, "You do not have access to target players with this command!");
 			return Plugin_Handled;
 		}
 
 		char targetString[128];
 
 		GetCmdArg(1, targetString, sizeof(targetString));
-		target = player.TargetOne(targetString, true)
+		target = TTT_Target(targetString, client);
 
-		if (target.ValidClient)
-        {
+		if (target == -1)
+		{
 			return Plugin_Handled;
 		}
 	}
 	else
 	{
-		target = player;
+		target = client;
 	}
 
-	CPrintToChat(target.Client, "{purple}[MSG] {yellow}To send a private message to another player.");
-	CPrintToChat(target.Client, "{purple}[MSG] {yellow}/msg <Player> <Message>");
-	CPrintToChat(target.Client, "{purple}[MSG] {yellow}Player: The name of the player you would like to target.");
-	CPrintToChat(target.Client, "{purple}[MSG] {yellow}Message: The message to send this will be all the of the text after the Player.");
+	TTT_Message(target, "To send a private message to another player.");
+	TTT_Message(target, "/msg <Player> <Message>");
+	TTT_Message(target, "Player: The name of the player you would like to target.");
+	TTT_Message(target, "Message: The message to send this will be all the of the text after the Player.");
 
 	return Plugin_Handled;
 }
 
 public Action Command_HR(int client, int args)
 {
-	Player player = Player(client);
-    Player target;
+	int target;
 	if (args > 1)
 	{
 		if (!(GetUserFlagBits(client) & ADMFLAG_GENERIC == ADMFLAG_GENERIC))
 		{
-			player.Error("You do not have access to target players with this command!");
+			TTT_Error(client, "You do not have access to target players with this command!");
 			return Plugin_Handled;
 		}
 
 		char targetString[128];
 
 		GetCmdArg(1, targetString, sizeof(targetString));
-		target = player.TargetOne(targetString, true)
+		target = TTT_Target(targetString, client, true, true, false);
 
-		if (target.Client == -1) {
+		if (target == -1)
+		{
 			return Plugin_Handled;
 		}
 	}
 	else
 	{
-		target = player;
+		target = client;
 	}
 
-	CPrintToChat(target.Client, "{purple}[MSG] {yellow}To reply to the last person who sent you a private message.");
-	CPrintToChat(target.Client, "{purple}[MSG] {yellow}/r <Message>");
-	CPrintToChat(target.Client, "{purple}[MSG] {yellow}Message: The message to send this will be all the of the text entered.");
+	TTT_Message(target, "To reply to the last person who sent you a private message.");
+	TTT_Message(target, "/r <Message>");
+	TTT_Message(target, "Message: The message to send this will be all the of the text entered.");
 
 	return Plugin_Handled;
 }

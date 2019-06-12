@@ -789,6 +789,7 @@ stock void Entity_ClearFlags(int entity)
  * Taken from: hl2sdk-ob-valve\public\const.h
  */
 
+#if !defined _ttt_included
 enum SolidFlags_t
 {
 	FSOLID_CUSTOMRAYTEST		= 0x0001,	// Ignore solid type + always call into the entity for ray tests
@@ -805,6 +806,7 @@ enum SolidFlags_t
 
 	FSOLID_MAX_BITS	= 10
 };
+#endif
 
 /**
  * Gets the solid flags of the entity
@@ -1009,6 +1011,7 @@ stock void Entity_SetMaxSpeed(int entity, float value)
  * Collision groups
  * Taken from hl2sdk-ob-valve/public/const.h
  */
+ #if !defined _ttt_included
 enum Collision_Group_t
 {
 	COLLISION_GROUP_NONE  = 0,
@@ -1034,6 +1037,7 @@ enum Collision_Group_t
 	COLLISION_GROUP_NPC_ACTOR,			// Used so NPCs in scripts ignore the player.
 	COLLISION_GROUP_NPC_SCRIPTED		// USed for NPCs in scripts that should not collide with each other
 };
+#endif
 
 /**
  * Gets the collision group of an entity.
@@ -1691,7 +1695,7 @@ stock int Entity_GetGroundEntity(int entity)
  * 						want a specific weapon to be shown in the HUD kill message.
  * @return 				True on success, false otherwise.
  */
-stock bool Entity_Hurt(int entity, int damage, int attacker=0, int damageType=DMG_GENERIC, const char fakeClassName[]="")
+stock bool Entity_Hurt(int entity, int damage, int attacker=0, int damageType=0, const char fakeClassName[]="")
 {
 	static int point_hurt = INVALID_ENT_REFERENCE;
 

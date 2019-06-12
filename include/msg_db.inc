@@ -1,7 +1,8 @@
 Database msgDb;
 bool msgConnected;
 
-public void MsgInit() {
+public void MsgInit()
+{
 	Database.Connect(MsgCallback, "msg");
 }
 
@@ -11,8 +12,10 @@ public void MsgInit() {
  *   .pm () // not implemented
  */
 
-public void MsgCallback(Database db, const char[] error, any data) {
-	if (db == null) {
+public void MsgCallback(Database db, const char[] error, any data)
+{
+	if (db == null)
+    {
 		LogError("MsgCallback: %s", error);
 		return;
 	}
@@ -21,8 +24,10 @@ public void MsgCallback(Database db, const char[] error, any data) {
 	msgConnected = true;
 }
 
-public void MsgInsert(char[] name, char[] auth, char[] msg) {
-	if (!msgConnected) {
+public void MsgInsert(char[] name, char[] auth, char[] msg)
+{
+	if (!msgConnected)
+    {
 		return;
 	}
 
@@ -33,11 +38,13 @@ public void MsgInsert(char[] name, char[] auth, char[] msg) {
 
 	Format(query, sizeof(query), "INSERT INTO msg VALUES (%i, '%s', '%s', '%s');", GetTime(), cName, auth, cMsg);
 
-	msgDb.Query(MsgInsertCallback, query)
+	msgDb.Query(MsgInsertCallback, query);
 }
 
-public void MsgInsertCallback(Database db, DBResultSet results, const char[] error, any data) {
-	if (results == null) {
-		LogError("MsgInsertCallback: %s", error)
+public void MsgInsertCallback(Database db, DBResultSet results, const char[] error, any data)
+{
+	if (results == null)
+    {
+		LogError("MsgInsertCallback: %s", error);
 	}
 }

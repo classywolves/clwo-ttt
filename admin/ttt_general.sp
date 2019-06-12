@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 /*
  * Base CS:GO plugin requirements.
  */
@@ -47,10 +49,8 @@ public Action OnPlayerMessage(Event event, const char[] eventName, bool dontBroa
 		return Plugin_Continue;
 
 	char name[64], auth[64], text[256];
-
-	Player player = Player(client);
-	player.Auth(AuthId_Steam2, auth);
-	player.Name(name);
+	GetClientAuthId(client, AuthId_Steam2, auth, 64);
+	GetClientName(client, name, 64);
 
 	GetEventString(event, "text", text, sizeof(text));
 
