@@ -72,7 +72,7 @@ public Action Command_ForceSpectator(int client, int args)
 
     if (client == target)
     {
-        TTT_Error(client, "Just use /afk.")
+        TTT_Error(client, "Just use /afk.");
     }
     
     int targetTeam = GetClientTeam(target);
