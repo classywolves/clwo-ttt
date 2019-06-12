@@ -79,7 +79,7 @@ public Action Command_ForceSpectator(int client, int args)
 
     ChangeClientTeam(target, CS_TEAM_SPECTATOR);
     CPrintToChat(target, "{purple}[TTT] {yellow}You were forced to spectator by %N.", client);
-    CPrintToChatAll("{purple}[TTT] {blue]%N {yellow}was forced to spectator by %N.", target, client)
+    CPrintToChatAll("{purple}[TTT] {blue]%N {yellow}was forced to spectator by %N.", target, client);
 
     return Plugin_Handled;
 }
