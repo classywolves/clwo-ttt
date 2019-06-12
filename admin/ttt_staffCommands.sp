@@ -68,13 +68,8 @@ public Action Command_ForceSpectator(int client, int args)
 
     char buffer[MAX_NAME_LENGTH];
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
-    int target = TTT_Target(buffer, client, true, true, false);
+    int target = TTT_Target(buffer, client, true, false, false);
     
-    if (target < 0)
-    { 
-        return Plugin_Handled; 
-    }
-
     int targetTeam = GetClientTeam(target);
     if (targetTeam == CS_TEAM_SPECTATOR)
     {
@@ -84,6 +79,7 @@ public Action Command_ForceSpectator(int client, int args)
 
     ChangeClientTeam(target, CS_TEAM_SPECTATOR);
     CPrintToChat(target, "{purple}[TTT] {yellow}You were forced to spectator by %N.", client);
+    CPrintToChatAll("{purple}[TTT] {blue]%N {yellow}was forced to spectator by %N.", target, client)
 
     return Plugin_Handled;
 }
@@ -118,7 +114,7 @@ public Action Command_SlayNextRound(int client, int args)
 
     char buffer[MAX_NAME_LENGTH];
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
-    int target = TTT_Target(buffer, client, true, true, false);
+    int target = TTT_Target(buffer, client, true, false, false);
     
     if (target > 0)
     {
@@ -137,13 +133,15 @@ public Action Command_RemoveSlayNextRound(int client, int args)
         return Plugin_Handled;
     }
 	
-    char targetName[128];
-    GetCmdArg(1, targetName, sizeof(targetName));
-    int target = TTT_Target(targetName, client);
+    char buffer[MAX_NAME_LENGTH];
+    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
+    int target = TTT_Target(buffer, client, true, false, false);
+
     if (target > 0)
     {
         TTT_SetRoundSlays(target, 0, false);
     }
+
     CPrintToChatStaff("{purple}[TTT] {red}%N {yellow}will no longer be slain next round.", target);
     return Plugin_Handled;
 }
@@ -159,12 +157,7 @@ public Action Command_SMSay(int client, int args)
 	char message[255], arg1[128], buffer[128], title[128];
 
 	GetCmdArg(1, arg1, sizeof(arg1));
-	int target = TTT_Target(arg1, client, true, true, false);
-
-	if (target < 0)
-    {
-		return Plugin_Handled;
-	}
+	int target = TTT_Target(arg1, client, true, false, false);
 
 	if (args >= 2)
     {
@@ -195,7 +188,7 @@ public Action Command_SCSay(int client, int args)
 	char message[255], arg1[128], buffer[128];
 
 	GetCmdArg(1, arg1, sizeof(arg1));
-	int target = TTT_Target(arg1, client, true, true, false);
+	int target = TTT_Target(arg1, client, true, false, false);
 
 	if (target < 0)
     {
@@ -229,9 +222,7 @@ public Action Command_Teleport(int client, int args)
     char buffer[MAX_NAME_LENGTH];
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
     int target = TTT_Target(buffer, client, true, true, false);
-    if (!IsValidClient(target)) { return Plugin_Handled; }
-    if (!IsPlayerAlive(target)) { return Plugin_Handled; }
-
+    
     float pos[3];
     int recipient = -1;
     if (args == 1)
