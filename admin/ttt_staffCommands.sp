@@ -69,6 +69,11 @@ public Action Command_ForceSpectator(int client, int args)
     char buffer[MAX_NAME_LENGTH];
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
     int target = TTT_Target(buffer, client, true, false, false);
+
+    if (client == target)
+    {
+        TTT_Error(client, "Just use /afk.")
+    }
     
     int targetTeam = GetClientTeam(target);
     if (targetTeam == CS_TEAM_SPECTATOR)
@@ -78,8 +83,8 @@ public Action Command_ForceSpectator(int client, int args)
     }
 
     ChangeClientTeam(target, CS_TEAM_SPECTATOR);
-    CPrintToChat(target, "{purple}[TTT] {yellow}You were forced to spectator by %N.", client);
-    CPrintToChatAll("{purple}[TTT] {blue]%N {yellow}was forced to spectator by %N.", target, client);
+    CPrintToChat(target, "{purple}[TTT] {yellow}You were forced to spectator by {blue}%N.", client);
+    CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}was forced to spectator by %N.", target, client);
 
     return Plugin_Handled;
 }
