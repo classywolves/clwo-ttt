@@ -56,6 +56,7 @@ public void RegisterCmds()
     RegConsoleCmd("sm_give", Command_Give, "Gives the given amount of credits to another player.");
 
     RegConsoleCmd("sm_rules", Command_Rules, "Sends link to rule thread in chat.");
+    RegConsoleCmd("sm_guide", Command_Guide, "Sends link to guide thread in chat.");
 }
 
 public void InitDBs()
@@ -264,6 +265,12 @@ public Action Command_Give(int client, int args)
 public Action Command_Rules(int client, int args)
 {
     CPrintToChat(client, "{purple}[TTT] {yellow}The rules can be found here: {lime}https://clwo.eu/thread-1614.html");
+    return Plugin_Handled;
+}
+
+public Action Command_Guide(int client, int args)
+{
+    CPrintToChat(client, "{purple}[TTT] {yellow}A guide on how to play can be found here: {lime}https://clwo.eu/thread-2123.html");
     return Plugin_Handled;
 }
 
