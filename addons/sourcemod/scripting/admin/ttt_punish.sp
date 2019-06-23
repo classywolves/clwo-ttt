@@ -2,20 +2,23 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <cstrike>
 #include <sdkhooks>
-#include <ttt>
 
-int gI_Type[MAXPLAYERS + 1];
-int gI_Client[MAXPLAYERS + 1];
+#include <ttt>
+#include <generics>
+#include <ttt_targeting>
+
+int g_clientPunishType[MAXPLAYERS + 1];
+int g_clientTarget[MAXPLAYERS + 1];
 Handle g_hDb = INVALID_HANDLE;
 
-int gI_PunishmentsRDM[MAXPLAYERS + 1];
-int gI_PunishmentsMute[MAXPLAYERS + 1];
-int gI_PunishmentsGag[MAXPLAYERS + 1];
+int g_punishmentsRDM[MAXPLAYERS + 1];
+int g_punishmentsMute[MAXPLAYERS + 1];
+int g_punishmentsGag[MAXPLAYERS + 1];
 
-char sql_createPunish[] = "CREATE TABLE `Punish` (`auth` VARCHAR(50) NULL DEFAULT NULL, `name` VARCHAR(50) NULL DEFAULT NULL, `reason` VARCHAR(50) NULL DEFAULT NULL, `type` INT(11) NULL DEFAULT NULL, `timestamp` INT(11) NULL DEFAULT NULL)";
-char sql_insertPunishment[] = "INSERT INTO Punish (auth, name, reason, type, timestamp, auth_admin, name_admin) VALUES('%s', '%s', '%s', '%i', '%d', '%s', '%s')";
+char sql_createPunish[] = "CREATE TABLE IF NOT EXISTS `ttt_db`.`punish` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `auth_id` VARCHAR(32) NOT NULL, `name` VARCHAR(64) NOT NULL, `time` INT(11) NOT NULL, `reason` VARCHAR(128) NOT NULL, `type` INT(11) NOT NULL, `auth_admin` VARCHAR(32) NOT NULL, `name_admin` VARCHAR(32) NOT NULL, PRIMARY KEY (`id`), UNIQUE `authtime_index` (`auth_id`, `time`))";
+char sql_insertPunishment[] = "INSERT INTO `punish` (`id`, `auth_id`, `name`, `time`, `reason`, `type`, `auth_admin`, `name_admin`) VALUES (NULL, '%s', '%s', '%d', '%s', '%i', '%s', '%s');";
+char sql_sumPunishments[] = "SELECT SUM (CASE WHEN `type` = 0 THEN 1 ELSE 0 END), SUM (CASE WHEN `type` = 1 THEN 1 ELSE 0 END), SUM (CASE WHEN `type` = 1 THEN 1 ELSE 0 END) FROM `punish` WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' AND `time` > '%i' - '259200';";
 
 public Plugin myinfo = 
 {
@@ -28,55 +31,43 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	RegAdminCmd("sm_punish", Command_DisplayMenu, ADMFLAG_GENERIC, "Displays the admin menu");
-	RegAdminCmd("sm_p", Command_DisplayMenu, ADMFLAG_GENERIC, "Displays the admin menu");
-	RegAdminCmd("sm_punishr", Command_PR, ADMFLAG_GENERIC, "Displays the admin menu");
-	RegAdminCmd("sm_pr", Command_PR, ADMFLAG_GENERIC, "Displays the admin menu");
-	RegAdminCmd("sm_punishm", Command_PM, ADMFLAG_GENERIC, "Displays the admin menu");
-	RegAdminCmd("sm_pm", Command_PM, ADMFLAG_GENERIC, "Displays the admin menu");
-	RegAdminCmd("sm_punishg", Command_PG, ADMFLAG_GENERIC, "Displays the admin menu");
-	RegAdminCmd("sm_pg", Command_PG, ADMFLAG_GENERIC, "Displays the admin menu");
+	RegAdminCmd("sm_punish", Command_PunishMenu, ADMFLAG_SLAY, "Displays the punish menu");
+	RegAdminCmd("sm_p", Command_PunishMenu, ADMFLAG_SLAY, "Displays the punish menu");
+	RegAdminCmd("sm_punishr", Command_PunishRdm, ADMFLAG_SLAY, "Displays the admin menu");
+	RegAdminCmd("sm_pr", Command_PunishRdm, ADMFLAG_SLAY, "Displays the admin menu");
+	RegAdminCmd("sm_punishm", Command_PunishMute, ADMFLAG_SLAY, "Displays the admin menu");
+	RegAdminCmd("sm_pm", Command_PunishMute, ADMFLAG_SLAY, "Displays the admin menu");
+	RegAdminCmd("sm_punishg", Command_PunishGag, ADMFLAG_SLAY, "Displays the admin menu");
+	RegAdminCmd("sm_pg", Command_PunishGag, ADMFLAG_SLAY, "Displays the admin menu");
 	
 	db_setupDatabase();
-	LateLoadAll();
-}
-
-public void LateLoadAll()
-{
+	
 	LoopValidClients(i)
 	{
-		if(!IsClientConnected(i))
-				continue;
-		
-		LoadClientPunishments(GetClientUserId(i));
+		LoadClientPunishments(i);
 	}
 }
 
 public void OnClientPostAdminCheck(int client)
 {
-	LoadClientPunishments(GetClientUserId(client));	
+	LoadClientPunishments(client);	
 }
 
-stock void LoadClientPunishments(int userid)
+stock void LoadClientPunishments(int client)
 {
-	int client = GetClientOfUserId(userid);
-	
-	if(TTT_IsClientValid(client) && !IsFakeClient(client))
-	{
-		char sCommunityID[64];
-		
-		if(!GetClientAuthId(client, AuthId_SteamID64, sCommunityID, sizeof(sCommunityID)))
-		{
-			LogError("(LoadClientPunishments) Auth failed: #%d", client);
-			return;
-		}
-		
-		char sQuery[2048];
-		Format(sQuery, sizeof(sQuery), "select sum(CASE when Type=0 then 1 else 0 end), sum(CASE when Type=1 then 1 else 0 end), sum(CASE when Type=2 then 1 else 0 end) from Punish where auth = %s and active = 1 and timestamp > %i - 259200", sCommunityID, GetTime());
-		//
-		if(g_hDb != null)
-			SQL_TQuery(g_hDb, SQL_OnClientPostAdminCheck, sQuery, userid);
-	}
+	char steamId[32];
+    if(!GetClientAuthId(i, AuthId_Steam2, steamId, 32))
+    {
+        LogError("(SQL_OnClientPostAdminCheck) Auth failed: #%d", client);
+        return;
+    }
+    
+    char query[512];
+    Format(query, sizeof(query), sql_sumPunishments, steamId[8], GetTime());
+    if(g_hDb != null)
+    {
+        SQL_TQuery(g_hDb, SQL_OnClientPostAdminCheck, query, GetClientUserId(client));
+    }
 }
 
 
@@ -84,34 +75,21 @@ public void SQL_OnClientPostAdminCheck(Handle owner, Handle hndl, const char[] e
 {
 	int client = GetClientOfUserId(userid);
 	
-	if(!client || !TTT_IsClientValid(client) || IsFakeClient(client))
-		return;
-	
-	if(hndl == null || strlen(error) > 0)
+	if(IsValidClient(client))
 	{
-		LogError("(SQL_OnClientPostAdminCheck) Query failed: %s", error);
-		return;
-	}
-	else
-	{
-		if (SQL_FetchRow(hndl))
+		if(hndl == null || strlen(error) > 0)
 		{
-			char sCommunityID[64];
-			
-			if(!GetClientAuthId(client, AuthId_SteamID64, sCommunityID, sizeof(sCommunityID)))
+			LogError("(SQL_OnClientPostAdminCheck) Query failed: %s", error);
+			return;
+		}
+		else
+		{
+			if (SQL_FetchRow(hndl))
 			{
-				LogError("(SQL_OnClientPostAdminCheck) Auth failed: #%d", client);
-				return;
+				g_punishmentsRDM[client] = SQL_FetchInt(hndl, 0);
+				g_punishmentsMute[client] = SQL_FetchInt(hndl, 1);
+				g_punishmentsGag[client] = SQL_FetchInt(hndl, 2);
 			}
-				
-			int iTemp0 = SQL_FetchInt(hndl, 0);
-			int iTemp1 = SQL_FetchInt(hndl, 1);
-			int iTemp2 = SQL_FetchInt(hndl, 2);
-			
-			gI_PunishmentsRDM[client] = iTemp0;
-			gI_PunishmentsMute[client] = iTemp1;
-			gI_PunishmentsGag[client] = iTemp2;
-			
 		}
 	}
 }
@@ -124,7 +102,7 @@ public db_setupDatabase()
         
 	if(g_hDb == INVALID_HANDLE)
 	{
-		SetFailState("[Punish] Unable to connect to database (%s)",szError);
+		SetFailState("[Punish] Unable to connect to database (%s)", szError);
 		return;
 	}
         
@@ -142,15 +120,12 @@ public db_createTables()
 	SQL_UnlockDatabase(g_hDb);
 }
 
-public Action Command_PM(int client, int args)
+public Action Command_PunishMute(int client, int args)
 {
-	if(!IsClientConnected(client))
+	if(!IsValidClient(client))
 		return Plugin_Handled;
 	
-	if (!TTT_IsClientValid(client))
-		return Plugin_Handled;
-	
-	gI_Type[client] = 1;
+	g_clientPunishType[client] = 1;
 	
 	if (args < 1)
 	{	
@@ -158,45 +133,28 @@ public Action Command_PM(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	char arg1[32];
-	GetCmdArg(1, arg1, sizeof(arg1));
-	
-	char target_name[MAX_TARGET_LENGTH];
-	int target_list[MAXPLAYERS];
-	int target_count;
-	bool tn_is_ml;
-	
-	if ((target_count = ProcessTargetString(arg1, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	char buffer[MAX_NAME_LENGTH];
+    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
+    int target = TTT_Target(buffer, client, true, false, false);
+	if (IsValidClient(target))
 	{
-		ReplyToTargetError(client, target_count);
-		return Plugin_Handled;
-	}
-	
-	int target = FindTarget(client, arg1, true, true);
-	if (target == -1) 
-	{
-		return Plugin_Handled;
-	}
-	if (IsClientInGame(target))
-	{
-		gI_Client[client] = GetClientUserId(target);
+		g_clientTarget[client] = GetClientUserId(target);
 		DisplayReasons(client);
 	}
-	if (!IsClientInGame(target)) ReplyToCommand(client, "[SM] %t", "Target is not in game");
-	
+	else
+	{
+		ReplyToCommand(client, "[SM] %t", "Target is not in game");
+	}
 	
 	return Plugin_Continue;
 }
 
-public Action Command_PR(int client, int args)
+public Action Command_PunishRdm(int client, int args)
 {
-	if(!IsClientConnected(client))
+	if(!IsValidClient(client))
 		return Plugin_Handled;
 	
-	if (!TTT_IsClientValid(client))
-		return Plugin_Handled;
-	
-	gI_Type[client] = 0;
+	g_clientPunishType[client] = 0;
 	
 	if (args < 1)
 	{	
@@ -204,45 +162,29 @@ public Action Command_PR(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	char arg1[32];
-	GetCmdArg(1, arg1, sizeof(arg1));
-	
-	char target_name[MAX_TARGET_LENGTH];
-	int target_list[MAXPLAYERS];
-	int target_count;
-	bool tn_is_ml;
-	
-	if ((target_count = ProcessTargetString(arg1, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	char buffer[MAX_NAME_LENGTH];
+    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
+    int target = TTT_Target(buffer, client, true, false, false);
+	if (IsValidClient(target))
 	{
-		ReplyToTargetError(client, target_count);
-		return Plugin_Handled;
-	}
-	
-	int target = FindTarget(client, arg1, true, true);
-	if (target == -1) 
-	{
-		return Plugin_Handled;
-	}
-	if (IsClientInGame(target))
-	{
-		gI_Client[client] = GetClientUserId(target);
+		g_clientTarget[client] = GetClientUserId(target);
 		DisplayReasons(client);
 	}
-	if (!IsClientInGame(target)) ReplyToCommand(client, "[SM] %t", "Target is not in game");
+	else
+	{
+		ReplyToCommand(client, "[SM] %t", "Target is not in game");
+	}
 	
 	
 	return Plugin_Continue;
 }
 
-public Action Command_PG(int client, int args)
+public Action Command_PunishGag(int client, int args)
 {
-	if(!IsClientConnected(client))
+	if(!IsValidClient(client))
 		return Plugin_Handled;
 	
-	if (!TTT_IsClientValid(client))
-		return Plugin_Handled;
-	
-	gI_Type[client] = 2;
+	g_clientPunishType[client] = 2;
 	
 	if (args < 1)
 	{	
@@ -250,39 +192,25 @@ public Action Command_PG(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	char arg1[32];
-	GetCmdArg(1, arg1, sizeof(arg1));
-	
-	char target_name[MAX_TARGET_LENGTH];
-	int target_list[MAXPLAYERS];
-	int target_count;
-	bool tn_is_ml;
-	
-	if ((target_count = ProcessTargetString(arg1, client, target_list, MAXPLAYERS, COMMAND_FILTER_CONNECTED, target_name, sizeof(target_name), tn_is_ml)) <= 0)
+	char buffer[MAX_NAME_LENGTH];
+    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
+    int target = TTT_Target(buffer, client, true, false, false);
+	if (IsValidClient(target))
 	{
-		ReplyToTargetError(client, target_count);
-		return Plugin_Handled;
-	}
-	
-	int target = FindTarget(client, arg1, true, true);
-	if (target == -1) 
-	{
-		return Plugin_Handled;
-	}
-	if (IsClientInGame(target))
-	{
-		gI_Client[client] = GetClientUserId(target);
+		g_clientTarget[client] = GetClientUserId(target);
 		DisplayReasons(client);
 	}
-	if (!IsClientInGame(target)) ReplyToCommand(client, "[SM] %t", "Target is not in game");
-	
+	else
+	{
+		ReplyToCommand(client, "[SM] %t", "Target is not in game");
+	}
 	
 	return Plugin_Continue;
 }
 
-public Action Command_DisplayMenu(int client, int args)
+public Action Command_PunishMenu(int client, int args)
 {
-	Menu menu = new Menu(MenuHandler1);
+	Menu menu = new Menu(MenuHandler_Punish);
 	
 	menu.SetTitle("Select Type of Punishment!");
 	
@@ -295,19 +223,18 @@ public Action Command_DisplayMenu(int client, int args)
 	return Plugin_Handled;
 }
 
-public int MenuHandler1(Menu menu, MenuAction action, int param1, int param2)
+public int MenuHandler_Punish(Menu menu, MenuAction action, int param1, int param2)
 {
 	/* If an option was selected, tell the client about the item. */
 	if (action == MenuAction_Select)
 	{
 		char info[32];
 		menu.GetItem(param2, info, sizeof(info));
-		gI_Type[param1] = StringToInt(info);
+		g_clientPunishType[param1] = StringToInt(info);
 		
-		//PrintToChat(param1, "You selected item: %i", gI_Type[param1]);
+		//PrintToChat(param1, "You selected item: %i", g_clientPunishType[param1]);
 		
 		DisplayTargets(param1);
-		
 	}
 	
 	return 0;
@@ -319,33 +246,27 @@ public void DisplayTargets(int client)
 	
 	menu2.SetTitle("Select a target!");
 	
-	char name[MAX_NAME_LENGTH], Sid[24];
-	int Iid;
+	char name[MAX_NAME_LENGTH], userid[4];
 	LoopValidClients(i)
 	{
-		if(!IsClientConnected(i) || IsFakeClient(i))
-			continue;
-			
 		GetClientName(i, name, sizeof(name));
-		Iid = GetClientUserId(i);
-		IntToString(Iid, Sid, 4);
-		menu2.AddItem(Sid, name);
+		IntToString(userid, GetClientUserId(i), 4);
+		menu2.AddItem(userid, name);
 	}
 		
 	menu2.Display(client, 20);
 
 }
 
-public int MenuHandler2(Menu menu, MenuAction action, int param1, int param2)
+public int MenuHandler_Targets(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
 		char info[32];
 		menu.GetItem(param2, info, sizeof(info));
 		
-		gI_Client[param1] = StringToInt(info);
+		g_clientTarget[param1] = StringToInt(info);
 		
-		//PrintToChat(param1, "You selected item: %i", gI_Client[param1]);
 		DisplayReasons(param1);
 	}
 	return 0;
@@ -354,14 +275,14 @@ public int MenuHandler2(Menu menu, MenuAction action, int param1, int param2)
 public void DisplayReasons(int client)
 {
 	Menu menu = new Menu(MenuHandler3);
-	char szName[50];
+	char name[50];
 	
-	int target = GetClientOfUserId(gI_Client[client]);
-	GetClientName(target, szName, sizeof(szName));
+	int target = GetClientOfUserId(g_clientTarget[client]);
+	GetClientName(target, name, sizeof(name));
 	
-	menu.SetTitle("Select a Reason! Punishing %s", szName);
+	menu.SetTitle("Select a Reason! Punishing %s", name);
 	
-	if(gI_Type[client] == 0)
+	if(g_clientPunishType[client] == 0)
 	{
 		menu.AddItem("RDM", "I have selected the correct person");
 	} 
@@ -381,129 +302,98 @@ public void DisplayReasons(int client)
 
 }
 
-public int MenuHandler3(Menu menu, MenuAction action, int param1, int param2)
+public int MenuHandler_Reasons(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
-	{	
+	{
+		char reason[255];
+		menu.GetItem(param2, reason, sizeof(reason));
 		
-		char info[255];
-		menu.GetItem(param2, info, sizeof(info));
-		
-		PunishDem(param1, info);
+		PunishDem(param1, reason);
 	}
+
 	return 0;
 }
 
 public void PunishDem(int client, char reason[255])
 {
 	
-	char szQuery[255];
-	char szSteamId[50];
-	char szName[50];
-	char szSteamId2[50];
-	char szName2[50];
-	int target;
+	char query[255];
+	char steamId[50];
+	char name[50];
+	char staffSteamId[50];
+	char staffName[50];
+	int target = GetClientOfUserId(g_clientTarget[client]);
 	
-	switch(gI_Type[client])
+	switch(g_clientPunishType[client])
 	{
 		case 0:
 		{
-			target = GetClientOfUserId(gI_Client[client]);
-			
-			if(gI_PunishmentsRDM[target] == 0)
-				FakeClientCommand(client, "sm_slay #%i", gI_Client[client]);
-			else if(gI_PunishmentsRDM[target] == 1)
+			if(g_punishmentsRDM[target] == 0)
 			{
-				FakeClientCommand(client, "sm_kick #%i 'You have RDMed 2x over the past 3 days!'", gI_Client[client]);
+				FakeClientCommand(client, "sm_slay #%i", g_clientTarget[client]);
 			}
-			else if(gI_PunishmentsRDM[target] == 2)
+			else if(g_punishmentsRDM[target] == 1)
 			{
-				FakeClientCommand(client, "sm_rdm #%i 15 %s", gI_Client[client], reason);
+				FakeClientCommand(client, "sm_kick #%i 'You have RDMed 2x over the past 3 days!'", g_clientTarget[client]);
+			}
+			else if(g_punishmentsRDM[target] == 2)
+			{
+				FakeClientCommand(client, "sm_rdm #%i 15 %s", g_clientTarget[client], reason);
 			}
 			else
 			{
 				
-				float pow = Pow(2.0, float(gI_PunishmentsRDM[target] - 2));
+				float pow = Pow(2.0, float(g_punishmentsRDM[target] - 2));
 				int time = 15 * RoundFloat(pow);
 				
-				FakeClientCommand(client, "sm_rdm #%i %i %s", gI_Client[client], time, reason);
+				FakeClientCommand(client, "sm_rdm #%i %i %s", g_clientTarget[client], time, reason);
 			}
 			
-			
-			GetClientAuthId(target, AuthId_SteamID64, szSteamId, sizeof(szSteamId));
-			GetClientName(target, szName, sizeof(szName));
-			
-			GetClientAuthId(client, AuthId_SteamID64, szSteamId2, sizeof(szSteamId2));
-			GetClientName(client, szName2, sizeof(szName2));
-			
-			//PrintToChatAll("%i", gI_PunishmentsMute[client]);
-			
-			gI_PunishmentsRDM[target]++;
-			
-			Format(szQuery, 512, sql_insertPunishment, szSteamId, szName, reason, gI_Type[client], GetTime(), szSteamId2, szName2);
-			SQL_TQuery(g_hDb, SQL_CheckCallback, szQuery, DBPrio_Low);
+			g_punishmentsRDM[target]++;
 		}
 		case 1:
 		{
-			target = GetClientOfUserId(gI_Client[client]);
-			
-			if(gI_PunishmentsMute[target] == 0)
-				FakeClientCommand(client, "sm_mute #%i 15 %s", gI_Client[client], reason);
+			if(g_punishmentsMute[target] == 0)
+			{
+				FakeClientCommand(client, "sm_mute #%i 15 %s", g_clientTarget[client], reason);
+			}
 			else 
 			{
-				
-				float pow = Pow(2.0, float(gI_PunishmentsMute[target]));
+				float pow = Pow(2.0, float(g_punishmentsMute[target]));
 				int time = 15 * RoundFloat(pow);
 				
-				FakeClientCommand(client, "sm_mute #%i %i %s", gI_Client[client], time, reason);
+				FakeClientCommand(client, "sm_mute #%i %i %s", g_clientTarget[client], time, reason);
 			}
 			
-			
-			GetClientAuthId(target, AuthId_SteamID64, szSteamId, sizeof(szSteamId));
-			GetClientName(target, szName, sizeof(szName));
-			
-			GetClientAuthId(client, AuthId_SteamID64, szSteamId2, sizeof(szSteamId2));
-			GetClientName(client, szName2, sizeof(szName2));
-			
-			//PrintToChatAll("%i", gI_PunishmentsMute[client]);
-			
-			gI_PunishmentsMute[target]++;
-			
-			Format(szQuery, 512, sql_insertPunishment, szSteamId, szName, reason, gI_Type[client], GetTime(), szSteamId2, szName2);
-			SQL_TQuery(g_hDb, SQL_CheckCallback, szQuery, DBPrio_Low);
+			g_punishmentsMute[target]++;
 			
 		}
 		case 2:
 		{
-			target = GetClientOfUserId(gI_Client[client]);
-			
-			if(gI_PunishmentsGag[target] == 0)
-				FakeClientCommand(client, "sm_gag #%i 15 %s", gI_Client[client], reason);
+			if(g_punishmentsGag[target] == 0)
+				FakeClientCommand(client, "sm_gag #%i 15 %s", g_clientTarget[client], reason);
 			else 
 			{
 				
-				float pow = Pow(2.0, float(gI_PunishmentsGag[target]));
+				float pow = Pow(2.0, float(g_punishmentsGag[target]));
 				int time = 15 * RoundFloat(pow);
 				
-				FakeClientCommand(client, "sm_gag #%i %i %s", gI_Client[client], time, reason);
+				FakeClientCommand(client, "sm_gag #%i %i %s", g_clientTarget[client], time, reason);
 			}
-			
-			
-			GetClientAuthId(target, AuthId_SteamID64, szSteamId, sizeof(szSteamId));
-			GetClientName(target, szName, sizeof(szName));
-			
-			GetClientAuthId(client, AuthId_SteamID64, szSteamId2, sizeof(szSteamId2));
-			GetClientName(client, szName2, sizeof(szName2));
-			
-			//PrintToChatAll("%i", gI_PunishmentsGag[client]);
-			
-			gI_PunishmentsGag[target]++;
-			
-			Format(szQuery, 512, sql_insertPunishment, szSteamId, szName, reason, gI_Type[client], GetTime(), szSteamId2, szName2);
-			SQL_TQuery(g_hDb, SQL_CheckCallback, szQuery, DBPrio_Low);
+
+			g_punishmentsGag[target]++;
 		}
 	}
 	
+	GetClientAuthId(target, AuthId_SteamID2, steamId, sizeof(steamId));
+	GetClientName(target, name, sizeof(name));
+	
+	GetClientAuthId(client, AuthId_SteamID2, staffSteamId, sizeof(staffSteamId));
+	GetClientName(client, staffName, sizeof(staffName));
+	
+	Format(query, 512, sql_insertPunishment, steamId, name, GetTime(), reason, g_clientPunishType[client], staffSteamId, staffName);
+	SQL_TQuery(g_hDb, SQL_CheckCallback, query, DBPrio_Low);
 }
 
 public SQL_CheckCallback(Handle owner, Handle hndl, const char error[], any data)
