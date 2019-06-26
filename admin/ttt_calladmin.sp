@@ -136,7 +136,7 @@ public Action Command_CallAdmin(int client, int args) {
 	//Tell them staff is already online
 	if(staff != 0) {
 		PrintToChat(client, "[SM] There is already a staff member online, you can message them by putting an '@' infront of your message");
-		//return Plugin_Handled;
+		return Plugin_Handled;
 	}
 
 	//Show the reson panel

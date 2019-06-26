@@ -63,13 +63,9 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             {
                 Format(teamColor, 12, "grey2");
             }
-            case CS_TEAM_T:
+            case CS_TEAM_T, CS_TEAM_CT:
             {
-                Format(teamColor, 12, "yellow");
-            }
-            case CS_TEAM_CT:
-            {
-                Format(teamColor, 12, "blue");
+                Format(teamColor, 12, "teamcolor");
             }
         }
 
