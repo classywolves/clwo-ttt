@@ -22,14 +22,14 @@ Database g_database;
 bool g_specBanned[MAXPLAYERS + 1] = { false, ... };
 Handle g_specBanExpireTimer[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
 
-const char sql_insertSpecBan[] = "";
-const char sql_checkSpecBan[] = "";
-const char sql_updateSpecBan[] = "";
-const char sql_updateExpireBans[] = "";
+const char sql_insertSpecBan[] = "INSERT INTO `spec_bans` (`auth_id`, `name`, `created`, `ends`, `length`, `reason`, `staff_auth`, `staff_name`) VALUES ('%s', '%s', '%d', '%d', '%d', '%s', '%s', '%s');";
+const char sql_selectSpecBan[] = "SELECT `ends` FROM `spec_bans` WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' AND `ends` > '%d' AND `remove_type` IS NULL LIMIT 1;";
+const char sql_updateUnSpecBan[] = "UPDATE `spec_bans` SET `removed_by` = '%s', `remove_type` = 'U', `removed_on` = '%s', `ureason` = '%s' WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' AND `ends` <= '%d' LIMIT 1;";
+const char sql_updateExpireBans[] = "UPDATE `spec_bans` SET `remove_type` = 'E', `removed_on` = '%d', `ureason` = 'Ban Expired' WHERE `ends` <= '%d' AND `remove_type` IS NULL;";
 
 public OnPluginStart()
 {
-    Database.Connect(DbCallback_Connect, "sourcebans");
+    Database.Connect(DbCallback_Connect, "ttt");
 
     RegAdminCmd("sm_specban", Command_SpecBan, ADMFLAG_SLAY, "Locks a player to spectator for the given length of time.");
     RegAdminCmd("sm_unspecban", Command_UnSpecBan, ADMFLAG_SLAY, "Removes a spec ban on a player.");
@@ -37,11 +37,14 @@ public OnPluginStart()
     // Hook this to block joins when player is banned
     AddCommandListener(Command_BlockTeamChange, "chooseteam");
     AddCommandListener(Command_BlockTeamChange, "jointeam");
+
     // This is the only sane way to deal with CS:GO auto-assign and plugin conflicts as in CS:GO Team Limit Bypass
     HookEvent("player_spawn", Event_PlayerSpawn, EventHookMode_Post);
     // This will catch anyone that gets swapped manually
     HookEvent("player_team", Event_PlayerTeam, EventHookMode_Post);
     HookEvent("jointeam_failed", Event_JoinTeamFailed, EventHookMode_Pre);
+
+    HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);
 
     PrintToServer("[SBN] Loaded successfully");
 }
@@ -49,7 +52,7 @@ public OnPluginStart()
 public void OnClientAuthorized(int client, const char[] authid)
 {
     char query[768];
-    g_database.Format(query, sizeof(query), sql_checkSpecBan, authid[8], GetTime());
+    g_database.Format(query, sizeof(query), sql_selectSpecBan, authid[8], GetTime());
     g_database.Query(DbCallback_CheckSpecBan, query, client);
 }
 
@@ -114,6 +117,13 @@ public Action Event_JoinTeamFailed(Handle event, const char[] name, bool dontBro
 	}
 
 	return Plugin_Continue;
+}
+
+public Action Event_RoundEnd(Handle event, const char[] name, bool dontBroadcast)
+{
+    ExpireBans();
+
+    return Plugin_Continue;
 }
 
 public Action Command_SpecBan(int client, const char[] command, int args)
@@ -185,7 +195,8 @@ public Action Command_BlockTeamChange(int client, const char[] command, int args
 
 public void DbCallback_Connect(Database db, const char[] error, any data)
 {
-    if (db == null) {
+    if (db == null)
+    {
         LogError("Db_ConnectCallback: %s", error);
         return;
     }
@@ -199,7 +210,8 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
 
 public void DbCallback_Expire(Database db, DBResultSet results, const char[] error, any data)
 {
-    if (results == null) {
+    if (results == null)
+    {
         LogError("DbCallback_Expire: %s", error);
         return;
     }
@@ -210,14 +222,15 @@ public void DbCallback_Expire(Database db, DBResultSet results, const char[] err
         GetClientAuthId(i, AuthId_Steam2, steamId, 32);
 
         char query[768];
-        g_database.Format(query, sizeof(query), sql_checkSpecBan, steamId[8], GetTime());
+        g_database.Format(query, sizeof(query), sql_selectSpecBan, steamId[8], GetTime());
         g_database.Query(DbCallback_CheckSpecBan, query, i);
     }
 }
 
 public void DbCallback_CheckSpecBan(Database db, DBResultSet results, const char[] error, int client)
 {
-    if (results == null) {
+    if (results == null)
+    {
         LogError("DbCallback_CheckSpecBan: %s", error);
         return;
     }
@@ -233,6 +246,37 @@ public void DbCallback_CheckSpecBan(Database db, DBResultSet results, const char
     {
         g_specBanned[client] = false;
     }
+}
+
+public void DbCallback_InsertSpecBan(Database db, DBResultSet results, const char[] error, DataPack data)
+{
+    if (results == null)
+    {
+        LogError("DbCallback_InsertSpecBan: %s", error);
+        return;
+    }
+
+    data.Reset();
+    int target = data.ReadCell();
+    int admin = data.ReadCell();
+    int length = data.ReadCell();
+
+    CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}%N has been spec banned for %d by %N.", target, length, admin);
+}
+
+public void DbCallback_UnSpecBan(Database db, DBResultSet results, const char[] error, DataPack data)
+{
+    if (results == null)
+    {
+        LogError("DbCallback_UnSpecBan: %s", error);
+        return;
+    }
+
+    data.Reset();
+    int target = data.ReadCell();
+    int admin = data.ReadCell();
+
+    CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}%N has been unspec banned by %N.", target, length, admin);
 }
 
 void ExpireBans()
@@ -257,9 +301,14 @@ void SpecBan(int client, int target, int length, const char[] reason)
     GetClientAuthId(client, AuthId_Steam2, adminId, 32);
     GetClientName(client, adminName, 64);
 
+    DataPack data = new DataPack();
+    data.WriteCell(target);
+    data.WriteCell(client);
+    data.WriteCell(length);
+
     char query[768];
     g_database.Format(query, sizeof(query), sql_insertSpecBan, steamId, name, created, ends, length, reason, adminId, adminName);
-    g_database.Query(DbCallback_InsertSpecBan, query, target);
+    g_database.Query(DbCallback_InsertSpecBan, query, data);
 }
 
 void UnSpecBan(int client, int target, const char[] reason)
@@ -272,9 +321,13 @@ void UnSpecBan(int client, int target, const char[] reason)
 
     int time = GetTime();
 
+    DataPack data = new DataPack();
+    data.WriteCell(target);
+    data.WriteCell(client);
+
     char query[768];
-    g_database.Format(query, sizeof(query), sql_updateSpecBan, adminId, time, reason, targetId[8], time);
-    g_database.Query(DbCallback_UpdateSpecBan, query, target);
+    g_database.Format(query, sizeof(query), sql_updateUnSpecBan, adminId, time, reason, targetId[8], time);
+    g_database.Query(DbCallback_UnSpecBan, query, data);
 }
 
 void EnforceSpecBan(int client)

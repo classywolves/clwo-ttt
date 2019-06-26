@@ -14,7 +14,7 @@ CREATE TABLE `ttt_db`.`spec_bans`
     `removed_on` INT(11) NULL,
     `ureason` TEXT NULL,
 	PRIMARY KEY (`id`),
-	UNIQUE `auth_index` (`auth_id`, `created`)
+	UNIQUE `ban_index` (`auth_id`, `created`)
 )
 ENGINE = InnoDB;
 
@@ -25,7 +25,7 @@ INSERT INTO `spec_bans` (`auth_id`, `name`, `created`, `ends`, `length`, `reason
 SELECT `ends` FROM `spec_bans` WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' AND `ends` > '%d' AND `remove_type` IS NULL LIMIT 1;
 
 -- Expire bans
-UPDATE `spec_bans` SET `remove_type` = 'E', `removed_on` = '%d', `ureason` = 'Ban Expired' WHERE `ends` <= '%d' IS NULL;
+UPDATE `spec_bans` SET `remove_type` = 'E', `removed_on` = '%d', `ureason` = 'Ban Expired' WHERE `ends` <= '%d' AND `remove_type` IS NULL;
 
 -- Un spec ban
-UPDATE `spec_bans` SET `removed_by` = '%s', `remove_type` = 'U', `removed_on` = '%s', `ureason` = '%s' WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' AND `ends` > '%d' LIMIT 1;
+UPDATE `spec_bans` SET `removed_by` = '%s', `remove_type` = 'U', `removed_on` = '%s', `ureason` = '%s' WHERE `auth_id` REGEXP '^STEAM_[0-9]:%s$' AND `ends` <= '%d' LIMIT 1;
