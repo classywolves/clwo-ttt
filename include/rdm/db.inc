@@ -108,14 +108,14 @@ public void RdmReportCallback(Database db, DBResultSet results, const char[] err
 
     CPrintToChat(client, "{purple}[TTT] {yellow}Thanks for submitting a case, a staff member shall be in contact shortly.");
 
-    CPrintToChatStaff("{purple}[TTT] {yellow}%N opened a new RDM case.", client);
+    CPrintToChatStaff("{purple}[TTT] {blue}%N {yellow}opened a new RDM case.", client);
 
     char query[768];
     rdmDb.Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `reports` LEFT JOIN `handles` ON `reports`.`death_index` = `handles`.`death_index` WHERE `handles`.`verdict` IS NULL;");
-    rdmDb.Query(RdmStaffReportCallback, query, client);
+    rdmDb.Query(RdmCaseCountCallback, query, client);
 }
 
-public void RdmStaffReportCallback(Database db, DBResultSet results, const char[] error, int client)
+public void RdmCaseCountCallback(Database db, DBResultSet results, const char[] error, any data)
 {
     if (results == null) {
         LogError("RdmReportCallback: %s", error);
@@ -127,15 +127,15 @@ public void RdmStaffReportCallback(Database db, DBResultSet results, const char[
         int caseCount = results.FetchInt(0);
         if (caseCount < 1)
         {
-            CPrintToChatStaff("{purple}[TTT] {yellow}There are currently no unhandled cases.");
+            CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}There are currently no unhandled cases.");
         }
         else if (caseCount < 2)
         {
-            CPrintToChatStaff("{purple}[TTT] {yellow}There is now %d unhandled case.", caseCount);
+            CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}There is now {red}%d {yellow}unhandled case.", caseCount);
         }
         else
         {
-            CPrintToChatStaff("{purple}[TTT] {yellow}There are now %d unhandled cases.", caseCount);
+            CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}There are now {red}%d {yellow}unhandled cases.", caseCount);
         }
     }
 }
@@ -205,6 +205,8 @@ public void RdmHandleCallback(Database db, DBResultSet results, const char[] err
         GetClientName(handler, staffName, sizeof(staffName));
         GetClientAuthId(handler, AuthId_Steam2, staffSteamId, sizeof(staffSteamId));
 
+        CPrintToChatStaff("{purple}[TTT] {blue}%s {yellow}has taken an RDM case.", staffName);
+
         DataPack data = new DataPack();
         data.WriteCell(handler);
         data.WriteCell(deathId);
@@ -245,7 +247,7 @@ public void RdmHandleResponseCallback(Database db, DBResultSet results, const ch
         char accuserName[64]; results.FetchString(1, accuserName, 64);
         char accusedName[64]; results.FetchString(2, accusedName, 64);
 
-        CPrintToChat(handler, "{purple}[TTT] {yellow}You have taken %s's case against %s.", accuserName, accusedName);
+        CPrintToChat(handler, "{purple}[TTT] {yellow}You have taken {blue}%s's {yellow}case against {red}%s.", accuserName, accusedName);
         currentCase[handler] = deathId;
     }
 }
@@ -285,11 +287,11 @@ public void RdmVerdictResponseCallback(Database db, DBResultSet results, const c
         {
             if (IsValidClient(accuser))
             {
-                TTT_Message(accuser, "%N has handled your case against %s and has concluded them to be innocent if you have any questions please message staff using an @ before your message.", handler, accusedName);
+                TTT_Message(accuser, "{blue}%N {yellow}has handled your case against {red}%s {yellow}and has concluded them to be {green}innocent{yellow}, if you have any questions please message staff using an @ before your message.", handler, accusedName);
             }
             if (IsValidClient(accused))
             {
-                TTT_Message(accused, "%N has found you innocent in your defense against %s have a nice day.", handler, accuserName);
+                TTT_Message(accused, "{blue}%N has found you {green}innocent {yellow}in your defense against {blue}%s{yellow}, have a nice day.", handler, accuserName);
             }
             TTT_Message(handler, "You have concluded the defendant innocent for case %d.", deathId);
         }
@@ -297,18 +299,18 @@ public void RdmVerdictResponseCallback(Database db, DBResultSet results, const c
         {
             if (IsValidClient(accuser))
             {
-                TTT_Message(accuser, "%N has handled your case against %s and has concluded them to be guilty. Thanks for your report.", handler, accusedName);
+                TTT_Message(accuser, "{blue}%N {yellow}has handled your case against {red}%s {yellow}and has concluded them to be {red}guilty{yellow}. Thanks for your report.", handler, accusedName);
             }
             if (IsValidClient(accused))
             {
                 if (punishment == CASE_CHOICE_SLAY)
                 {
-                    TTT_Message(accused, "You are being slayed next round by %N for killing %s. If you have any questions about this please message staff by using an @ before your message.", handler, accuserName);
+                    TTT_Message(accused, "You are being slayed next round by {blue}%N {yellow}for killing {blue}%s{yellow}. If you have any questions about this please message staff by using an @ before your message.", handler, accuserName);
                     TTT_AddRoundSlays(accused, 1, false);
                 }
                 else if (punishment == CASE_CHOICE_WARN)
                 {
-                    TTT_Message(accused, "You have been found guilty of RDM by %N for killing %s further action may be taken. If you have any questions about this please message staff by using an @ before your message in team chat.", handler, accuserName);
+                    TTT_Message(accused, "You have been found guilty of RDM by {blue}%N {yellow}for killing {blue}%s {yellow}further action may be taken. If you have any questions about this please message staff by using an @ before your message in team chat.", handler, accuserName);
                 }
             }
             TTT_Message(handler, "You have concluded the defendant guilty for case %d.", deathId);

@@ -76,7 +76,7 @@ public Action Command_CaseCount(int client, int args)
 {
     char query[768];
     rdmDb.Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `reports` LEFT JOIN `handles` ON `reports`.`death_index` = `handles`.`death_index` WHERE `handles`.`verdict` IS NULL;");
-    rdmDb.Query(RdmStaffReportCallback, query, client);
+    rdmDb.Query(RdmCaseCountCallback, query, client);
 
     return Plugin_Handled;
 }
@@ -216,4 +216,11 @@ public bool BadKill(int attackerRole, int victimRole)
     //else if (attackerRole == TTT_TEAM_TRAITOR || victimRole == TTT_TEAM_TRAITOR) return false;
     else if ((attackerRole | victimRole) & TTT_TEAM_TRAITOR) return false;
     else return true;
+}
+
+public void TTT_OnRoundEnd(int winner, Handle array)
+{
+    char query[768];
+    rdmDb.Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `reports` LEFT JOIN `handles` ON `reports`.`death_index` = `handles`.`death_index` WHERE `handles`.`verdict` IS NULL;");
+    rdmDb.Query(RdmCaseCountCallback, query);
 }
