@@ -71,6 +71,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
         //Remove colors from message
         CRemoveColors(message, _CV_MAX_MESSAGE_LENGTH);
+        RemoveHexColors(message, message, _CV_MAX_MESSAGE_LENGTH);
 
         //Remove colors from name
         CRemoveColors(name, MAX_NAME_LENGTH);
@@ -131,6 +132,7 @@ void SendPrivateChat(int client, int target, char[] message)
 {
     //Remove colors from message
     CRemoveColors(message, _CV_MAX_MESSAGE_LENGTH);
+    RemoveHexColors(message, message, _CV_MAX_MESSAGE_LENGTH);
 
     //Get names and remove colors
     char clientName[MAX_NAME_LENGTH], targetName[MAX_NAME_LENGTH];
@@ -154,4 +156,22 @@ void SendPrivateChat(int client, int target, char[] message)
     }
 
     LogAction(client, target, "\"%L\" triggered sm_psay to \"%L\" (text %s)", client, target, message);
+}
+
+stock RemoveHexColors(const char[] input, char[] output, int size) {
+	int x = 0;
+	for (int i=0; input[i] != '\0'; i++) {
+
+		if (x+1 == size) {
+			break;
+		}
+
+		char character = input[i];
+
+		if (character > 0x10) {
+			output[x++] = character;
+		}
+	}
+
+	output[x] = '\0';
 }
