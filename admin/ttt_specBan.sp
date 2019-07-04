@@ -63,7 +63,7 @@ public void OnClientAuthorized(int client, const char[] authid)
 {
     char query[768];
     g_database.Format(query, sizeof(query), sql_selectSpecBan, authid[8], GetTime());
-    g_database.Query(DbCallback_CheckSpecBan, query, client);
+    g_database.Query(DbCallback_CheckSpecBan, query, GetClientUserId(client));
 }
 
 public Action Event_PlayerSpawn(Event event, const char[] name, bool dontBroadcast)
@@ -262,11 +262,11 @@ public void DbCallback_Expire(Database db, DBResultSet results, const char[] err
 
         char query[768];
         g_database.Format(query, sizeof(query), sql_selectSpecBan, steamId[8], GetTime());
-        g_database.Query(DbCallback_CheckSpecBan, query, i);
+        g_database.Query(DbCallback_CheckSpecBan, query, GetClientUserId(i));
     }
 }
 
-public void DbCallback_CheckSpecBan(Database db, DBResultSet results, const char[] error, int client)
+public void DbCallback_CheckSpecBan(Database db, DBResultSet results, const char[] error, int userid)
 {
     if (results == null)
     {
@@ -274,12 +274,13 @@ public void DbCallback_CheckSpecBan(Database db, DBResultSet results, const char
         return;
     }
 
+    int client = GetClientOfUserId(userid);
     if (results.FetchRow())
     {
         int ends = results.FetchInt(0);
 
         g_specBanned[client] = true;
-        g_specBanExpireTimer[client] = CreateTimer(float(ends - GetTime()), Timer_SpecBanExpire, client, TIMER_FLAG_NO_MAPCHANGE);
+        g_specBanExpireTimer[client] = CreateTimer(float(ends - GetTime()), Timer_SpecBanExpire, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
     }
     else
     {
@@ -296,8 +297,8 @@ public void DbCallback_InsertSpecBan(Database db, DBResultSet results, const cha
     }
 
     data.Reset();
-    int target = data.ReadCell();
-    int admin = data.ReadCell();
+    int target = GetClientOfUserId(data.ReadCell());
+    int admin = GetClientOfUserId(data.ReadCell());
     int length = data.ReadCell();
 
     CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}%N has been spec banned for %d by %N.", target, length, admin);
@@ -313,8 +314,8 @@ public void DbCallback_UnSpecBan(Database db, DBResultSet results, const char[] 
     }
 
     data.Reset();
-    int target = data.ReadCell();
-    int admin = data.ReadCell();
+    int target = GetClientOfUserId(data.ReadCell());
+    int admin = GetClientOfUserId(data.ReadCell());
 
     CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}%N has been unspec banned by %N.", target, admin);
     g_specBanned[target] = false;
