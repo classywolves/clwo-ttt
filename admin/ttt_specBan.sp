@@ -300,6 +300,7 @@ public void DbCallback_InsertSpecBan(Database db, DBResultSet results, const cha
     int target = GetClientOfUserId(data.ReadCell());
     int admin = GetClientOfUserId(data.ReadCell());
     int length = data.ReadCell();
+    delete data;
 
     CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}%N has been spec banned for %d by %N.", target, length, admin);
     g_specBanned[target] = false;
@@ -316,6 +317,7 @@ public void DbCallback_UnSpecBan(Database db, DBResultSet results, const char[] 
     data.Reset();
     int target = GetClientOfUserId(data.ReadCell());
     int admin = GetClientOfUserId(data.ReadCell());
+    delete data;
 
     CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}%N has been unspec banned by %N.", target, admin);
     g_specBanned[target] = false;
