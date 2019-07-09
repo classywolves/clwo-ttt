@@ -11,6 +11,7 @@
 * Custom include files.
 */
 #include <ttt>
+#include <ttt_shop>
 #include <colorvariables>
 #include <generics>
 #include <mostactive>
