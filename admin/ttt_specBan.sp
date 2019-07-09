@@ -145,7 +145,7 @@ public int Native_SpecBan(Handle plugin, int numParams)
     int length = GetNativeCell(3);
 
     char reason[192];
-    GetNativeString(4, reason, 192);
+    GetNativeString(4, reason, sizeof(reason));
 
     SpecBan(client, target, length, reason);
 
@@ -158,7 +158,7 @@ public int Native_UnSpecBan(Handle plugin, int numParams)
     int target = GetNativeCell(2);
 
     char reason[192];
-    GetNativeString(3, reason, 192);
+    GetNativeString(3, reason, sizeof(reason));
 
     UnSpecBan(client, target, reason);
 
@@ -201,14 +201,14 @@ public Action Command_UnSpecBan(int client, int args)
     }
 
     char buffer[64];
-    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
+    GetCmdArg(1, buffer, sizeof(buffer));
     int target = TTT_Target(buffer, client, true, false, false);
 
     char reason[192] = "";
     for (int i = 2; i <= args; i++)
     {
-        GetCmdArg(i, buffer, 64);
-        Format(reason, 192, "%s %s", reason, buffer);
+        GetCmdArg(i, buffer, sizeof(buffer));
+        Format(reason, sizeof(reason), "%s %s", reason, buffer);
     }
 
     UnSpecBan(client, target, reason);
@@ -258,7 +258,7 @@ public void DbCallback_Expire(Database db, DBResultSet results, const char[] err
     LoopValidClients(i)
     {
         char steamId[32];
-        GetClientAuthId(i, AuthId_Steam2, steamId, 32);
+        GetClientAuthId(i, AuthId_Steam2, steamId, sizeof(steamId));
 
         char query[768];
         g_database.Format(query, sizeof(query), sql_selectSpecBan, steamId[8], GetTime());
@@ -347,15 +347,16 @@ void SpecBan(int client, int target, int length, const char[] reason)
 {
     char steamId[32];
     char name[64];
-    GetClientAuthId(target, AuthId_Steam2, steamId, 32);
+    GetClientAuthId(target, AuthId_Steam2, steamId, sizeof(steamId));
+    GetClientName(target, name, sizeof(name));
 
     int created = GetTime();
     int ends = created + length;
 
     char adminId[32];
     char adminName[64];
-    GetClientAuthId(client, AuthId_Steam2, adminId, 32);
-    GetClientName(client, adminName, 64);
+    GetClientAuthId(client, AuthId_Steam2, adminId, sizeof(adminId));
+    GetClientName(client, adminName, sizeof(adminName));
 
     DataPack data = new DataPack();
     data.WriteCell(target);
@@ -370,10 +371,10 @@ void SpecBan(int client, int target, int length, const char[] reason)
 void UnSpecBan(int client, int target, const char[] reason)
 {
     char targetId[32];
-    GetClientAuthId(target, AuthId_Steam2, targetId, 32);
+    GetClientAuthId(target, AuthId_Steam2, targetId, sizeof(targetId));
 
     char adminId[32];
-    GetClientAuthId(client, AuthId_Steam2, adminId, 32);
+    GetClientAuthId(client, AuthId_Steam2, adminId, sizeof(adminId));
 
     int time = GetTime();
 
