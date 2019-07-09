@@ -18,7 +18,9 @@ public Plugin myinfo =
     url = ""
 };
 
-Database g_database;
+Database g_database = null;
+
+ConVar g_cEntry;
 
 bool g_specBanned[MAXPLAYERS + 1] = { false, ... };
 Handle g_specBanExpireTimer[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
@@ -33,13 +35,14 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
     RegPluginLibrary("ttt_specBan");
 
     CreateNative("TTT_SpecBan", Native_SpecBan);
+    CreateNative("TTT_UnSpecBan", Native_UnSpecBan);
 
     return APLRes_Success;
 }
 
 public OnPluginStart()
 {
-    Database.Connect(DbCallback_Connect, "ttt");
+    g_cEntry = CreateConVar("spec_ban_database", "ttt", "The name of the entry in your database.cfg");
 
     RegAdminCmd("sm_specban", Command_SpecBan, ADMFLAG_SLAY, "Locks a player to spectator for the given length of time.");
     RegAdminCmd("sm_unspecban", Command_UnSpecBan, ADMFLAG_SLAY, "Removes a spec ban on a player.");
@@ -56,7 +59,24 @@ public OnPluginStart()
 
     HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);
 
+    AutoExecConfig(true, "spec_ban", "clwo");
+
     PrintToServer("[SBN] Loaded successfully");
+}
+
+public OnConfigsExecuted()
+{
+    char entry[32];
+    g_cEntry.GetString(entry, sizeof(entry));
+
+    if (g_database != null)
+    {
+        LogMessage("%s is already connected! (Handle %d)", entry, g_database);
+    }
+    else
+    {
+        Database.Connect(DbCallback_Connect, entry);
+    }
 }
 
 public void OnClientAuthorized(int client, const char[] authid)
