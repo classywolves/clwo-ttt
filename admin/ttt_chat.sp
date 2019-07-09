@@ -1,21 +1,16 @@
 #pragma semicolon 1
 
-/*
- * Base CS:GO plugin requirements.
- */
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
-/*
- * Custom include files.
- */
 #include <colorvariables>
 #include <generics>
 #include <chat-processor>
 #include <ttt_ranks>
+#include <ttt_targeting>
+#include <ttt_messages>
 #include <donators>
-
 
 public Plugin myinfo =
 {
@@ -41,6 +36,13 @@ public OnPluginStart()
 
 public void RegisterCmds()
 {
+    RegAdminCmd("sm_say", Command_Say, ADMFLAG_CHAT, "sm_say - Sends a message to all players");
+    RegAdminCmd("sm_msay", Command_MSay, ADMFLAG_CHAT, "sm_msay - Send a panel message to all players");
+    RegAdminCmd("sm_smsay", Command_SMSay, ADMFLAG_CHAT, "sm_smsay - MSay, but targetted");
+    RegAdminCmd("sm_csay", Command_CSay, ADMFLAG_CHAT, "sm_csay - Sends a central message to all players");
+    RegAdminCmd("sm_scsay", Command_SCSay, ADMFLAG_CHAT, "sm_scsay - CSay, but targetted");
+    
+    RegConsoleCmd("sm_chat", Command_Chat, "sm_chat - Sends a message to staff");
     RegConsoleCmd("sm_msg", Command_Msg, "sm_msg <name or #userid> <message> - sends private message");
     RegConsoleCmd("sm_r", Command_Reply, "sm_reply <message> - replies to previous private message");
     RegConsoleCmd("sm_reply", Command_Reply, "sm_reply <message> - replies to previous private message");
@@ -92,13 +94,14 @@ public OnLibraryAdded(const char[] name)
 
 public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstring, char[] name, char[] message, bool& processcolors, bool& removecolors)
 {
-    if (message[0] != '@') // Not staff / all say or pm.
-    {
-        char buffer[16];
-        char teamColor[6];
-        char staffTag[64];
+    char buffer[16];
+    char teamColor[6];
+    char staffTag[64];
 
-        int rank = GetPlayerRank(author);
+    int rank = GetPlayerRank(author);
+    
+    if (message[0] != '@') // Not staff / all say or pm.
+    {   
         if (rank > RANK_PLEB)
         {
             GetRankTag(rank, buffer);
@@ -158,32 +161,284 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
         // Format message name
         Format(name, MAX_NAME_LENGTH, "%s%s {%s}%s%s{default}", cPreChatTag, staffTag, teamColor, sChatTag, name);
+
+        return Plugin_Changed;
     }
 
-    return Plugin_Changed;
+    if (rank > RANK_VIP && (StrContains(flagstring, "team", false) != -1 ||  StrContains(flagstring, "Cstrike_Chat_CT", false) != -1 ||  StrContains(flagstring, "Cstrike_Chat_T", false) != -1||  StrContains(flagstring, "Cstrike_Chat_Spec", false) != -1))
+    {
+        strcopy(message, strlen(message), message[1]);
+
+        recipients.Clear();
+
+        LoopValidClients(i)
+        {
+            int nrank = GetPlayerRank(i);
+            if(RANK_VIP < nrank)
+            {
+                recipients.Push(GetClientUserId(i));
+            }
+        }
+
+        GetRankTag(rank, buffer);
+        Format(staffTag, 64, "{default}[{lime}%s{default}]", buffer);
+
+        Format(name, MAX_NAME_LENGTH, "{yellow}[STAFF] %s{yellow} %s", staffTag, name);
+        Format(message, _CV_MAX_MESSAGE_LENGTH, "{bluegrey}%s", message);
+        Format(flagstring, 17, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
+
+        LogAction(author, -1, "\"%L\" triggered sm_say (text %s)", author, message);
+
+        return Plugin_Changed;
+    }
+
+
+    if (rank > RANK_VIP && (StrContains(flagstring, "team", false) == -1 ||  StrContains(flagstring, "Cstrike_Chat_CT", false) == -1 ||  StrContains(flagstring, "Cstrike_Chat_T", false) == -1 || StrContains(flagstring, "Cstrike_Chat_Spec", false) == -1))
+    {
+        strcopy(message, strlen(message), message[1]);
+
+        recipients.Clear();
+
+        LoopValidClients(i)
+        {
+            recipients.Push(GetClientUserId(i));
+        }      
+
+        GetRankTag(rank, buffer);
+        Format(staffTag, 64, "{default}[{lime}%s{default}]", buffer);
+
+        Format(name, MAX_NAME_LENGTH, "{red}[ALL] %s {red}%s{default}", staffTag, name);
+        Format(flagstring, 17, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
+
+        LogAction(author, -1, "\"%L\" triggered sm_chat (text %s)", author, message);
+
+        return Plugin_Changed;
+    }
+
+    else
+    {
+        strcopy(message, strlen(message), message[1]);
+
+        recipients.Clear();
+
+        LoopValidClients(i)
+        {
+            int nrank = GetPlayerRank(i);
+            if(RANK_VIP < nrank)
+            {
+                recipients.Push(GetClientUserId(i));
+            }
+        }
+
+        recipients.Push(GetClientUserId(author));
+
+        Format(name, MAX_NAME_LENGTH, "{yellow}[TO STAFF] %s{yellow}", name);
+        Format(message, _CV_MAX_MESSAGE_LENGTH, "{bluegrey}%s", message);
+        Format(flagstring, 17, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
+
+        LogAction(author, -1, "\"%L\" triggered sm_chat (text %s)", author, message);
+
+        return Plugin_Changed;
+    }
+     
+}
+
+public Action Command_Say(int client, int args)
+{
+    if (args < 1)
+    {
+        TTT_Error(client, "Invalid usage: /say <message>");
+        return Plugin_Handled;
+    }
+
+    char message[255], buffer[128];
+
+    GetCmdArg(1, message, sizeof(message));
+
+    for (int i = 2; i <= args; i++)
+    {
+        GetCmdArg(i, buffer, sizeof(buffer));
+        Format(message, sizeof(message), "%s %s", message, buffer);
+    }
+    
+    SendChatToAll(client, message);
+    return Plugin_Handled;
+}
+
+public Action Command_MSay(int client, int args)
+{
+    if (args < 1)
+    {
+        TTT_Error(client, "Invalid Usage: /msay <message>");
+        return Plugin_Handled;
+    }
+
+    char message[255], buffer[128], title[128];
+
+    GetCmdArg(1, message, sizeof(message));
+
+    for (int i = 2; i <= args; i++)
+    {
+        GetCmdArg(i, buffer, sizeof(buffer));
+        Format(message, sizeof(message), "%s %s", message, buffer);
+    }
+
+    Format(title, sizeof(title), "%N: ", client);
+    LoopValidClients(j)
+    {
+        TTT_SendPanelMsg(j, title, message);
+    }
+
+    return Plugin_Handled;
+}
+
+public Action Command_SMSay(int client, int args)
+{
+    if (args < 2)
+    {
+        TTT_Error(client, "Invalid Usage: /smsay <player> <message>");
+        return Plugin_Handled;
+    }
+
+    char message[255], arg1[128], buffer[128], title[128];
+
+    GetCmdArg(1, arg1, sizeof(arg1));
+    int target = TTT_Target(arg1, client, true, false, false);
+
+    if (target < 0)
+    {
+        return Plugin_Handled;
+    }
+
+    if (args >= 2)
+    {
+        // They've included a message!
+        GetCmdArg(2, message, sizeof(message));
+
+        for (int i = 3; i <= args; i++)
+        {
+            GetCmdArg(i, buffer, sizeof(buffer));
+            Format(message, sizeof(message), "%s %s", message, buffer);
+        }
+    }
+
+    Format(title, sizeof(title), "%N: ", client);
+    TTT_SendPanelMsg(target, title, message);
+
+    return Plugin_Handled;
+}
+
+public Action Command_CSay(int client, int args)
+{
+    if (args < 1)
+    {
+        TTT_Error(client, "Invalid Usage: /csay <message>");
+        return Plugin_Handled;
+    }
+
+    char message[255], buffer[128];
+    GetCmdArg(1, message, sizeof(message));
+
+    for (int i; i <= args; i++)
+    {
+        GetCmdArg(i, buffer, sizeof(buffer));
+        Format(message, sizeof(message), "%s %s", message, buffer);
+    }
+
+    PrintCenterTextAll(message);
+    return Plugin_Handled;
+}
+
+public Action Command_SCSay(int client, int args)
+{
+    if (args < 2)
+    {
+        TTT_Error(client, "Invalid Usage: /scsay <player> <message>");
+        return Plugin_Handled;
+    }
+
+    char message[255], arg1[128], buffer[128];
+
+    GetCmdArg(1, arg1, sizeof(arg1));
+    int target = TTT_Target(arg1, client, true, false, false);
+
+    if (target < 0)
+    {
+        return Plugin_Handled;
+    }
+
+    if (args >= 2)
+    {
+        // They've included a message!
+        GetCmdArg(2, message, sizeof(message));
+
+        for (int i = 3; i <= args; i++)
+        {
+            GetCmdArg(i, buffer, sizeof(buffer));
+            Format(message, sizeof(message), "%s %s", message, buffer);
+        }
+    }
+
+    PrintCenterText(target, message);
+    return Plugin_Handled;
+}
+
+public Action Command_Chat(int client, int args)
+{
+    char message[255], buffer [128];
+
+    int rank = GetPlayerRank(client);
+
+    if (args < 1)
+    {
+        TTT_Error(client, "Invalid usage: /say <message>");
+        return Plugin_Handled;
+    }
+    
+    GetCmdArg(1, message, sizeof(message));
+
+    for (int i = 2; i <= args; i++)
+    {
+        GetCmdArg(i, buffer, sizeof(buffer));
+        Format(message, sizeof(message), "%s %s", message, buffer);
+    }
+    
+    if (rank <= RANK_VIP)
+    {
+        SendChatToAdminPleb(client, message);
+        return Plugin_Handled;
+    }
+
+    else
+    {
+        SendChatToAdmin(client, message);
+        return Plugin_Handled;
+    }    
 }
 
 public Action Command_Msg(int client, int args)
 {
-	if (args < 2)
-	{
-		ReplyToCommand(client, "[SM] Usage: sm_msg <name or #userid> <message>");
-		return Plugin_Handled;
-	}
+    if (args < 2)
+    {
+        ReplyToCommand(client, "[SM] Usage: sm_msg <name or #userid> <message>");
+        return Plugin_Handled;
+    }
 
-	char text[192], arg[64];
-	GetCmdArgString(text, sizeof(text));
+    char text[192], arg[64];
+    GetCmdArgString(text, sizeof(text));
 
-	int len = BreakString(text, arg, sizeof(arg));
-	
-	int target = FindTarget(client, arg, true, false);
+    int len = BreakString(text, arg, sizeof(arg));
+    
+    int target = FindTarget(client, arg, true, false);
 
-	if (target == -1)
-		return Plugin_Handled;
+    if (target == -1)
+    {
+        return Plugin_Handled;
+    }
+        
+    SendPrivateChat(client, target, text[len]);
 
-	SendPrivateChat(client, target, text[len]);
-
-	return Plugin_Handled;
+    return Plugin_Handled;
 }
 
 public Action Command_Reply(int client, int args)
@@ -207,6 +462,64 @@ public Action Command_Reply(int client, int args)
     return Plugin_Handled;      
 }
 
+void SendChatToAll(int client, char[] message)
+{
+    char buffer[16];
+    char staffTag[64];
+    char name[255];
+
+    int rank = GetPlayerRank(client);
+    
+    GetRankTag(rank, buffer);
+    Format(staffTag, 64, "{default}[{lime}%s{default}]", buffer);
+
+    GetClientName(client, name, sizeof(name));
+    
+    Format(name, MAX_NAME_LENGTH, "{red}[ALL] %s {red}%s{default}", staffTag, name);
+
+    CPrintToChatAll("%s: {default}%s", name, message);
+
+    LogAction(client, -1, "\"%L\" triggered sm_say (text %s)", client, message);
+}
+
+void SendChatToAdmin(int client, char[] message)
+{
+    char buffer[16];
+    char staffTag[64];
+    char name[255];
+
+    int rank = GetPlayerRank(client);
+    GetRankTag(rank, buffer);
+    Format(staffTag, 64, "{default}[{lime}%s{default}]", buffer);
+    GetClientName(client, name, sizeof(name));
+
+    LoopValidClients(i)
+    {
+        if(GetPlayerRank(i) > RANK_PLEB)
+        {
+            CPrintToChat(i, "{yellow}[STAFF] %s{yellow} %s: {bluegrey}%s", staffTag, name, message);
+        }
+    }
+
+    LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, message);
+}
+
+void SendChatToAdminPleb(int client, char[] message)
+{
+    char name[255];
+    GetClientName(client, name, 255);
+    
+    LoopValidClients(i)
+    {
+        if(GetPlayerRank(i) > RANK_PLEB)
+        {
+            CPrintToChat(i,"{yellow}[TO STAFF] %s:  {bluegrey}%s", name, message);  
+        }
+    }
+    CPrintToChat(client,"{yellow}[TO STAFF] %s:{bluegrey}%s", name, message);
+
+    LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, message);
+}
 
 void SendPrivateChat(int client, int target, char[] message)
 {

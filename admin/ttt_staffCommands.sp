@@ -41,8 +41,6 @@ public void RegisterCmds()
     RegAdminCmd("sm_reloadplugin", Command_ReloadPlugin, ADMFLAG_RCON, "Reloads the passed plugin.");
     RegAdminCmd("sm_slaynr", Command_SlayNextRound, ADMFLAG_SLAY, "Slay a player before roles are assigned for the next round.");
     RegAdminCmd("sm_unslaynr", Command_RemoveSlayNextRound, ADMFLAG_SLAY, "Remove slays for a player before roles are assigned for the next round.");
-    RegAdminCmd("sm_scsay", Command_SCSay, ADMFLAG_CHAT, "Targeted CSay.");
-    RegAdminCmd("sm_smsay", Command_SMSay, ADMFLAG_CHAT, "Targeted MSay.");
     RegAdminCmd("sm_tp", Command_Teleport, ADMFLAG_GENERIC, "Allows a staff member to teleport another player.");
     RegAdminCmd("sm_teleport", Command_Teleport, ADMFLAG_GENERIC, "Allows a staff member to teleport another player.");
 }
@@ -84,8 +82,8 @@ public Action Command_ForceSpectator(int client, int args)
     }
 
     ChangeClientTeam(target, CS_TEAM_SPECTATOR);
-    CPrintToChat(target, "{purple}[TTT] {yellow}You were forced to spectator by {blue}%N.", client);
-    CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}was forced to spectator by {blue}%N.", target, client);
+    CPrintToChat(target, "{purple}[TTT] {yellow}You were forced to spectator by {blue}%N{yellow}.", client);
+    CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}was forced to spectator by {blue}%N{yellow}.", target, client);
 
     return Plugin_Handled;
 }
@@ -151,71 +149,6 @@ public Action Command_RemoveSlayNextRound(int client, int args)
     CPrintToChatStaff("{purple}[TTT] {red}%N {yellow}will no longer be slain next round.", target);
     return Plugin_Handled;
 }
-	
-public Action Command_SMSay(int client, int args)
-{
-	if (args < 2)
-    {
-		TTT_Error(client, "Invalid Usage: /smsay <player> <message>");
-		return Plugin_Handled;
-	}
-
-	char message[255], arg1[128], buffer[128], title[128];
-
-	GetCmdArg(1, arg1, sizeof(arg1));
-	int target = TTT_Target(arg1, client, true, false, false);
-
-	if (args >= 2)
-    {
-		// They've included a message!
-		GetCmdArg(2, message, sizeof(message));
-
-		for (int i = 3; i <= args; i++)
-        {
-			GetCmdArg(i, buffer, sizeof(buffer));
-			Format(message, sizeof(message), "%s %s", message, buffer);
-		}
-	}
-
-	Format(title, sizeof(title), "%N: ", client);
-	TTT_SendPanelMsg(target, title, message);
-
-	return Plugin_Handled;
-}
-
-public Action Command_SCSay(int client, int args)
-{
-	if (args < 2)
-    {
-		TTT_Error(client, "Invalid Usage: /scsay <player> <message>");
-		return Plugin_Handled;
-	}
-
-	char message[255], arg1[128], buffer[128];
-
-	GetCmdArg(1, arg1, sizeof(arg1));
-	int target = TTT_Target(arg1, client, true, false, false);
-
-	if (target < 0)
-    {
-		return Plugin_Handled;
-	}
-
-	if (args >= 2)
-    {
-		// They've included a message!
-		GetCmdArg(2, message, sizeof(message));
-
-		for (int i = 3; i <= args; i++)
-        {
-			GetCmdArg(i, buffer, sizeof(buffer));
-			Format(message, sizeof(message), "%s %s", message, buffer);
-		}
-	}
-
-	PrintCenterText(target, message);
-	return Plugin_Handled;
-}
 
 public Action Command_Teleport(int client, int args)
 {
@@ -252,11 +185,11 @@ public Action Command_Teleport(int client, int args)
     
     if (recipient > 0)
     {
-    	CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N {yellow}to {blue}%N.", client, target, recipient);
+    	CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N {yellow}to {blue}%N{yellow}.", client, target, recipient);
 	}
 	else
     {
-        CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N.", client, target);
+        CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N{yellow}.", client, target);
     }
 
     return Plugin_Handled;
