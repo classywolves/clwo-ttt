@@ -29,7 +29,7 @@ public OnPluginStart()
 
 public void OnClientPutInServer(int client)
 {
-    g_clientDamageHooked[client] = false;
+    g_clientDamagedHooked[client] = false;
 }
 
 public void TTT_OnRoundStart()
@@ -47,9 +47,9 @@ public void TTT_OnRoundStart()
             TTT_AddClientCredits(i, creditKarmaReward);
             CPrintToChat(i, "{purple}[TTT] {yellow}Due to your high karma, you recieved some extra health and credits! {lime}(+%i HP and +%i credits!)", hpKarmaReward, creditKarmaReward);
             
-            if (!g_clientDamageHooked[i])
+            if (!g_clientDamagedHooked[i])
             {
-                g_clientDamageHooked[i] = true;
+                g_clientDamagedHooked[i] = true;
                 SDKHook(i, SDKHook_OnTakeDamageAlive, HookOnTakeDamage);
             }
         }
@@ -76,7 +76,7 @@ public void TTT_OnRoundEnd()
 {   
     LoopValidClients(i)
     {
-        if (TTT_GetClientKarma(i) <= 5000 && g_clientDamageHooked[i])
+        if (TTT_GetClientKarma(i) <= 5000 && g_clientDamagedHooked[i])
         {
             SDKUnhook(i, SDKHook_OnTakeDamageAlive, HookOnTakeDamage);
         }
