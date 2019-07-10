@@ -1,6 +1,7 @@
 //Base CS:GO Plugin Requirements
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 #include <cstrike>
 
 //Custom includes
@@ -19,19 +20,65 @@ public Plugin myinfo =
     url = ""
 };
 
+bool g_clientDamagedHooked[MAXPLAYERS + 1] = { false, ... };
+
+public OnPluginStart()
+{
+    PrintToServer("[KRM] Loaded succcessfully");
+}
+
+public void OnClientPutInServer(int client)
+{
+    g_clientDamageHooked[client] = false;
+}
+
 public void TTT_OnRoundStart()
 {
-    int hpKarmaReward = 110
-    int creditKarmaReward = 400
+    int hpKarmaReward = 10;
+    int creditKarmaReward = 400;
     
     LoopValidClients(i)
     {   
-        int clientKarma = TTT_GetClientKarma(i)
-        if (clientKarma >= 10000)
+        int clientKarma = TTT_GetClientKarma(i);
+        int team = GetClientTeam(i);
+        if (clientKarma >= 5000 && (team == CS_TEAM_CT || team == CS_TEAM_T))
         {
-            SetEntityHealth(i, hpKarmaReward);
+            SetEntityHealth(i, 100 + hpKarmaReward);
             TTT_AddClientCredits(i, creditKarmaReward);
-            TTT_Message(i, "Due to your high karma, you recieved some extra health and credits!");
+            CPrintToChat(i, "{purple}[TTT] {yellow}Due to your high karma, you recieved some extra health and credits! {lime}(+%i HP and +%i credits!)", hpKarmaReward, creditKarmaReward);
+            
+            if (!g_clientDamageHooked[i])
+            {
+                g_clientDamageHooked[i] = true;
+                SDKHook(i, SDKHook_OnTakeDamageAlive, HookOnTakeDamage);
+            }
+        }
+    }
+}
+
+public Action HookOnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
+{
+    if (!(damagetype & DMG_FALL))
+    {
+        return Plugin_Continue; 
+    }
+
+    float fallDamageReduction = 0.2;
+    float oldDamage = damage;
+
+    damage -= damage * fallDamageReduction;
+
+    CPrintToChat(victim, "{purple}[TTT] {yellow}Due to your high karma, your fall damage was reduced from {green}%.0f {yellow}to {green}%.0f{yellow}.", oldDamage, damage);
+    return Plugin_Changed;
+}
+
+public void TTT_OnRoundEnd()
+{   
+    LoopValidClients(i)
+    {
+        if (TTT_GetClientKarma(i) <= 5000 && g_clientDamageHooked[i])
+        {
+            SDKUnhook(i, SDKHook_OnTakeDamageAlive, HookOnTakeDamage);
         }
     }
 }
