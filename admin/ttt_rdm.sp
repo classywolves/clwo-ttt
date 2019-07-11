@@ -66,7 +66,7 @@ public void TTT_OnClientDeath(int victim, int attacker)
 
     if (BadKill(TTT_GetClientRole(attacker), TTT_GetClientRole(victim)))
     {
-        CPrintToChatStaff("{purple}[TTT] {yellow}Bad Action: [{green}%N{yellow}] ({blue}%d{yellow}) killed [{green}%N{yellow}] ({blue}%d{yellow})", attacker, attackerKarma, victim, victimKarma);
+        TTT_MessageStaff(ADMFLAG_GENERIC, "{default}Bad Action: [{yellow}%N{default}] ({orange}%d{default}) killed [{yellow}%N{default}] ({orange}%d{default})", attacker, attackerKarma, victim, victimKarma);
     }
 
     RdmDeathInsert(victim, victimKarma, attacker, attackerKarma);

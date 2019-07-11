@@ -46,12 +46,12 @@ public void RegisterCmds()
 }
 
 public Action Command_BanTimes(int client, int args) {
-    CPrintToChat(client, "{purple}[TTT] {yellow}The following are some common ban times:");
-    CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}hour  --> {blue}60    {yellow}minutes");
-    CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}day   --> {blue}1440  {yellow}minutes");
-    CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}2 {yellow}days  --> {blue}2880  {yellow}minutes");
-    CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}week  --> {blue}10080 {yellow}minutes");
-    CPrintToChat(client, "{purple}[TTT] {yellow} - {blue}1 {yellow}month --> {blue}40320 {yellow}minutes");
+    TTT_Message(client, "The following are some common ban times:");
+    TTT_Message(client, "{orange}1 {default}hour  --> {orange}60    {default}minutes");
+    TTT_Message(client, "{orange}1 {default}day   --> {orange}1440  {default}minutes");
+    TTT_Message(client, "{orange}2 {default}days  --> {orange}2880  {default}minutes");
+    TTT_Message(client, "{orange}1 {default}week  --> {orange}10080 {default}minutes");
+    TTT_Message(client, "{orange}1 {default}month --> {orange}40320 {default}minutes");
 
     return Plugin_Handled;
 }
@@ -60,7 +60,7 @@ public Action Command_ForceSpectator(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Error(client, "Usage: sm_forcespec <target>.");
+        TTT_Usage(client, "sm_forcespec <target>");
         return Plugin_Handled;
     }
 
@@ -82,8 +82,7 @@ public Action Command_ForceSpectator(int client, int args)
     }
 
     ChangeClientTeam(target, CS_TEAM_SPECTATOR);
-    CPrintToChat(target, "{purple}[TTT] {yellow}You were forced to spectator by {blue}%N{yellow}.", client);
-    CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}was forced to spectator by {blue}%N{yellow}.", target, client);
+    TTT_MessageAll("{yellow}%N {default}was forced to spectator by {yellow}%N", target, client);
 
     return Plugin_Handled;
 }
@@ -91,7 +90,7 @@ public Action Command_ForceSpectator(int client, int args)
 public Action Command_ReloadPlugin(int client, int args)
 {
     if (args < 1) {
-        TTT_Error(client, "Usage: sm_reload <plugin>.");
+        TTT_Usage(client, "sm_reload <plugin>");
         return Plugin_Handled;
     }
 
@@ -103,7 +102,7 @@ public Action Command_ReloadPlugin(int client, int args)
     PrintToConsole(client, reload);
     ServerCommandEx(load, sizeof(load), "sm plugins load %s", plugin);
     PrintToConsole(client, load);
-    CPrintToChat(client, "{purple}[TTT] {yellow}Reloaded {green}%s {yellow}successfully!", plugin);
+    TTT_Message(client, "{default}Reloaded {green}%s {default}successfully!", plugin);
 
     return Plugin_Handled;
 }
@@ -112,7 +111,7 @@ public Action Command_SlayNextRound(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Error(client, "Invalid Usage: sm_slaynr <target name>");
+        TTT_Usage(client, "sm_slaynr <#userid|name>");
         return Plugin_Handled;
     }
 
@@ -125,7 +124,7 @@ public Action Command_SlayNextRound(int client, int args)
         TTT_AddRoundSlays(target, 1, false);
     }
 
-    CPrintToChatStaff("{purple}[TTT] {red}%N {yellow}will be slain next round.", target);
+    TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%N {orange}will be slain next round.", target);
     return Plugin_Handled;
 }
 
@@ -133,7 +132,7 @@ public Action Command_RemoveSlayNextRound(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Error(client, "Invalid Usage: sm_unslaynr <target name>");
+        TTT_Usage(client, "sm_unslaynr <#userid|name>");
         return Plugin_Handled;
     }
 	
@@ -146,7 +145,7 @@ public Action Command_RemoveSlayNextRound(int client, int args)
         TTT_SetRoundSlays(target, 0, false);
     }
 
-    CPrintToChatStaff("{purple}[TTT] {red}%N {yellow}will no longer be slain next round.", target);
+    TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%N {orange}will no longer be slain next round.", target);
     return Plugin_Handled;
 }
 
@@ -154,7 +153,7 @@ public Action Command_Teleport(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Error(client, "Usage: sm_teleport <target> [player].");
+        TTT_Usage(client, "sm_teleport <#userid|name> <#userid|name>");
         return Plugin_Handled;
     }
 
@@ -185,11 +184,11 @@ public Action Command_Teleport(int client, int args)
     
     if (recipient > 0)
     {
-    	CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N {yellow}to {blue}%N{yellow}.", client, target, recipient);
+    	TTT_MessageAll("{yellow}%N {defalt}teleported {yellow}%N {default}to {orange}%N", client, target, recipient);
 	}
 	else
     {
-        CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N{yellow}.", client, target);
+        CPrintToChatAll("{yellow}%N {defalt}teleported {yellow}%N", client, target);
     }
 
     return Plugin_Handled;

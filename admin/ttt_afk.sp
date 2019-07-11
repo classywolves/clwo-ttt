@@ -56,11 +56,11 @@ public Action Timer_AntiAfk(Handle timer, int userid)
             playerWarningCount[client]++;
             if (playerWarningCount[client] == 5)
             {
-                CPrintToChat(client, "{purple}[TTT] {yellow}You have been afk for 30 seconds if you do not start moving in 30 seconds you shall be slain.");
+                TTT_Message(client, "You have been afk for {orange}30 {default}seconds if you do not start moving in {orange}30 {default}seconds you shall be slain.");
             }
             else if (playerWarningCount[client] == 11)
             {
-                CPrintToChat(client, "{purple}[TTT] {yellow}You have been slain for being afk for over 1 minute.");
+                TTT_Message(client, "You have been slain for being afk for over {orange}1 {default}minute.");
                 ForcePlayerSuicide(client);
 
                 ClearTimer(timer);
