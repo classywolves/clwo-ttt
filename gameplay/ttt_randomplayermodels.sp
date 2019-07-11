@@ -228,14 +228,12 @@ public void SetPlayerModel(int client, int role)
         case TTT_TEAM_DETECTIVE:
         {
             SetEntityModel(client, ctPlayerModels[playerModelIndex[client]]);
-            SetEntPropString(client, Prop_Send, "m_szArmsModel", "");
-            //SetPlayerArms(client, ctViewModels[ctRandom]);
+            SetPlayerArms(client, ctViewModels[ctRandom]);
         }
         case TTT_TEAM_INNOCENT, TTT_TEAM_TRAITOR:
         {
             SetEntityModel(client, tPlayerModels[playerModelIndex[client]]);
-            SetEntPropString(client, Prop_Send, "m_szArmsModel", "");
-            //SetPlayerArms(client, tViewModels[tRandom]);
+            SetPlayerArms(client, tViewModels[tRandom]);
         }
     }
 }
@@ -269,6 +267,7 @@ void SetPlayerArms(int client, const char arms_path[PLATFORM_MAX_PATH])
         if(!IsModelPrecached(arms_path))
         PrecacheModel(arms_path);
 
+        SetEntPropString(client, Prop_Send, "m_szArmsModel", "");
         SetEntPropString(client, Prop_Send, "m_szArmsModel", arms_path);
     }
 }
