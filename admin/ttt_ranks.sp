@@ -12,6 +12,7 @@
 */
 #include <colorvariables>
 #include <generics>
+#include <ttt_messages>
 
 public Plugin myinfo = {
     name = "TTT Ranks",
@@ -83,7 +84,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
     RegPluginLibrary("ttt_ranks");
 
-    CreateNative("TTT_Ranks_IsStaff", Native_IsStaff)
+    CreateNative("TTT_Ranks_IsStaff", Native_IsStaff);
     CreateNative("GetRankName", Native_GetRankName);
     CreateNative("GetRankTag", Native_GetRankTag);
     CreateNative("GetPermission", Native_GetPermission);
