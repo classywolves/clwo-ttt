@@ -247,7 +247,7 @@ public Action Command_Say(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Error(client, "Invalid usage: /say <message>");
+        TTT_Usage(client, "sm_say <message>");
         return Plugin_Handled;
     }
 
@@ -269,7 +269,7 @@ public Action Command_MSay(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Error(client, "Invalid Usage: /msay <message>");
+        TTT_Usage(client, "sm_msay <message>");
         return Plugin_Handled;
     }
 
@@ -296,7 +296,7 @@ public Action Command_SMSay(int client, int args)
 {
     if (args < 2)
     {
-        TTT_Error(client, "Invalid Usage: /smsay <player> <message>");
+        TTT_Usage(client, "sm_smsay <#userid|name> <message>");
         return Plugin_Handled;
     }
 
@@ -332,7 +332,7 @@ public Action Command_CSay(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Error(client, "Invalid Usage: /csay <message>");
+        TTT_Usage(client, "sm_csay <message>");
         return Plugin_Handled;
     }
 
@@ -353,7 +353,7 @@ public Action Command_SCSay(int client, int args)
 {
     if (args < 2)
     {
-        TTT_Error(client, "Invalid Usage: /scsay <player> <message>");
+        TTT_Usage(client, "sm_scsay <#userid|name> <message>");
         return Plugin_Handled;
     }
 
@@ -391,7 +391,7 @@ public Action Command_Chat(int client, int args)
 
     if (args < 1)
     {
-        TTT_Error(client, "Invalid usage: /say <message>");
+        TTT_Usage(client, "sm_chat <message>");
         return Plugin_Handled;
     }
     
@@ -420,7 +420,7 @@ public Action Command_Msg(int client, int args)
 {
     if (args < 2)
     {
-        ReplyToCommand(client, "[SM] Usage: sm_msg <name or #userid> <message>");
+        TTT_Usage(client, "sm_msg <#userid|name> <message>");
         return Plugin_Handled;
     }
 
@@ -445,7 +445,7 @@ public Action Command_Reply(int client, int args)
 {
     if (args < 1)
     {
-        ReplyToCommand(client, "[SM] Usage: sm_reply <message>");
+        TTT_Usage(client, "sm_reply <message>");
         return Plugin_Handled;  
     }
     int target = g_iReplyTo[client];

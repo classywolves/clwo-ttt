@@ -49,7 +49,7 @@ public Action Command_InformerMute(int client, int args) {
   }
 
   if (args < 1) {
-    TTT_Error(client, "Invalid Usage: /imute <target> <time> <reason>");
+    TTT_Usage(client, "sm_imute <target> [time] <reason>");
     return Plugin_Handled;
   }
 
@@ -107,9 +107,9 @@ public Action Command_InformerMute(int client, int args) {
 
   SourceComms_SetClientMute(target, true, time, true, reason);
   if (args >= 3) {
-    CPrintToChatAll("{purple}[TTT] {yellow}%N has been muted for %i minutes by %N due to '%s'", target, time, client, mini);
+    TTT_MessageAll("{yellow}%N {default}has been muted for {orange}%i {default}minutes by {yellow}%N {default}due to {grey}'%s'", target, time, client, mini);
   } else {
-    CPrintToChatAll("{purple}[TTT] {yellow}%N has been muted for %i minutes by %N", target, time, client);
+    TTT_MessageAll("{yellow}%N {default}has been muted for {orange}%i {default}minutes by {yellow}%N", target, time, client);
   }
 
   return Plugin_Handled;
@@ -124,7 +124,7 @@ public Action Command_InformerGag(int client, int args) {
   }
 
   if (args < 1) {
-    TTT_Error(client, "Invalid Usage: /igag <target> <time> <reason>");
+    TTT_Usage(client, "sm_igag <target> [time] <reason>");
     return Plugin_Handled;
   }
 
@@ -182,9 +182,9 @@ public Action Command_InformerGag(int client, int args) {
 
   SourceComms_SetClientGag(target, true, time, true, reason);
   if (args >= 3) {
-    CPrintToChatAll("{purple}[TTT] {yellow}%N has been gagged for %i minutes by %N due to '%s'", target, time, client, mini);
+    TTT_MessageAll("{yellow}%N {default}has been gagged for {orange}%i {default}minutes by {yellow}%N {default}due to {grey}'%s'", target, time, client, mini);
   } else {
-    CPrintToChatAll("{purple}[TTT] {yellow}%N has been gagged for %i minutes by %N", target, time, client);
+    TTT_MessageAll("{yellow}%N {default}has been gagged for {orange}%i {default}minutes by {yellow}%N", target, time, client);
   }
 
   return Plugin_Handled;
@@ -199,7 +199,7 @@ public Action Command_InformerKick(int client, int args) {
   }
 
   if (args < 1) {
-    TTT_Error(client, "Invalid Usage: /ikick <target> <reason>");
+    TTT_Usage(client, "sm_ikick <target> <reason>");
     return Plugin_Handled;
   }
 
@@ -234,9 +234,9 @@ public Action Command_InformerKick(int client, int args) {
 
   KickClient(target, reason);
   if (args >= 3) {
-    CPrintToChatAll("{purple}[TTT] {green}%N {yellow}has been kicked by {green}%N{yellow} %s", target, client, mini);
+    TTT_MessageAll("{yellow}%N {default}has been kicked by {yellow}%N {default}due to {grey}'%s'", target, client, mini);
   } else {
-    CPrintToChatAll("{purple}[TTT] {green}%N {yellow}has been kicked by {green}%N", target, client);
+    TTT_MessageAll("{yellow}%N {default}has been kicked by {yellow}%N", target, client);
   }
 
   return Plugin_Handled;

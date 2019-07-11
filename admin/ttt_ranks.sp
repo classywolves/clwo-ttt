@@ -12,6 +12,7 @@
 */
 #include <colorvariables>
 #include <generics>
+#include <ttt_messages>
 
 public Plugin myinfo = {
     name = "TTT Ranks",
@@ -83,7 +84,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
     RegPluginLibrary("ttt_ranks");
 
-    CreateNative("TTT_Ranks_IsStaff", Native_IsStaff)
+    CreateNative("TTT_Ranks_IsStaff", Native_IsStaff);
     CreateNative("GetRankName", Native_GetRankName);
     CreateNative("GetRankTag", Native_GetRankTag);
     CreateNative("GetPermission", Native_GetPermission);
@@ -167,7 +168,7 @@ public Action Command_RefreshRanks(int client, int args)
 
 public Action Command_Rank(int client, int args)
 {
-    CPrintToChat(client, "{purple}[TTT] {blue}%N {yellow}has the rank: {green}%s", client, rankNames[playerRanks[client]]);
+    TTT_Message(client, "{yellow}%N {default}has the rank: {lime}%s", client, rankNames[playerRanks[client]]);
 
     return Plugin_Handled;
 }
@@ -177,7 +178,7 @@ public Action Command_DebugRank(int client, int args)
     char steamId[64];
     GetClientAuthId(client, AuthId_Steam2, steamId, 64);
 
-    CPrintToChat(client, "{purple}[TTT] {blue}%N {default}(%s) {yellow}has the rank: {green}%i", client, steamId, rankNames[playerRanks[client]]);
+    TTT_Message(client, "{yellow}%N {default}(%s) {default}has the rank: {lime}%i", client, steamId, rankNames[playerRanks[client]]);
 }
 
 public int Native_IsStaff(Handle plugin, int numParams)

@@ -12,8 +12,28 @@ stock void TTT_Message(int client, const char[] msg, any ...)
     char formatted[MAX_MESSAGE_LENGTH];
     VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 3);
 
-    Format(formatted, MAX_MESSAGE_LENGTH, "{purple}[TTT] {yellow}%s", buffer);
+    Format(formatted, MAX_MESSAGE_LENGTH, "{default}[TTT] >  %s", buffer);
     CPrintToChat(client, formatted);
+}
+
+stock void TTT_MessageAll(const char[] msg, any ...)
+{
+    char buffer[MAX_MESSAGE_LENGTH];
+    char formatted[MAX_MESSAGE_LENGTH];
+    VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 3);
+
+    Format(formatted, MAX_MESSAGE_LENGTH, "{default}[TTT] >  %s", buffer);
+    CPrintToChatAll(formatted);
+}
+
+stock void TTT_MessageStaff(int adminFlag, const char[] msg, any ...)
+{
+    char buffer[MAX_MESSAGE_LENGTH];
+    char formatted[MAX_MESSAGE_LENGTH];
+    VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 3);
+
+    Format(formatted, MAX_MESSAGE_LENGTH, "{default}[TTT] >  %s", buffer);
+    CPrintToChatAdmins(adminFlag, formatted);
 }
 
 stock void TTT_Error(int client, const char[] msg, any ...)
@@ -22,7 +42,17 @@ stock void TTT_Error(int client, const char[] msg, any ...)
     char formatted[MAX_MESSAGE_LENGTH];
     VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 3);
 
-    Format(formatted, MAX_MESSAGE_LENGTH, "{purple}[TTT] {red}%s", buffer);
+    Format(formatted, MAX_MESSAGE_LENGTH, "{default}[TTT] > Error! %s", buffer);
+    CPrintToChat(client, formatted);
+}
+
+stock void TTT_Usage(int client, const char[] msg, any ...)
+{
+    char buffer[MAX_MESSAGE_LENGTH];
+    char formatted[MAX_MESSAGE_LENGTH];
+    VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 3);
+
+    Format(formatted, MAX_MESSAGE_LENGTH, "{default}[SM] Usage: %s", buffer);
     CPrintToChat(client, formatted);
 }
 

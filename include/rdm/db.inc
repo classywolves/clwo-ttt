@@ -106,9 +106,9 @@ public void RdmReportCallback(Database db, DBResultSet results, const char[] err
         return;
     }
 
-    CPrintToChat(client, "{purple}[TTT] {yellow}Thanks for submitting a case, a staff member shall be in contact shortly.");
+    TTT_Message(client, "Thanks for submitting a case, a staff member shall be in contact shortly.");
 
-    CPrintToChatStaff("{purple}[TTT] {blue}%N {yellow}opened a new RDM case.", client);
+    TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%N {default}opened a new RDM case.", client);
 
     char query[768];
     rdmDb.Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `reports` LEFT JOIN `handles` ON `reports`.`death_index` = `handles`.`death_index` WHERE `handles`.`verdict` IS NULL;");
@@ -127,15 +127,15 @@ public void RdmCaseCountCallback(Database db, DBResultSet results, const char[] 
         int caseCount = results.FetchInt(0);
         if (caseCount < 1)
         {
-            CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}There are currently no unhandled cases.");
+            TTT_MessageStaff(ADMFLAG_GENERIC, "There are currently no unhandled cases.");
         }
         else if (caseCount < 2)
         {
-            CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}There is now {red}%d {yellow}unhandled case.", caseCount);
+            TTT_MessageStaff(ADMFLAG_GENERIC, "There is now {orange}%d {default}unhandled case.", caseCount);
         }
         else
         {
-            CPrintToChatAdmins(ADMFLAG_GENERIC, "{purple}[TTT] {yellow}There are now {red}%d {yellow}unhandled cases.", caseCount);
+            TTT_MessageStaff(ADMFLAG_GENERIC, "There are now {orange}%d {default}unhandled cases.", caseCount);
         }
     }
 }
@@ -184,10 +184,10 @@ public void RdmInfoCallback(Database db, DBResultSet results, const char[] error
             }
         }
 
-        CPrintToChat(client, "{purple}[TTT] {yellow}Case information for Death: %d(%d rounds ago)", results.FetchInt(0), currentRound - results.FetchInt(9));
-        CPrintToChat(client, "{yellow}The accuser had shot last %d seconds before there death.", results.FetchInt(1) - results.FetchInt(8));
-        CPrintToChat(client, "{yellow}Accuser: %s(%d) - %s", accuserName, results.FetchInt(4), accuserRole);
-        CPrintToChat(client, "{yellow}Accused: %s(%d) - %s", accusedName, results.FetchInt(7), accusedRole);
+        TTT_Message(client, "Case information for Death: {orange}%d{default}({orange}%d {default}rounds ago)", results.FetchInt(0), currentRound - results.FetchInt(9));
+        TTT_Message(client, "The accuser had shot last {orange}%d {default}seconds before there death.", results.FetchInt(1) - results.FetchInt(8));
+        TTT_Message(client, "Accuser: {yellow}%s{default}({orange}%d{default}) - %s", accuserName, results.FetchInt(4), accuserRole);
+        TTT_Message(client, "Accused: {yellow}%s{default}({orange}%d{default}) - %s", accusedName, results.FetchInt(7), accusedRole);
     }
 }
 
@@ -205,7 +205,7 @@ public void RdmHandleCallback(Database db, DBResultSet results, const char[] err
         GetClientName(handler, staffName, sizeof(staffName));
         GetClientAuthId(handler, AuthId_Steam2, staffSteamId, sizeof(staffSteamId));
 
-        CPrintToChatStaff("{purple}[TTT] {blue}%s {yellow}has taken an RDM case.", staffName);
+        TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%s {default}has taken an RDM case.", staffName);
 
         DataPack data = new DataPack();
         data.WriteCell(handler);
@@ -287,33 +287,33 @@ public void RdmVerdictResponseCallback(Database db, DBResultSet results, const c
         {
             if (IsValidClient(accuser))
             {
-                TTT_Message(accuser, "{blue}%N {yellow}has handled your case against {red}%s {yellow}and has concluded them to be {green}innocent{yellow}, if you have any questions please message staff using an @ before your message.", handler, accusedName);
+                TTT_Message(accuser, "{yellow}%N {default}has handled your case against {yellow}%s {default}and has concluded them to be {green}innocent{default}, if you have any questions please message staff using an @ before your message or /chat.", handler, accusedName);
             }
             if (IsValidClient(accused))
             {
-                TTT_Message(accused, "{blue}%N has found you {green}innocent {yellow}in your defense against {blue}%s{yellow}, have a nice day.", handler, accuserName);
+                TTT_Message(accused, "{yellow}%N {default}has found you {green}innocent {default}in your defense against {yellow}%s{default}, have a nice day.", handler, accuserName);
             }
-            TTT_Message(handler, "You have concluded the defendant innocent for case %d.", deathId);
+            TTT_Message(handler, "You have concluded the defendant {green}innocent {default}for case {orange}%d", deathId);
         }
         else if (verdict == CASE_VERDICT_GUILTY)
         {
             if (IsValidClient(accuser))
             {
-                TTT_Message(accuser, "{blue}%N {yellow}has handled your case against {red}%s {yellow}and has concluded them to be {red}guilty{yellow}. Thanks for your report.", handler, accusedName);
+                TTT_Message(accuser, "{yellow}%N {default}has handled your case against {yellow}%s {defalt}and has concluded them to be {red}guilty{default}. Thanks for your report.", handler, accusedName);
             }
             if (IsValidClient(accused))
             {
                 if (punishment == CASE_CHOICE_SLAY)
                 {
-                    TTT_Message(accused, "You are being slayed next round by {blue}%N {yellow}for killing {blue}%s{yellow}. If you have any questions about this please message staff by using an @ before your message.", handler, accuserName);
+                    TTT_Message(accused, "You are being slayed next round by {yellow}%N {default}for killing {yellow}%s{default}. If you have any questions about this please message staff by using an @ before your message.", handler, accuserName);
                     TTT_AddRoundSlays(accused, 1, false);
                 }
                 else if (punishment == CASE_CHOICE_WARN)
                 {
-                    TTT_Message(accused, "You have been found guilty of RDM by {blue}%N {yellow}for killing {blue}%s {yellow}further action may be taken. If you have any questions about this please message staff by using an @ before your message in team chat.", handler, accuserName);
+                    TTT_Message(accused, "You have been found guilty of RDM by {yellow}%N {default}for killing {yellow}%s {default}further action may be taken. If you have any questions about this please message staff by using an @ before your message or /chat.", handler, accuserName);
                 }
             }
-            TTT_Message(handler, "You have concluded the defendant guilty for case %d.", deathId);
+            TTT_Message(handler, "You have concluded the defendant {red}guilty {default}for case {orange}%d.", deathId);
         }
     }
 }

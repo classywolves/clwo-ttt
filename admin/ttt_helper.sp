@@ -67,9 +67,9 @@ public Action Command_HMsg(int client, int args)
 	}
 
 	TTT_Message(target, "To send a private message to another player.");
-	TTT_Message(target, "/msg <Player> <Message>");
-	TTT_Message(target, "Player: The name of the player you would like to target.");
-	TTT_Message(target, "Message: The message to send this will be all the of the text after the Player.");
+	TTT_Message(target, "/msg <#userid|name> <message>");
+	TTT_Message(target, "#userid|name: The user ID after a # found in status or the name of the player you would like to message.");
+	TTT_Message(target, "Message: The message to send, this will be all the of the text after the the user ID or name.");
 
 	return Plugin_Handled;
 }
@@ -101,7 +101,7 @@ public Action Command_HR(int client, int args)
 	}
 
 	TTT_Message(target, "To reply to the last person who sent you a private message.");
-	TTT_Message(target, "/r <Message>");
+	TTT_Message(target, "/r <message>");
 	TTT_Message(target, "Message: The message to send this will be all the of the text entered.");
 
 	return Plugin_Handled;

@@ -77,7 +77,7 @@ public Action BloodLustStart(Handle timer, int userid)
         return Plugin_Continue;
     }
 
-    CPrintToChat(client, "{purple}[TTT] {red}You are longing for blood!  Better kill again soon, lest there lie concequences.");
+    TTT_Message(client, "{red}You are longing for blood!  Better kill again soon, lest there lie concequences.");
     //ShowOverlayToClient(client, traitorBloodLustOverlay);
     BloodLustScreenColor(client);
     ClearTimer(bloodLustTimers[client]);
@@ -94,7 +94,7 @@ public Action BloodLustFinal(Handle timer, int userid) {
         return Plugin_Continue;
     }
 
-    CPrintToChat(client, "{purple}[TTT] {red}You have gone without blood for too long; you are now revealed to the players around you.");
+    TTT_Message(client, "{red}You have gone without blood for too long; you are now revealed to the players around you.");
     SetEntityRenderColor(client, 255, 0, 0, 255);
     ClearTimer(bloodLustTimers[client]);
 
