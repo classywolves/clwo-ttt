@@ -57,7 +57,7 @@ public Action Command_InformerMute(int client, int args) {
   int time;
 
   GetCmdArg(1, arg1, sizeof(arg1));
-  int target = TTT_Target(arg1, client, true, true, false);
+  int target = TTT_Target(arg1, client, true, false, false);
 
   if (target == -1) {
     return Plugin_Handled;
@@ -132,7 +132,7 @@ public Action Command_InformerGag(int client, int args) {
   int time;
 
   GetCmdArg(1, arg1, sizeof(arg1));
-  int target = TTT_Target(arg1, client, true, true, false);
+  int target = TTT_Target(arg1, client, true, false, false);
 
   if (target == -1) {
     return Plugin_Handled;
@@ -206,7 +206,7 @@ public Action Command_InformerKick(int client, int args) {
   char reason[255], mini[255], arg1[128], buffer[128];
 
   GetCmdArg(1, arg1, sizeof(arg1));
-  int target = TTT_Target(arg1, client, true, true, false);
+  int target = TTT_Target(arg1, client, true, false, false);
 
   if (target == -1) {
     return Plugin_Handled;
