@@ -975,6 +975,7 @@ stock void AddColors(Handle hTrie)
 		SetTrieString(hTrie, "darkblue", "\x0C");
 		SetTrieString(hTrie, "purple", "\x03");
 		SetTrieString(hTrie, "orchid", "\x0E");
+		SetTrieString(hTrie, "orange", "\x10");
 		SetTrieString(hTrie, "yellow", "\x09");
 		SetTrieString(hTrie, "gold", "\x10");
 		SetTrieString(hTrie, "lightgreen", "\x05");
