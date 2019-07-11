@@ -33,7 +33,7 @@ int tRandom = 0;
 int baseIndexCt = 0;
 int baseIndexT = 0;
 
-int playerModelIndex[MAXPLAYERS + 1] = {-1, ...};
+int playerModelIndex[MAXPLAYERS + 1] = { 0, ... };
 
 public OnPluginStart()
 {
@@ -228,12 +228,14 @@ public void SetPlayerModel(int client, int role)
         case TTT_TEAM_DETECTIVE:
         {
             SetEntityModel(client, ctPlayerModels[playerModelIndex[client]]);
-            SetPlayerArms(client, ctViewModels[ctRandom]);
+            SetEntPropString(client, Prop_Send, "m_szArmsModel", "");
+            //SetPlayerArms(client, ctViewModels[ctRandom]);
         }
         case TTT_TEAM_INNOCENT, TTT_TEAM_TRAITOR:
         {
             SetEntityModel(client, tPlayerModels[playerModelIndex[client]]);
-            SetPlayerArms(client, tViewModels[tRandom]);
+            SetEntPropString(client, Prop_Send, "m_szArmsModel", "");
+            //SetPlayerArms(client, tViewModels[tRandom]);
         }
     }
 }
