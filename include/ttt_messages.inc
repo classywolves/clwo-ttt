@@ -20,7 +20,7 @@ stock void TTT_MessageAll(const char[] msg, any ...)
 {
     char buffer[MAX_MESSAGE_LENGTH];
     char formatted[MAX_MESSAGE_LENGTH];
-    VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 3);
+    VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 2);
 
     Format(formatted, MAX_MESSAGE_LENGTH, "{default}[TTT] >  %s", buffer);
     CPrintToChatAll(formatted);

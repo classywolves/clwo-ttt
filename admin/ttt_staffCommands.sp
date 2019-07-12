@@ -184,11 +184,11 @@ public Action Command_Teleport(int client, int args)
     
     if (recipient > 0)
     {
-    	TTT_MessageAll("{yellow}%N {defalt}teleported {yellow}%N {default}to {orange}%N", client, target, recipient);
+    	TTT_MessageAll("{yellow}%N {default}teleported {yellow}%N {default}to {orange}%N", client, target, recipient);
 	}
 	else
     {
-        CPrintToChatAll("{yellow}%N {defalt}teleported {yellow}%N", client, target);
+        TTT_MessageAll("{yellow}%N {default}teleported {yellow}%N", client, target);
     }
 
     return Plugin_Handled;
