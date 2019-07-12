@@ -184,7 +184,7 @@ public Action Command_Teleport(int client, int args)
     
     if (recipient > 0)
     {
-    	TTT_MessageAll("{yellow}%N {default}teleported {yellow}%N {default}to {orange}%N", client, target, recipient);
+    	TTT_MessageAll("{yellow}%N {default}teleported {yellow}%N {default}to {yellow}%N", client, target, recipient);
 	}
 	else
     {
