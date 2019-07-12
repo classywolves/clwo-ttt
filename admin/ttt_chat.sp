@@ -138,13 +138,13 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             {
                 if(!Donator_DisabledDonatorPrefix(author))
                 {
-                    Format(cPreChatTag, sizeof(cPreChatTag), "\x01[\x05♥\x01]\x01");                    
+                    Format(cPreChatTag, sizeof(cPreChatTag), "{default}[{lime}♥{default}]");                    
                 }
             }
             if(Guest_IsSpecialGuest(author) && !Guest_DisabledSpecialGuestPrefix(author))
             {
                 Guest_GetTag(author, sTemp, sizeof(sTemp));
-                Format(sChatTag, sizeof(sChatTag), "\x01[\x05%s\x01]\x01", sTemp);
+                Format(sChatTag, sizeof(sChatTag), "{default}[{lime}%s{default}]", sTemp);
             }
             //suffix for donator.
             if(Donator_IsDonator(author) && Donator_GetType(author) > 1)
@@ -153,14 +153,14 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
                 if(!Donator_DisabledChatTag(author))
                 {
                     Donator_GetChatTag(author, sTemp, sizeof(sTemp));
-                    Format(sChatTag, sizeof(sChatTag), "%s\x01[{lime}%s\x01]\x01", sChatTag, sTemp); //append, just incase our special guest is a donator
+                    Format(sChatTag, sizeof(sChatTag), "%s{default}[{yellow}%s{default}]", sChatTag, sTemp); //append, just incase our special guest is a donator
                 }
             }
         }
         #endif
 
         // Format message name
-        Format(name, MAX_NAME_LENGTH, "%s%s {%s}%s%s{default}", cPreChatTag, staffTag, teamColor, sChatTag, name);
+        Format(name, MAX_NAME_LENGTH, "%s%s%s {%s}%s{default}", cPreChatTag, staffTag, sChatTag, teamColor, name);
 
         return Plugin_Changed;
     }
@@ -559,21 +559,21 @@ void SendPrivateChat(int client, int target, char[] message)
 }
 
 stock RemoveHexColors(const char[] input, char[] output, int size) {
-	int x = 0;
-	for (int i=0; input[i] != '\0'; i++) {
+    int x = 0;
+    for (int i=0; input[i] != '\0'; i++) {
 
-		if (x+1 == size) {
-			break;
-		}
+        if (x+1 == size) {
+            break;
+        }
 
-		char character = input[i];
+        char character = input[i];
 
-		if (character > 0x10) {
-			output[x++] = character;
-		}
-	}
+        if (character > 0x10) {
+            output[x++] = character;
+        }
+    }
 
-	output[x] = '\0';
+    output[x] = '\0';
 }
 
 
