@@ -151,7 +151,7 @@ stock void CPrintToChatAdmins(int iBitFlags, const char[] sMessage, any ...)
 		}
 
 		iAdminID = GetUserAdmin(iClient);
-		if (iAdminID == INVALID_ADMIN_ID || !(GetAdminFlags(iAdminID, Access_Effective) & iBitFlags)) {
+		if (iAdminID == INVALID_ADMIN_ID || !(CheckAccess(iAdminID, "", iBitFlags, true))) {
 			continue;
 		}
 
