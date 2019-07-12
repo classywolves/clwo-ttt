@@ -68,6 +68,12 @@ public Action Command_ForceSpectator(int client, int args)
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
     int target = TTT_Target(buffer, client, true, false, false);
 
+    if(!IsValidClient(target))
+    {
+        TTT_Error(client, "Invalid target!");
+        return Plugin_Handled;
+    }
+
     if (client == target)
     {
         TTT_Error(client, "Just use /afk.");
@@ -118,6 +124,12 @@ public Action Command_SlayNextRound(int client, int args)
     char buffer[MAX_NAME_LENGTH];
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
     int target = TTT_Target(buffer, client, true, false, false);
+        
+    if(!IsValidClient(target))
+    {
+        TTT_Error(client, "Invalid target!");
+        return Plugin_Handled;
+    }
     
     if (target > 0)
     {
@@ -139,6 +151,12 @@ public Action Command_RemoveSlayNextRound(int client, int args)
     char buffer[MAX_NAME_LENGTH];
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
     int target = TTT_Target(buffer, client, true, false, false);
+        
+    if(!IsValidClient(target))
+    {
+        TTT_Error(client, "Invalid target!");
+        return Plugin_Handled;
+    }
 
     if (target > 0)
     {
@@ -160,7 +178,13 @@ public Action Command_Teleport(int client, int args)
     char buffer[MAX_NAME_LENGTH];
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
     int target = TTT_Target(buffer, client, true, true, false);
-    
+        
+    if(!IsValidClient(target))
+    {
+        TTT_Error(client, "Invalid target!");
+        return Plugin_Handled;
+    }
+
     float pos[3];
     int recipient = -1;
     if (args == 1)
