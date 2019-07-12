@@ -124,7 +124,7 @@ public Action Command_SlayNextRound(int client, int args)
         TTT_AddRoundSlays(target, 1, false);
     }
 
-    TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%N {orange}will be slain next round.", target);
+    TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%N {default}will be slain next round.", target);
     return Plugin_Handled;
 }
 
@@ -145,7 +145,7 @@ public Action Command_RemoveSlayNextRound(int client, int args)
         TTT_SetRoundSlays(target, 0, false);
     }
 
-    TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%N {orange}will no longer be slain next round.", target);
+    TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%N {default}will no longer be slain next round.", target);
     return Plugin_Handled;
 }
 
