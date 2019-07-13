@@ -43,6 +43,7 @@ public void RegisterCmds()
     RegAdminCmd("sm_scsay", Command_SCSay, ADMFLAG_CHAT, "sm_scsay - CSay, but targetted");
     
     RegConsoleCmd("sm_chat", Command_Chat, "sm_chat - Sends a message to staff");
+    RegConsoleCmd("sm_psay", Command_Msg, "sm_msg <name or #userid> <message> - sends private message");
     RegConsoleCmd("sm_msg", Command_Msg, "sm_msg <name or #userid> <message> - sends private message");
     RegConsoleCmd("sm_r", Command_Reply, "sm_reply <message> - replies to previous private message");
     RegConsoleCmd("sm_reply", Command_Reply, "sm_reply <message> - replies to previous private message");
