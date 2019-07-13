@@ -107,11 +107,16 @@ public OnLibraryAdded(const char[] name)
 
 public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstring, char[] name, char[] message, bool& processcolors, bool& removecolors)
 {
-    char buffer[16];
-    char teamColor[6];
-    char staffTag[64];
-
-
+    //please don't use {colors} here because it exceeds the buffers, example with anne:
+    //{default}[{lime}♥{default}]{default}[{lime}T.MOD{default}]{default}[{lime}♀♀{default}]{default}[{yellow}Teacher{default}] {teamcolor}Anne{default}
+    // use \x0xxxx versions
+    char cRankBuffer[16];
+    char teamColor[512];
+    char staffTag[512];
+    char cFullBuffer[512];
+    int iBufferSize = 512;
+    char sChatTag[512];
+    char cPreChatTag[512];
 
     int rank = GetPlayerRank(author);
     
@@ -128,19 +133,19 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
                     rank = StringToInt(cCookie);
                 }
             }
-            GetRankTag(rank, buffer);
-            Format(staffTag, 64, "{default}[{lime}%s{default}]", buffer);
+            GetRankTag(rank, cRankBuffer);
+            Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
         }
 
         switch (GetClientTeam(author))
         {
             case CS_TEAM_SPECTATOR:
             {
-                Format(teamColor, 12, "grey2");
+                Format(teamColor, sizeof(teamColor), "grey2");
             }
             case CS_TEAM_T, CS_TEAM_CT:
             {
-                Format(teamColor, 12, "teamcolor");
+                Format(teamColor, sizeof(teamColor), "teamcolor");
             }
         }
 
@@ -149,26 +154,25 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         RemoveHexColors(message, message, _CV_MAX_MESSAGE_LENGTH);
 
         //Remove colors from name
-        CRemoveColors(name, MAX_NAME_LENGTH);
+        CRemoveColors(name, iBufferSize);
 
         //lets add in our donator/special guest tags.
-        char sChatTag[128];
-        char cPreChatTag[128];
+
         #if defined _donators_included_
-        char sTemp[128];
+        char sTemp[512];
         if(g_bDonators)
         {
             if(Donator_IsDonator(author))
             {
                 if(!Donator_DisabledDonatorPrefix(author))
                 {
-                    Format(cPreChatTag, sizeof(cPreChatTag), "{default}[{lime}♥{default}]");                    
+                    Format(cPreChatTag, sizeof(cPreChatTag), "\x01[\x05♥\x01]");                    
                 }
             }
             if(Guest_IsSpecialGuest(author) && !Guest_DisabledSpecialGuestPrefix(author))
             {
                 Guest_GetTag(author, sTemp, sizeof(sTemp));
-                Format(sChatTag, sizeof(sChatTag), "{default}[{lime}%s{default}]", sTemp);
+                Format(sChatTag, sizeof(sChatTag), "\x01[\x05%s\x01]", sTemp);
             }
             //suffix for donator.
             if(Donator_IsDonator(author) && Donator_GetType(author) > 1)
@@ -177,13 +181,14 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
                 if(!Donator_DisabledChatTag(author))
                 {
                     Donator_GetChatTag(author, sTemp, sizeof(sTemp));
-                    Format(sChatTag, sizeof(sChatTag), "%s{default}[{yellow}%s{default}]", sChatTag, sTemp); //append, just incase our special guest is a donator
+                    Format(sChatTag, sizeof(sChatTag), "%s\x01[\x09%s\x01]", sChatTag, sTemp); //append, just incase our special guest is a donator
                 }
             }
         }
         #endif
         // Format message name
-        Format(name, MAX_NAME_LENGTH, "%s%s%s {%s}%s{default}", cPreChatTag, staffTag, sChatTag, teamColor, name);
+        Format(cFullBuffer, sizeof(cFullBuffer), "%s%s%s {%s}%s\x01", cPreChatTag, staffTag, sChatTag, teamColor, name);
+        Format(name, iBufferSize, "%s", cFullBuffer);
 
         return Plugin_Changed;
     }
@@ -203,12 +208,12 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             }
         }
 
-        GetRankTag(rank, buffer);
-        Format(staffTag, 64, "{default}[{lime}%s{default}]", buffer);
+        GetRankTag(rank, cRankBuffer);
+        Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
 
-        Format(name, MAX_NAME_LENGTH, "{yellow}[STAFF] %s{yellow} %s", staffTag, name);
+        Format(name, iBufferSize, "\x09[STAFF] %s\x09 %s", staffTag, name);
         Format(message, _CV_MAX_MESSAGE_LENGTH, "{bluegrey}%s", message);
-        Format(flagstring, 17, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
+        Format(flagstring, iBufferSize, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
 
         LogAction(author, -1, "\"%L\" triggered sm_say (text %s)", author, message);
 
@@ -227,11 +232,11 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             recipients.Push(GetClientUserId(i));
         }      
 
-        GetRankTag(rank, buffer);
-        Format(staffTag, 64, "{default}[{lime}%s{default}]", buffer);
+        GetRankTag(rank, cRankBuffer);
+        Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
 
-        Format(name, MAX_NAME_LENGTH, "{red}[ALL] %s {red}%s{default}", staffTag, name);
-        Format(flagstring, 17, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
+        Format(name, iBufferSize, "{red}[ALL] %s {red}%s\x01", staffTag, name);
+        Format(flagstring, iBufferSize, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
 
         LogAction(author, -1, "\"%L\" triggered sm_chat (text %s)", author, message);
 
@@ -255,9 +260,9 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
         recipients.Push(GetClientUserId(author));
 
-        Format(name, MAX_NAME_LENGTH, "{yellow}[TO STAFF] %s{yellow}", name);
+        Format(name, iBufferSize, "\x09[TO STAFF] %s\x09", name);
         Format(message, _CV_MAX_MESSAGE_LENGTH, "{bluegrey}%s", message);
-        Format(flagstring, 17, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
+        Format(flagstring, iBufferSize, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
 
         LogAction(author, -1, "\"%L\" triggered sm_chat (text %s)", author, message);
 
@@ -547,13 +552,13 @@ void SendChatToAll(int client, char[] message)
     int rank = GetPlayerRank(client);
     
     GetRankTag(rank, buffer);
-    Format(staffTag, 64, "{default}[{lime}%s{default}]", buffer);
+    Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
 
     GetClientName(client, name, sizeof(name));
     
-    Format(name, MAX_NAME_LENGTH, "{red}[ALL] %s {red}%s{default}", staffTag, name);
+    Format(name, MAX_NAME_LENGTH, "{red}[ALL] %s {red}%s\x01", staffTag, name);
 
-    CPrintToChatAll("%s: {default}%s", name, message);
+    CPrintToChatAll("%s: \x01%s", name, message);
 
     LogAction(client, -1, "\"%L\" triggered sm_say (text %s)", client, message);
 }
@@ -566,14 +571,14 @@ void SendChatToAdmin(int client, char[] message)
 
     int rank = GetPlayerRank(client);
     GetRankTag(rank, buffer);
-    Format(staffTag, 64, "{default}[{lime}%s{default}]", buffer);
+    Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
     GetClientName(client, name, sizeof(name));
 
     LoopValidClients(i)
     {
         if(GetPlayerRank(i) > RANK_PLEB)
         {
-            CPrintToChat(i, "{yellow}[STAFF] %s{yellow} %s: {bluegrey}%s", staffTag, name, message);
+            CPrintToChat(i, "\x09[STAFF] %s\x09 %s: {bluegrey}%s", staffTag, name, message);
         }
     }
 
@@ -589,10 +594,10 @@ void SendChatToAdminPleb(int client, char[] message)
     {
         if(GetPlayerRank(i) > RANK_PLEB)
         {
-            CPrintToChat(i,"{yellow}[TO STAFF] %s:  {bluegrey}%s", name, message);  
+            CPrintToChat(i,"\x09[TO STAFF] %s:  {bluegrey}%s", name, message);  
         }
     }
-    CPrintToChat(client,"{yellow}[TO STAFF] %s:{bluegrey}%s", name, message);
+    CPrintToChat(client,"\x09[TO STAFF] %s:{bluegrey}%s", name, message);
 
     LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, message);
 }
@@ -620,13 +625,13 @@ void SendPrivateChat(int client, int target, char[] message)
     }
     else if (target == client)
     {
-        CPrintToChat(client, "[{grey}me{gold} -> {grey}me{default}] %s", message);
+        CPrintToChat(client, "[{grey}me{gold} -> {grey}me\x01] %s", message);
         //add sound.
         ClientCommand(target, "play \"%s\"", cSoundName);
     } else {
         g_iReplyTo[target] = client;
-        CPrintToChat(target, "[{grey}%s{gold} -> {grey}me{default}] %s", clientName, message);
-        CPrintToChat(client, "[{grey}me{gold} -> {grey}%s{default}] %s", targetName, message);
+        CPrintToChat(target, "[{grey}%s{gold} -> {grey}me\x01] %s", clientName, message);
+        CPrintToChat(client, "[{grey}me{gold} -> {grey}%s\x01] %s", targetName, message);
         //add sound.
         ClientCommand(target, "play \"%s\"", cSoundName);
     }
