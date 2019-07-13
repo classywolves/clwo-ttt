@@ -11,6 +11,7 @@
 #include <ttt_targeting>
 #include <ttt_messages>
 #include <donators>
+#include <clientprefs>
 
 public Plugin myinfo =
 {
@@ -24,12 +25,15 @@ public Plugin myinfo =
 int g_iReplyTo[MAXPLAYERS + 1];
 bool g_bDonators = false;
 bool g_biMod = false;
+Handle g_hClientCookieOverRideRank = null;
+
 
 public OnPluginStart()
 {
     LoadTranslations("common.phrases");
 
     RegisterCmds();
+    RegisterCvars();
 
     PrintToServer("[CHT] Loaded successfully");
 }
@@ -47,6 +51,14 @@ public void RegisterCmds()
     RegConsoleCmd("sm_msg", Command_Msg, "sm_msg <name or #userid> <message> - sends private message");
     RegConsoleCmd("sm_r", Command_Reply, "sm_reply <message> - replies to previous private message");
     RegConsoleCmd("sm_reply", Command_Reply, "sm_reply <message> - replies to previous private message");
+
+    RegAdminCmd("sm_setrankoverride", Command_RankOverride, ADMFLAG_RCON, "sm_setrankoverride <#userid|name> <number>");
+}
+public void RegisterCvars()
+{
+    g_hClientCookieOverRideRank = FindClientCookie("RankOverride");
+    if(g_hClientCookieOverRideRank == null)
+        g_hClientCookieOverRideRank = RegClientCookie("RankOverride", "The number to override the rank to" , CookieAccess_Protected);
 }
 
 public void OnMapStart()
@@ -99,12 +111,23 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
     char teamColor[6];
     char staffTag[64];
 
+
+
     int rank = GetPlayerRank(author);
     
     if (message[0] != '@') // Not staff / all say or pm.
     {   
         if (rank > RANK_PLEB)
         {
+            if(AreClientCookiesCached(author))
+            {
+                char cCookie[128];
+                GetClientCookie(author, g_hClientCookieOverRideRank, cCookie, sizeof(cCookie));
+                if(strlen(cCookie) > 0)
+                {
+                    rank = StringToInt(cCookie);
+                }
+            }
             GetRankTag(rank, buffer);
             Format(staffTag, 64, "{default}[{lime}%s{default}]", buffer);
         }
@@ -129,10 +152,10 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         CRemoveColors(name, MAX_NAME_LENGTH);
 
         //lets add in our donator/special guest tags.
-        char sChatTag[64];
-        char cPreChatTag[64];
+        char sChatTag[128];
+        char cPreChatTag[128];
         #if defined _donators_included_
-        char sTemp[64];
+        char sTemp[128];
         if(g_bDonators)
         {
             if(Donator_IsDonator(author))
@@ -159,7 +182,6 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             }
         }
         #endif
-
         // Format message name
         Format(name, MAX_NAME_LENGTH, "%s%s%s {%s}%s{default}", cPreChatTag, staffTag, sChatTag, teamColor, name);
 
@@ -461,6 +483,59 @@ public Action Command_Reply(int client, int args)
     SendPrivateChat(client, target, text);
     
     return Plugin_Handled;      
+}
+public Action Command_RankOverride(int client, int args)
+{
+    if (args < 1)
+    {
+        ReplyToCommand(client, " [SM] Usage: sm_setrankoverride <#userid|name> <number>");
+        return Plugin_Handled;
+    }
+
+    char arg[65];
+    GetCmdArg(1, arg, sizeof(arg)); 
+
+    char arg2[65];
+    GetCmdArg(2, arg2, sizeof(arg2));
+    int rank_int = StringToInt(arg2);
+
+    char target_name[MAX_TARGET_LENGTH];
+    int target_list[MAXPLAYERS];
+    int target_count;
+    bool tn_is_ml;
+    
+    if ((target_count = ProcessTargetString(
+            arg,
+            client,
+            target_list,
+            MAXPLAYERS,
+            COMMAND_FILTER_NO_BOTS|COMMAND_FILTER_NO_IMMUNITY,
+            target_name,
+            sizeof(target_name),
+            tn_is_ml)) <= 0)
+    {
+        ReplyToCommand(client," [SM] Invalid Target");
+        return Plugin_Handled;
+    }
+    for (int i = 0; i < target_count; i++)
+    {
+        int target = target_list[i];
+        if(args < 2)
+        {
+            SetClientCookie(target, g_hClientCookieOverRideRank, "");
+            ReplyToCommand(client, " [SM] Removed the rank override of %N", target);
+        }
+        else
+        {
+            SetClientCookie(target, g_hClientCookieOverRideRank, arg2);
+            char buffer[16];
+            GetRankTag(rank_int, buffer);
+            ReplyToCommand(client, " [SM] Set the rank override of %N to [%s]", target, buffer);
+        }
+        
+    }
+    return Plugin_Handled;
+
 }
 
 void SendChatToAll(int client, char[] message)
