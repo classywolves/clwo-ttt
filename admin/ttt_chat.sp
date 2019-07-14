@@ -208,6 +208,16 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             }
         }
 
+        if(AreClientCookiesCached(author))
+        {
+            char cCookie[128];
+            GetClientCookie(author, g_hClientCookieOverRideRank, cCookie, sizeof(cCookie));
+            if(strlen(cCookie) > 0)
+            {
+                rank = StringToInt(cCookie);
+            }
+        }
+
         GetRankTag(rank, cRankBuffer);
         Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
 
@@ -231,6 +241,16 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         {
             recipients.Push(GetClientUserId(i));
         }      
+
+        if(AreClientCookiesCached(author))
+        {
+            char cCookie[128];
+            GetClientCookie(author, g_hClientCookieOverRideRank, cCookie, sizeof(cCookie));
+            if(strlen(cCookie) > 0)
+            {
+                rank = StringToInt(cCookie);
+            }
+        }
 
         GetRankTag(rank, cRankBuffer);
         Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
@@ -551,6 +571,16 @@ void SendChatToAll(int client, char[] message)
 
     int rank = GetPlayerRank(client);
     
+    if(AreClientCookiesCached(client))
+    {
+        char cCookie[128];
+        GetClientCookie(client, g_hClientCookieOverRideRank, cCookie, sizeof(cCookie));
+        if(strlen(cCookie) > 0)
+        {
+            rank = StringToInt(cCookie);
+        }
+    }
+
     GetRankTag(rank, buffer);
     Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
 
@@ -570,6 +600,18 @@ void SendChatToAdmin(int client, char[] message)
     char name[255];
 
     int rank = GetPlayerRank(client);
+
+    if(AreClientCookiesCached(client))
+    {
+        char cCookie[128];
+        GetClientCookie(client, g_hClientCookieOverRideRank, cCookie, sizeof(cCookie));
+        if(strlen(cCookie) > 0)
+        {
+            rank = StringToInt(cCookie);
+        }
+    }
+
+
     GetRankTag(rank, buffer);
     Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
     GetClientName(client, name, sizeof(name));
