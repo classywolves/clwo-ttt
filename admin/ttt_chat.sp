@@ -4,6 +4,7 @@
 #include <sdktools>
 #include <cstrike>
 
+#undef REQUIRE_PLUGIN
 #include <colorvariables>
 #include <generics>
 #include <chat-processor>
@@ -19,7 +20,7 @@ public Plugin myinfo =
     author = "c0rp3n / Sourcecode / iNilo",
     description = "Processes chat for CLWO TTT & Course.",
     version = "1.0.0",
-    url = ""
+    url = "https://clwo.eu"
 };
 
 int g_iReplyTo[MAXPLAYERS + 1];
