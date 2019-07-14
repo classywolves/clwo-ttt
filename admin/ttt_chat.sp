@@ -16,7 +16,7 @@
 public Plugin myinfo =
 {
     name = "CLWO Chat",
-    author = "c0rp3n",
+    author = "c0rp3n / Sourcecode / iNilo",
     description = "Processes chat for CLWO TTT & Course.",
     version = "1.0.0",
     url = ""
