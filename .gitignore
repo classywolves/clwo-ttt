@@ -7,4 +7,3 @@ cmake-build-debug/
 
 *.exe 
 *.dat
-*.inc
