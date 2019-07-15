@@ -265,10 +265,17 @@ void SetPlayerArms(int client, const char arms_path[PLATFORM_MAX_PATH])
 
         //Set player arm model
         if(!IsModelPrecached(arms_path))
-        PrecacheModel(arms_path);
+        {
+            PrecacheModel(arms_path);
+        }
 
         SetEntPropString(client, Prop_Send, "m_szArmsModel", "");
-        SetEntPropString(client, Prop_Send, "m_szArmsModel", arms_path);
+
+        int ent = GetEntPropEnt(client, Prop_Send, "m_hMyWearables");
+        if(ent == -1)
+        {
+            SetEntPropString(client, Prop_Send, "m_szArmsModel", arms_path);
+        }
     }
 }
 
