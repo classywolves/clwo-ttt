@@ -68,6 +68,15 @@ public void RegisterCvars()
     g_hClientCookieOverRideRank = FindClientCookie("RankOverride");
     if(g_hClientCookieOverRideRank == null)
         g_hClientCookieOverRideRank = RegClientCookie("RankOverride", "The number to override the rank to" , CookieAccess_Protected);
+
+    g_hClientBlockList = RegClientCookie("PrivateMessages_Blacklist", "Blocked players", CookieAccess_Public);
+
+    g_hDisabledPM = RegClientCookie("DisablePrivateMessages", "Setting this to 1 will disable you from receiving PM's", CookieAccess_Public);
+    g_hStaffOnlyPM = RegClientCookie("StaffOnlyPrivateMessages", "Setting this to 1 will only allow staff to PM you", CookieAccess_Public);
+    SetCookiePrefabMenu(g_hDisabledPM, CookieMenu_YesNo_Int, "[MSG's] Disable private messages");
+    SetCookiePrefabMenu(g_hStaffOnlyPM, CookieMenu_YesNo_Int, "[MSG's] Enable staff only private messages");
+    SetCookieMenuItem(ClientPrefMenuBlock, 0, "[MSG's] Manage blocklist");
+
 }
 
 public void OnMapStart()
@@ -987,6 +996,11 @@ public void AccountIdInBlacklist(int client, int accountid, bool add)
 public bool CanOverride(int client)
 {
     return CheckCommandAccess(client, "sm_chat", ADMFLAG_CHAT);
+}
+
+public void ClientPrefMenuBlock(int client, CookieMenuAction action, any info, char[] buffer, int maxlen)
+{
+    MenuBlock(client);
 }
 
 public bool HasClientBlockedAccountID(int client, int accountid)
