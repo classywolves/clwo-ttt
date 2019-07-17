@@ -29,6 +29,11 @@ bool g_biMod = false;
 Handle g_hClientCookieOverRideRank = null;
 
 
+Handle g_hClientBlockList;
+Handle g_hDisabledPM;
+Handle g_hStaffOnlyPM;
+
+
 public OnPluginStart()
 {
     LoadTranslations("common.phrases");
@@ -54,6 +59,9 @@ public void RegisterCmds()
     RegConsoleCmd("sm_reply", Command_Reply, "sm_reply <message> - replies to previous private message");
 
     RegAdminCmd("sm_setrankoverride", Command_RankOverride, ADMFLAG_RCON, "sm_setrankoverride <#userid|name> <number>");
+
+    RegConsoleCmd("sm_block", Command_Block, "sm_block select players to blacklist");
+    RegConsoleCmd("sm_blocks", Command_Block, "sm_block select players to blacklist");
 }
 public void RegisterCvars()
 {
@@ -659,6 +667,36 @@ void SendPrivateChat(int client, int target, char[] message)
     GetClientName(target, targetName, sizeof(targetName));
     CRemoveColors(targetName, sizeof(targetName));
 
+    //prelogic
+
+    char cValue[8];
+    GetClientCookie(target, g_hDisabledPM, cValue, sizeof(cValue)); //
+    if(StringToInt(cValue) == 1 && !CanOverride(client))
+    {
+        ReplyToCommand(client, ">\x01[\x08failed to send\x01]\x01: %N has disabled private messages", target);
+        PrintToChat(target, ">\x01[\x08blocked a private message\x01]");
+        return;
+    }
+
+    GetClientCookie(target, g_hStaffOnlyPM, cValue, sizeof(cValue)); //
+    if(StringToInt(cValue) == 1 && GetUserAdmin(client) == INVALID_ADMIN_ID)
+    {
+        ReplyToCommand(client, ">\x01[\x08failed to send\x01]\x01: %N has disabled private messages for non staff members", target);
+        PrintToChat(target, ">\x01[\x08blocked a non staff message\x01]");
+        return;
+    }
+
+    //check for blocklist.
+    if(HasClientBlockedAccountID(target, GetSteamAccountID(client)) && !CanOverride(client))
+    {
+        ReplyToCommand(client, ">\x01[\x08failed to send\x01]\x01: %N has disabled private messages", target);
+        PrintToChat(target, ">\x01[\x08message ignored (player is on blocklist)\x01]");
+        return;
+    }
+
+
+
+
     char cSoundName[512];
     DynamicGetRandomSoundFile(1, 1, "inilo/general_v1_452489/chat_v1_452489/chat_beep02_452489.mp3", cSoundName, sizeof(cSoundName));
 
@@ -747,4 +785,349 @@ stock void DynamicGetRandomSoundFile(int start, int stop, const char[] sound_fsp
 stock void FakePrecacheSound(const char[] szPath)
 {
     AddToStringTable( FindStringTable( "soundprecache" ), szPath );
+}
+
+
+public Action Command_Block(int client, int args)
+{
+    //View blocklist
+    //add player to blocklist
+    //remove player from blocklist
+    MenuBlock(client);
+    return Plugin_Handled;
+}
+public void MenuBlock(int client)
+{
+    if(!IsValidClient(client))
+        return;
+    Menu menu = new Menu(Block_Callback);
+    menu.SetTitle("Private messages blocklist");
+    menu.AddItem("#view#", "View your current blocklist");
+    menu.AddItem("#add#", "Add a player to your blocklist");
+    menu.Display(client, MENU_TIME_FOREVER);
+}
+public void MenuAddToBlacklist(int client)
+{
+
+    if(!IsValidClient(client))
+        return;
+    Menu menu = new Menu(MenuAddToBlacklist_Callback);
+    menu.SetTitle("Please select player to add to your blocklist");
+    int blcksize = GetClientBlacklistSize(client);
+    for (int target = 1; target < MaxClients; target++)
+    {
+        if(!IsValidClient(target))
+            continue;
+        char cItem[64];
+        char cDisplay[64];
+        int account_id = GetSteamAccountID(target);
+        if( account_id == 0)
+            continue;
+        bool blocked = HasClientBlockedAccountID(client, account_id);
+        Format(cItem, sizeof(cItem), "%i", account_id);
+        //check if already blacklisten.
+        if(blocked)
+        {
+            Format(cDisplay, sizeof(cDisplay), "%N (blocked)", target);
+        }
+        else
+        {
+            if(blcksize >= 10)
+            {
+                Format(cDisplay, sizeof(cDisplay), "%N (blacklist full)", target);
+                blocked = true;
+            }
+            else
+            {
+                Format(cDisplay, sizeof(cDisplay), "%N", target);
+            }
+            
+        }
+        menu.AddItem(cItem, cDisplay, blocked ? ITEMDRAW_DISABLED : ITEMDRAW_DEFAULT);
+    }
+    menu.ExitBackButton = true;
+    menu.Display(client, MENU_TIME_FOREVER);
+}
+public void MenuManageBlackList(int client)
+{
+    if(!IsValidClient(client))
+        return;
+    if(!AreClientCookiesCached(client))
+    {
+        PrintToChat(client, " [SM] Your blacklist is still being loaded");
+        return;
+    }
+    Menu menu = new Menu(MenuManageBlackList_Callback);
+    menu.SetTitle("Manage your blacklist");
+    //loop the account ID's.
+    char cBlacklist[512];
+    char cBlacklistSplit[64][64];
+    GetClientCookie(client, g_hClientBlockList, cBlacklist, sizeof(cBlacklist));
+    int lngth = strlen(cBlacklist);
+    int found = ExplodeString(cBlacklist, ",", cBlacklistSplit, 64, 64);
+    PrintToConsole(client, " [BLACKLIST] length[%i] found[%i] content[%s]", lngth, found, cBlacklist);
+    if(lngth == 0 || found == 0)
+    {
+        PrintToChat(client, " [SM] Your blocklist is empty");
+        return; 
+    }
+    for(int blacklist_n = 0; blacklist_n <= found; blacklist_n++)
+    {
+        if(strlen(cBlacklistSplit[blacklist_n]) == 0)
+            continue;
+        char cItem[64];
+        char cDisplay[64];
+        Format(cItem, sizeof(cItem), cBlacklistSplit[blacklist_n]);
+        int try_target = AccountIDToClient(StringToInt(cBlacklistSplit[blacklist_n]));
+        if(IsValidClient(try_target))
+        {
+            Format(cDisplay, sizeof(cDisplay), "Remove %s (%N)", cBlacklistSplit[blacklist_n], try_target); 
+        }
+        else
+        {
+            Format(cDisplay, sizeof(cDisplay), "Remove %s", cBlacklistSplit[blacklist_n]);  
+        }
+        
+        
+        menu.AddItem(cItem, cDisplay);
+    }
+    menu.ExitBackButton = true;
+    menu.Display(client, MENU_TIME_FOREVER);
+}
+
+public void AccountIdInBlacklist(int client, int accountid, bool add)
+{
+    if(!AreClientCookiesCached(client))
+    {
+        PrintToChat(client, " [SM] Your blocklist is still being loaded");
+        return;
+    }
+    PrintToConsole(client, " [BLOCKLIST] request to add[%b] account[%i]", add, accountid);
+    char cBlacklist[512];
+    char cBlacklistSplit[64][64];
+    int iBlacklist[64];
+    GetClientCookie(client, g_hClientBlockList, cBlacklist, sizeof(cBlacklist));
+    int lngth = strlen(cBlacklist);
+    int found = ExplodeString(cBlacklist, ",", cBlacklistSplit, 64, 64);
+    PrintToConsole(client, " [BLOCKLIST] length[%i] found[%i] content[%s]", lngth, found, cBlacklist);
+    for(int blacklist_n = 0; blacklist_n <= found; blacklist_n++)
+    {
+        char cItem[64];
+        Format(cItem, sizeof(cItem), cBlacklistSplit[blacklist_n]);
+        int current_blocked = StringToInt(cItem);
+        iBlacklist[blacklist_n] = current_blocked;  
+    }
+    //list is loaded.
+    //loop it.
+    int free_place = 0;
+    for(int blacklist_n = 0; blacklist_n < 64; blacklist_n++)
+    {
+        //loop the list.
+        //PrintToConsole(client, "[BLOCKLIST] current blocklist[%i] -> %i", blacklist_n, iBlacklist[blacklist_n]);
+        if(add)
+        {
+            if(iBlacklist[blacklist_n] == 0)
+            {
+                free_place = blacklist_n;
+            }
+            if(iBlacklist[blacklist_n] == accountid)
+            {
+                PrintToChat(client, " [SM] This player is already blocked");
+                return;
+            }
+        }
+        else
+        {
+            //remove the player
+            if(iBlacklist[blacklist_n] == accountid)
+            {
+                iBlacklist[blacklist_n] = 0; //erase the player
+            }
+        }
+    }
+    if(add)
+    {
+        iBlacklist[free_place] = accountid; //added to list, convert back to string now.
+    }
+
+    //rebuild the list.
+    char cBlacklistRedone[512];
+    int count = 0;
+    for(int blacklist_n = 0; blacklist_n < 64; blacklist_n++)
+    {
+        if(iBlacklist[blacklist_n] == 0)
+            continue; //dont care.
+        //PrintToConsole(client, "[BLOCKLIST] rebuilding with %i", iBlacklist[blacklist_n]);
+        if(count == 0)
+        {
+            //first.
+            Format(cBlacklistRedone, sizeof(cBlacklistRedone), "%i", iBlacklist[blacklist_n]);
+        }
+        else
+        {
+            Format(cBlacklistRedone, sizeof(cBlacklistRedone), "%s,%i", cBlacklistRedone, iBlacklist[blacklist_n]);
+        }
+        count++;
+    }
+    //save this bitch ass to a the cookie.
+    SetClientCookie(client, g_hClientBlockList, cBlacklistRedone);
+    PrintToChat(client, " [SM] Updated your blocklist!");
+    PrintToConsole(client, " [BLOCKLIST] final[%s]", cBlacklistRedone);
+    if(add)
+    {
+        MenuAddToBlacklist(client);
+    }
+    else
+    {
+        //reshow remove
+        MenuManageBlackList(client);
+    }
+}
+
+public bool CanOverride(int client)
+{
+    return CheckCommandAccess(client, "sm_chat", ADMFLAG_CHAT);
+}
+
+public bool HasClientBlockedAccountID(int client, int accountid)
+{
+    char cBlacklist[512];
+    char cBlacklistSplit[64][64];
+    int iBlacklist[64];
+    GetClientCookie(client, g_hClientBlockList, cBlacklist, sizeof(cBlacklist));
+    int found = ExplodeString(cBlacklist, ",", cBlacklistSplit, 64, 64);
+    //PrintToConsole(client, " [BLOCKLIST] length[%i] found[%i] content[%s]", lngth, found, cBlacklist);
+    for(int blacklist_n = 0; blacklist_n <= found; blacklist_n++)
+    {
+        char cItem[64];
+        Format(cItem, sizeof(cItem), cBlacklistSplit[blacklist_n]);
+        int current_blocked = StringToInt(cItem);
+        iBlacklist[blacklist_n] = current_blocked;  
+    }
+    for(int blacklist_n = 0; blacklist_n < 64; blacklist_n++)
+    {
+        if(iBlacklist[blacklist_n] == 0)
+            continue;
+        if(iBlacklist[blacklist_n] == accountid)
+            return true;
+    }
+    return false;
+}
+public int GetClientBlacklistSize(int client)
+{
+    char cBlacklist[512];
+    char cBlacklistSplit[64][64];
+    GetClientCookie(client, g_hClientBlockList, cBlacklist, sizeof(cBlacklist));
+    int lngth = strlen(cBlacklist);
+    int found = ExplodeString(cBlacklist, ",", cBlacklistSplit, 64, 64);
+    if(lngth == 0)
+        return 0;
+    return found;
+}
+
+public int MenuAddToBlacklist_Callback(Menu menu, MenuAction action, int param1, int param2)
+{
+    int client = param1;
+    if(!IsValidClient(client))
+        return;
+    switch(action)
+    {
+        case MenuAction_Select:
+        {
+            char info[32];
+            menu.GetItem(param2, info, sizeof(info));
+            //convert the item into EWardayType
+            int account_id_to_block = StringToInt(info);
+            AccountIdInBlacklist(client, account_id_to_block, true);
+        }
+        case MenuAction_Cancel:
+        {
+            int close_reason = param2;  
+            switch(close_reason)
+            {
+                case MenuCancel_ExitBack:
+                {
+                    MenuBlock(client);
+                }
+            }
+        }
+        case MenuAction_End:
+        {
+            delete menu;
+        }
+    }
+}
+public int MenuManageBlackList_Callback(Menu menu, MenuAction action, int param1, int param2)
+{
+    int client = param1;
+    if(!IsValidClient(client))
+        return;
+    switch(action)
+    {
+        case MenuAction_Select:
+        {
+            char info[32];
+            menu.GetItem(param2, info, sizeof(info));
+            //convert the item into EWardayType
+            int account_id_to_block = StringToInt(info);
+            AccountIdInBlacklist(client, account_id_to_block, false);
+        }
+        case MenuAction_Cancel:
+        {
+            int close_reason = param2;  
+            switch(close_reason)
+            {
+                case MenuCancel_ExitBack:
+                {
+                    MenuBlock(client);
+                }
+            }
+        }
+        case MenuAction_End:
+        {
+            delete menu;
+        }
+    }
+}
+
+public int Block_Callback(Menu menu, MenuAction action, int param1, int param2)
+{
+    int client = param1;
+    if(!IsValidClient(client))
+        return;
+    switch(action)
+    {
+        case MenuAction_Select:
+        {
+            char info[32];
+            menu.GetItem(param2, info, sizeof(info));
+            if(StrEqual(info,"#view#"))
+            {
+                MenuManageBlackList(client);
+            }
+            if(StrEqual(info,"#add#"))
+            {
+                MenuAddToBlacklist(client);
+            }
+        }
+        case MenuAction_End:
+        {
+            delete menu;
+        }
+    }
+}
+
+stock int AccountIDToClient(int AccountID)
+{
+    for (int client = 1; client <= MaxClients; client++)
+    {
+        if(!IsValidClient(client))
+            continue;
+        int account_id = GetSteamAccountID(client,true);
+        if(account_id == 0)
+            continue;
+        if(AccountID == account_id)
+            return client;
+    }
+    return 0;
 }
