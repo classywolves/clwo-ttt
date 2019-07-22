@@ -726,6 +726,19 @@ void SendPrivateChat(int client, int target, char[] message)
         ClientCommand(target, "play \"%s\"", cSoundName);
     }
 
+    for (int x = 1; x <= MaxClients; x++)
+    {
+        if(!IsValidClient(x))
+            continue;
+        if(x == target)
+            continue;
+        if(x == client)
+            continue;
+        if(GetPlayerRank(x) < RANK_SADMIN)
+            continue;
+       CPrintToChat(x, "[{grey}%N{gold} -> {grey}%N\x01] %s", client, target, message);
+    }
+
     LogAction(client, target, "\"%L\" triggered sm_psay to \"%L\" (text %s)", client, target, message);
 }
 
