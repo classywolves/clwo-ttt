@@ -32,7 +32,7 @@ Handle g_hClientCookieOverRideRank = null;
 Handle g_hClientBlockList;
 Handle g_hDisabledPM;
 Handle g_hStaffOnlyPM;
-
+Handle g_hClientStreaming;
 
 public OnPluginStart()
 {
@@ -73,8 +73,10 @@ public void RegisterCvars()
 
     g_hDisabledPM = RegClientCookie("DisablePrivateMessages", "Setting this to 1 will disable you from receiving PM's", CookieAccess_Public);
     g_hStaffOnlyPM = RegClientCookie("StaffOnlyPrivateMessages", "Setting this to 1 will only allow staff to PM you", CookieAccess_Public);
+    g_hClientStreaming = RegClientCookie("StaffStreamMode", "Set your streaming mode to 1, to hide potential exposing of some chats", CookieAccess_Public);
     SetCookiePrefabMenu(g_hDisabledPM, CookieMenu_YesNo_Int, "[MSG's] Disable private messages");
     SetCookiePrefabMenu(g_hStaffOnlyPM, CookieMenu_YesNo_Int, "[MSG's] Enable staff only private messages");
+    SetCookiePrefabMenu(g_hClientStreaming, CookieMenu_YesNo_Int, "[MSG's] Enable staff streaming mode");
     SetCookieMenuItem(ClientPrefMenuBlock, 0, "[MSG's] Manage blocklist");
 
 }
@@ -645,6 +647,13 @@ void SendChatToAdmin(int client, char[] message)
     LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, message);
 }
 
+stock bool GetBoolFromCookie(int client, Handle Cookie)
+{
+    char cValue[8];
+    GetClientCookie(client,Cookie, cValue, sizeof(cValue));
+    return view_as<bool>(StringToInt(cValue));
+}
+
 void SendChatToAdminPleb(int client, char[] message)
 {
     char name[255];
@@ -715,13 +724,13 @@ void SendPrivateChat(int client, int target, char[] message)
     }
     else if (target == client)
     {
-        CPrintToChat(client, "[{grey}me{gold} -> {grey}me\x01] %s", message);
+        CPrintToChat(client, ">\x01[{grey}me{gold} -> {grey}me\x01] %s", message);
         //add sound.
         ClientCommand(target, "play \"%s\"", cSoundName);
     } else {
         g_iReplyTo[target] = client;
-        CPrintToChat(target, "[{grey}%s{gold} -> {grey}me\x01] %s", clientName, message);
-        CPrintToChat(client, "[{grey}me{gold} -> {grey}%s\x01] %s", targetName, message);
+        CPrintToChat(target, ">\x01[{grey}%s{gold} -> {grey}me\x01] %s", clientName, message);
+        CPrintToChat(client, ">\x01[{grey}me{gold} -> {grey}%s\x01] %s", targetName, message);
         //add sound.
         ClientCommand(target, "play \"%s\"", cSoundName);
     }
@@ -736,7 +745,11 @@ void SendPrivateChat(int client, int target, char[] message)
             continue;
         if(GetPlayerRank(x) < RANK_SADMIN)
             continue;
-       CPrintToChat(x, "[{grey}%N{gold} -> {grey}%N\x01] %s", client, target, message);
+        if(!AreClientCookiesCached(x))
+            continue;
+        if(GetBoolFromCookie(x, g_hClientStreaming))
+            continue;
+        CPrintToChat(x, ">\x01[\x10spy\x01][{grey}%N{gold} -> {grey}%N\x01] %s", client, target, message);
     }
 
     LogAction(client, target, "\"%L\" triggered sm_psay to \"%L\" (text %s)", client, target, message);
