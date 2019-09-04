@@ -1,3 +1,5 @@
+#pragma semicolon 1
+
 //Base CS:GO Plugin Requirements
 #include <sourcemod>
 #include <sdktools>
@@ -6,6 +8,7 @@
 
 //Custom includes
 #include <ttt>
+#include <gamemodes>
 #include <ttt_messages>
 #include <ttt_targeting>
 #include <generics>
@@ -14,19 +17,20 @@
 
 
 bool gb_Jugg_Round = false;
-int gi_Countdown = 3;
+bool gb_Jugg_RoundNR = false;
+int gi_JuggCountdown = 10;
 int gi_Client = 0;
-int gi_TotalNumOfCT = 0;
 
 ConVar cv_MPTeammatesAreEnemies;
 ConVar cv_HealthBoostPerT = null;
 ConVar cv_Ratio = null;
-ConVar cv_Solo = null;
 
 
 public OnPluginStart()
 {
-    gi_Countdown = 3;
+    PrintToChatAll("[JUGG] Loaded successfully");
+    
+    gi_JuggCountdown = 10;
 
     cv_MPTeammatesAreEnemies = FindConVar("mp_teammates_are_enemies");
 
@@ -34,27 +38,25 @@ public OnPluginStart()
 
     cv_Ratio = CreateConVar("cv_Ratio", "6", "How many CT per T", FCVAR_NOTIFY, true, 2.0, true, 10.0);
 
-    cv_Solo = CreateConVar("cv_Solo", "false", "Solo mode", FCVAR_NOTIFY);
-
-    RegAdminCmd("sm_jugg", Command_Jugg, ADMFLAG_BAN, "Start a Juggernaut round");
-    RegAdminCmd("sm_canceljugg", Command_CancelJugg, ADMFLAG_BAN, "Cancel Juggernaut");
-    RegAdminCmd("sm_juggernaut", Command_Jugg, ADMFLAG_BAN, "Start a Juggernaut round");
-    RegAdminCmd("sm_chb", Command_CHB, ADMFLAG_BAN, "Change health boost given to CT");
-    RegAdminCmd("sm_ratio", Command_Ratio, ADMFLAG_BAN, "Change how many CTs per T");
-    RegAdminCmd("sm_solo", Command_Solo, ADMFLAG_BAN, "Set it to solo mode");
+    RegAdminCmd("sm_jugg", Command_Jugg, ADMFLAG_VOTE, "Start a Juggernaut round");
+    RegAdminCmd("sm_canceljugg", Command_CancelJugg, ADMFLAG_VOTE, "Cancel Juggernaut");
+    RegAdminCmd("sm_juggernaut", Command_Jugg, ADMFLAG_VOTE, "Start a Juggernaut round");
+    RegAdminCmd("sm_chb", Command_CHB, ADMFLAG_VOTE, "Change health boost given to CT");
+    RegAdminCmd("sm_ratio", Command_Ratio, ADMFLAG_VOTE, "Change how many CTs per T");
 }
+
 
 public Action Command_Jugg(int client, int args)
 {
-    if(gb_Jugg_Round)
+    if(gb_Jugg_Round || gb_Jugg_RoundNR)
     {
-        CPrintToChat(client, "[JUGG] JUGG Round has already been started!")
+        CPrintToChat(client, "[JUGG] JUGG Round has already been started!");
         return Plugin_Handled;
     }
 
     if(TTT_IsRoundActive())
     {
-        BeginJugg(client);
+        CPrintToChat(client, "[JUGG] A TTT round has already started");
         return Plugin_Handled;
     }
 
@@ -62,7 +64,7 @@ public Action Command_Jugg(int client, int args)
     {
         CPrintToChatAll("[JUGG] Next round will be the Juggernaut gamemode!");
         gi_Client = client;
-        gb_Jugg_Round = true;
+        gb_Jugg_RoundNR = true;
         return Plugin_Handled;
     }
 }
@@ -74,13 +76,12 @@ public Action Command_CancelJugg(int client, int args)
         TTT_Error(client, "Can't cancel mid round!");
         return Plugin_Handled;
     }
-
-    if(gb_Jugg_Round)
+    if(gb_Jugg_RoundNR)
     {
-        gb_Jugg_Round = false;
+        gb_Jugg_RoundNR = false;
+        CPrintToChatAll("[JUGG] Juggernaut cancelled");
     }
 
-    CPrintToChatAll("[JUGG] Juggernaut cancelled");
     return Plugin_Handled;
 }
 
@@ -116,39 +117,11 @@ public Action Command_Ratio(int client, int args)
     return Plugin_Handled;
 }
 
-public Action Command_Solo(int client, int args)
-{
-    if(args > 0)
-    {
-        if(cv_Solo.BoolValue)
-        {
-            CPrintToChat(client, "[JUGG] cv_Solo = true");
-        }
-        if(!cv_Solo.BoolValue)
-        {
-            CPrintToChat(client, "[JUGG] cv_Solo = false");
-        }
-        
-        return Plugin_Handled;
-    }
-
-    if(cv_Solo.BoolValue)
-    {
-        cv_Solo.SetBool(false, false, true);
-    }
-    if(!cv_Solo.BoolValue)
-    {
-        cv_Solo.SetBool(true, false, true);
-    }
-
-    return Plugin_Handled;
-}
-
 public void TTT_OnRoundStart(int innocents, int traitors, int detective)
 {
-    gi_Countdown = 3;
+    gi_JuggCountdown = 10;
 
-    if(gb_Jugg_Round)
+    if(gb_Jugg_RoundNR)
     {
         JuggPanel();
         HookDMG();
@@ -179,22 +152,24 @@ public void JuggPanel()
 
 public Action Timer_JuggCountdown(Handle timer, int client)
 {
-    if(gi_Countdown <= 0)
+    if(gi_JuggCountdown == 0)
     {
         UnHookDMG();
         BeginJugg(client);
+        ClearTimer(timer);
+        gb_Jugg_RoundNR = false;
         return Plugin_Stop;
     }
 
-    PrintCenterTextAll("Juggernaut Starting in: %i", gi_Countdown);
-    CPrintToChatAll("[JUGG] Juggernaut starting in: %i", gi_Countdown);    
-    gi_Countdown--;
+    PrintCenterTextAll("Juggernaut Starting in: %i", gi_JuggCountdown);
+    CPrintToChatAll("[JUGG] Juggernaut starting in: %i", gi_JuggCountdown);    
+    gi_JuggCountdown--;
     return Plugin_Continue;
 }
 
 public void TTT_OnRoundEnd(int winner, Handle array)
 {
-    gi_Countdown = 3;
+    gi_JuggCountdown = 10;
 
     if(gb_Jugg_Round)
     {
@@ -211,142 +186,28 @@ public void BeginJugg(int client)
         gb_Jugg_Round = true;
     }
 
-    SetUpTeams(client);
-
-    CPrintToChatAll("[JUGG] Juggernaut has started!");
-}
-
-public void SetUpTeams(int client)
-{
-    PrintToConsole(client, "[JUGG] Teams are being set up");
-
-    ArrayList tList = new ArrayList(1, 0);
-    ArrayList dList = new ArrayList(1, 0);
-
-    int totalPlayers = 0;
+    SetUpTeams(cv_Ratio.IntValue, TTT_TEAM_TRAITOR, TTT_TEAM_DETECTIVE);
+    
+    int numOfT = 0;
 
     LoopValidClients(i)
     {
-        if(!IsAliveClient(i))
+        if(TTT_GetClientRole(i) == TTT_TEAM_TRAITOR)
         {
-            PrintToConsole(client, "[JUGG] %N is dead, skipping", i);
-            continue;
-        }
-        if(TTT_GetClientRole(i) == 8)
-        {
-            dList.Push(i)
-            PrintToConsole(client, "[JUGG] %N is a Detective", i);
-            totalPlayers++;
-            continue;
-        }
-        tList.Push(i);
-        PrintToConsole(client, "[JUGG] %N is a Traitor or Innocent", i);
-        totalPlayers++;    
-    }
-
-    int numOfCT = totalPlayers/cv_Ratio.IntValue;
-
-    if(numOfCT == 0)
-    {
-        numOfCT = 1;
-    }
-
-    if(!cv_Solo.BoolValue)
-    {
-        for(int d = dList.Length; d < numOfCT; d++)
-        {
-            int index = Math_GetRandomInt(0, tList.Length);
-            int random = tList.Get(index, 0);
-            tList.Erase(index);
-            dList.Push(random);
-            PrintToConsole(client, "[JUGG] %N moved to Detective team", random);
-        }
-    }
-    else
-    {
-        CPrintToChatAll("[JUGG] Solo mode!");
-        if(dList.Length < 1)
-        {
-            for(int d = dList.Length; d > 1; d--)
-            {
-                int index = Math_GetRandomInt(0, dList.Length);
-                int random = dList.Get(index, 0);
-                dList.Erase(index);
-                tList.Push(random);
-                PrintToConsole(client, "[JUGG] %N moved to Traitor team", random);
-            }
+            numOfT++;
         }
     }
 
-    CreateTeams(tList, dList, client);
-}
+    SetHealth(cv_HealthBoostPerT.IntValue*numOfT);
+    GiveHeavy(TTT_TEAM_DETECTIVE);
 
-public void CreateTeams(ArrayList traitorTeam, ArrayList detectiveTeam, int client)
-{
-    PrintToConsole(client, "[JUGG] Creating teams")
-
-    for(int t = 0; t <= traitorTeam.Length - 1; t++)
-    {
-        int player = traitorTeam.Get(t, 0);
-        if(TTT_GetClientRole(player) != 4)
-        {    
-            TTT_SetClientRole(player, 4);
-        }
-        PrintToConsole(client, "[JUGG] %N is on the Traitor team", player);
-    }
-    PrintToConsole(client, "[JUGG] Traitor team created successfully");
-    
-    for(int d = 0; d <= detectiveTeam.Length - 1; d++)
-    {
-        int player = detectiveTeam.Get(d, 0);
-        if(TTT_GetClientRole(player) != 8)
-        {
-            TTT_SetClientRole(player, 8);
-        }
-        PrintToConsole(client, "[JUGG] %N is on the Detective team", player);
-    }
-    PrintToConsole(client, "[JUGG] Detective team created successfully");
-
-    PrintToConsole(client, "[JUGG] Teams created successfully!");
-
-    HealthBoost(traitorTeam, detectiveTeam, client);
-}
-
-public void HealthBoost(ArrayList traitorTeam, ArrayList detectiveTeam, int client)
-{
-    int TotalHealthBoost = traitorTeam.Length*cv_HealthBoostPerT.IntValue;
-
-    for(int d = 0; d <= detectiveTeam.Length - 1; d++)
-    {
-        int player = detectiveTeam.Get(d, 0);
-        SetEntityHealth(player, 100 + TotalHealthBoost);
-        PrintToConsole(client, "[JUGG] %N health boosted by {orange}%i", player, TotalHealthBoost);
-    }
-        
-    CPrintToChatAll("[JUGG] {darkblue}CT {default}healthboost: {orange}%i", TotalHealthBoost);
-
-    GiveHeavy(detectiveTeam, client);
-}
-
-public void GiveHeavy(ArrayList detectiveTeam, int client)
-{
-    for(int d = 0; d <= detectiveTeam.Length - 1; d++)
-    {
-        int player = detectiveTeam.Get(d, 0);
-        GivePlayerItem(player, "item_heavyassaultsuit");
-        PrintToConsole(client, "[JUGG] %N given heavy suit", player);
-        gi_TotalNumOfCT++
-    }
-
-    CPrintToChatAll("[JUGG] Number of {darkblue}CTs{default}: {orange}%i", gi_TotalNumOfCT);
+    CPrintToChatAll("[JUGG] Juggernaut has started!");
 }
 
 public void EndJugg()
 {
     cv_MPTeammatesAreEnemies.SetBool(true, true, true);
     gb_Jugg_Round = false;
-
-    gi_TotalNumOfCT = 0;
 }
 
 public void HookDMG()
@@ -361,7 +222,7 @@ public void UnHookDMG()
 {
     LoopValidClients(i)
     {
-        SDKUnhook(i, SDKHook_OnTakeDamage, Jugg_TakeDMG)
+        SDKUnhook(i, SDKHook_OnTakeDamage, Jugg_TakeDMG);
     }
 }
 
