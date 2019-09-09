@@ -41,9 +41,9 @@ public OnPluginStart() {
 public void RegisterCmds() {
     RegConsoleCmd("sm_rdm", Command_RDM, "Shows the RDM report window for all recent killers.");
     RegAdminCmd("sm_cases", Command_CaseCount, ADMFLAG_GENERIC, "Shows the current amount of cases to staff.");
-    RegAdminCmd("sm_handle", Command_Handle, ADMFLAG_SLAY, "Handles the next case or a user inputted case.");
-    RegAdminCmd("sm_info", Command_Info, ADMFLAG_SLAY, "Displays all of the information for a given case.");
-    RegAdminCmd("sm_verdict", Command_Verdict, ADMFLAG_SLAY, "Shows a member of staff the availible verdicts for there current case.");
+    RegAdminCmd("sm_handle", Command_Handle, ADMFLAG_GENERIC, "Handles the next case or a user inputted case.");
+    RegAdminCmd("sm_info", Command_Info, ADMFLAG_GENERIC, "Displays all of the information for a given case.");
+    RegAdminCmd("sm_verdict", Command_Verdict, ADMFLAG_GENERIC, "Shows a member of staff the availible verdicts for there current case.");
 }
 
 public void HookEvents() {

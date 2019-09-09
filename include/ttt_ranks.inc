@@ -95,3 +95,15 @@ stock void CPrintToChatStaff(const char[] message, any ...)
         CPrintToChat(i, buffer);
     }
 }
+
+stock bool IsHigherStaffOnline(int rank)
+{
+  LoopValidClients(i)
+  {
+    if((GetPlayerRank(i) > rank) && (GetClientTeam(i) != CS_TEAM_SPECTATOR))
+    {
+      return true;
+    }
+  }
+  return false;
+}

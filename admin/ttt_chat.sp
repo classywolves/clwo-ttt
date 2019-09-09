@@ -1,8 +1,19 @@
+/**
+Warning to all that will gaze upon this code
+This was written by a very rookie programmer stressed by exams
+I had no time (nor patience) to make this code look good, 
+and for that I apologise
+This code should work, but not well, it's the best I could do with my ever shrnking sanity
+No, I will never return and make it pretty, deal with it
+**/
+
+
 #pragma semicolon 1
 
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
+#include <string>
 
 #undef REQUIRE_PLUGIN
 #include <colorvariables>
@@ -13,6 +24,7 @@
 #include <ttt_messages>
 #include <donators>
 #include <clientprefs>
+
 
 public Plugin myinfo =
 {
@@ -251,7 +263,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
     }
 
 
-    if (rank > RANK_VIP && (StrContains(flagstring, "team", false) == -1 ||  StrContains(flagstring, "Cstrike_Chat_CT", false) == -1 ||  StrContains(flagstring, "Cstrike_Chat_T", false) == -1 || StrContains(flagstring, "Cstrike_Chat_Spec", false) == -1))
+    if (rank > RANK_INFORMER && (StrContains(flagstring, "team", false) == -1 ||  StrContains(flagstring, "Cstrike_Chat_CT", false) == -1 ||  StrContains(flagstring, "Cstrike_Chat_T", false) == -1 || StrContains(flagstring, "Cstrike_Chat_Spec", false) == -1))
     {
         strcopy(message, strlen(message), message[1]);
 
@@ -292,7 +304,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         LoopValidClients(i)
         {
             int nrank = GetPlayerRank(i);
-            if(RANK_VIP < nrank)
+            if(nrank > RANK_INFORMER)
             {
                 recipients.Push(GetClientUserId(i));
             }
@@ -638,7 +650,7 @@ void SendChatToAdmin(int client, char[] message)
 
     LoopValidClients(i)
     {
-        if(GetPlayerRank(i) > RANK_PLEB)
+        if(GetPlayerRank(i) > RANK_VIP)
         {
             CPrintToChat(i, "\x09[STAFF] %s\x09 %s: {bluegrey}%s", staffTag, name, message);
         }
@@ -661,7 +673,7 @@ void SendChatToAdminPleb(int client, char[] message)
     
     LoopValidClients(i)
     {
-        if(GetPlayerRank(i) > RANK_PLEB)
+        if(GetPlayerRank(i) > RANK_VIP)
         {
             CPrintToChat(i,"\x09[TO STAFF] %s:  {bluegrey}%s", name, message);  
         }

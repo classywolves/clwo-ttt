@@ -39,8 +39,8 @@ public void RegisterCmds()
     RegAdminCmd("sm_bantimes", Command_BanTimes, ADMFLAG_GENERIC, "List Common Time Lengths.");
     RegAdminCmd("sm_forcespec", Command_ForceSpectator, ADMFLAG_GENERIC, "Moves a player to spectator.");
     RegAdminCmd("sm_reloadplugin", Command_ReloadPlugin, ADMFLAG_RCON, "Reloads the passed plugin.");
-    RegAdminCmd("sm_slaynr", Command_SlayNextRound, ADMFLAG_SLAY, "Slay a player before roles are assigned for the next round.");
-    RegAdminCmd("sm_unslaynr", Command_RemoveSlayNextRound, ADMFLAG_SLAY, "Remove slays for a player before roles are assigned for the next round.");
+    RegAdminCmd("sm_slaynr", Command_SlayNextRound, ADMFLAG_GENERIC, "Slay a player before roles are assigned for the next round.");
+    RegAdminCmd("sm_unslaynr", Command_RemoveSlayNextRound, ADMFLAG_GENERIC, "Remove slays for a player before roles are assigned for the next round.");
     RegAdminCmd("sm_tp", Command_Teleport, ADMFLAG_GENERIC, "Allows a staff member to teleport another player.");
     RegAdminCmd("sm_teleport", Command_Teleport, ADMFLAG_GENERIC, "Allows a staff member to teleport another player.");
 }
@@ -80,8 +80,7 @@ public Action Command_ForceSpectator(int client, int args)
         return Plugin_Handled;
     }
     
-    int targetTeam = GetClientTeam(target);
-    if (targetTeam == CS_TEAM_SPECTATOR)
+    if (GetClientTeam(target) == CS_TEAM_SPECTATOR)
     {
         TTT_Error(client, "Target already spectating.");
         return Plugin_Handled;
@@ -131,6 +130,12 @@ public Action Command_SlayNextRound(int client, int args)
         return Plugin_Handled;
     }
     
+    if (!IsValidClient(target))
+    {
+        TTT_Error(client, "Invalid target!");
+        return Plugin_Handled;
+    }
+    
     if (target > 0)
     {
         TTT_AddRoundSlays(target, 1, false);
@@ -145,6 +150,16 @@ public Action Command_RemoveSlayNextRound(int client, int args)
     if (args < 1)
     {
         TTT_Usage(client, "sm_unslaynr <#userid|name>");
+        return Plugin_Handled;
+    }
+	
+    char buffer[MAX_NAME_LENGTH];
+    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
+    int target = TTT_Target(buffer, client, true, false, false);
+        
+    if (!IsValidClient(target))
+    {
+        TTT_Error(client, "Invalid target!");
         return Plugin_Handled;
     }
 	
@@ -169,6 +184,12 @@ public Action Command_RemoveSlayNextRound(int client, int args)
 
 public Action Command_Teleport(int client, int args)
 {
+    if((GetPlayerRank(client) == RANK_INFORMER) && (IsHigherStaffOnline(GetPlayerRank(client))))
+    {
+        TTT_Error(client, "Please contact higher staff.");
+        return Plugin_Handled;
+    } 
+    
     if (args < 1)
     {
         TTT_Usage(client, "sm_teleport <#userid|name> <#userid|name>");
@@ -208,11 +229,11 @@ public Action Command_Teleport(int client, int args)
     
     if (recipient > 0)
     {
-    	TTT_MessageAll("{yellow}%N {default}teleported {yellow}%N {default}to {yellow}%N", client, target, recipient);
+    	CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N {yellow}to {blue}%N{yellow}.", client, target, recipient);
 	}
 	else
     {
-        TTT_MessageAll("{yellow}%N {default}teleported {yellow}%N", client, target);
+        CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N{yellow}.", client, target);
     }
 
     return Plugin_Handled;
