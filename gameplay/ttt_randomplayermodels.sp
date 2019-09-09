@@ -1,23 +1,14 @@
 #pragma semicolon 1
 
-/*
- * Base CS:GO plugin requirements.
- */
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
-/*
- * Custom include files.
- */
 #include <ttt>
 #include <colorvariables>
 #include <generics>
 
-/*
- * Custom Defines.
- */
- #include <player_models>
+#include <player_models>
 
 public Plugin myinfo =
 {
@@ -46,11 +37,11 @@ public OnPluginStart()
 
 public void HookEvents()
 {
-    HookEvent("round_start", OnRoundStartPre, EventHookMode_Pre);
+    HookEvent("round_start", OnRoundStartPost, EventHookMode_Post);
     HookEvent("player_spawn", OnPlayerSpawnPost, EventHookMode_Post);
 }
 
-public Action OnRoundStartPre(Event event, const char[] name, bool dontBroadcast)
+public Action OnRoundStartPost(Event event, const char[] name, bool dontBroadcast)
 {
     ctRandom = GetRandomInt(0, MAX_PLAYER_TEAMS - 1);
     tRandom = GetRandomInt(0, MAX_PLAYER_TEAMS - 1);

@@ -1,24 +1,15 @@
 #pragma semicolon 1
 
-/*
- * Base CS:GO plugin requirements.
- */
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
-/*
- * Custom include files.
- */
 #include <ttt>
 #include <colorvariables>
+#include <sourcecomms>
 #include <generics>
+#include <ttt_messages>
 #include <voiceannounce_ex>
-
-/*
- * Custom Defines.
- */
-
 
 public Plugin myinfo =
 {

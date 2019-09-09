@@ -1,15 +1,9 @@
 #pragma semicolon 1
 
-/*
-* Base CS:GO plugin requirements.
-*/
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
-/*
-* Custom include files.
-*/
 #include <ttt>
 #include <ttt_shop>
 #include <colorvariables>
@@ -71,7 +65,7 @@ public Action Command_Staff(int client, int args)
     int staffIndexes[MAXPLAYERS + 1];
     LoopValidClients(i)
     {
-        if (TTT_Ranks_IsStaff(i)) {
+        if (Ranks_IsStaff(i)) {
             staffIndexes[staffCount++] = i;
         }
     }
@@ -86,8 +80,8 @@ public Action Command_Staff(int client, int args)
         for (int i = 0; i < staffCount; i++)
         {
             char rankName[32];
-            int rank = GetPlayerRank(staffIndexes[i]);
-            GetRankName(rank, rankName);
+            int rank = Ranks_GetClientRank(staffIndexes[i]);
+            Ranks_GetRankName(rank, rankName);
             switch (rank) {
                 case 0, 1, 3, 4, 5, 6, 8, 9, 10:
                 {

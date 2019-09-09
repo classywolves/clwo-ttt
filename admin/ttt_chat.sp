@@ -150,7 +150,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
     char sChatTag[512];
     char cPreChatTag[512];
 
-    int rank = GetPlayerRank(author);
+    int rank = Ranks_GetClientRank(author);
     
     if (message[0] != '@') // Not staff / all say or pm.
     {   
@@ -233,7 +233,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
         LoopValidClients(i)
         {
-            int nrank = GetPlayerRank(i);
+            int nrank = Ranks_GetClientRank(i);
             if(RANK_VIP < nrank)
             {
                 recipients.Push(GetClientUserId(i));
@@ -303,7 +303,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
         LoopValidClients(i)
         {
-            int nrank = GetPlayerRank(i);
+            int nrank = Ranks_GetClientRank(i);
             if(nrank > RANK_INFORMER)
             {
                 recipients.Push(GetClientUserId(i));
@@ -467,7 +467,7 @@ public Action Command_Chat(int client, int args)
 {
     char message[255], buffer [128];
 
-    int rank = GetPlayerRank(client);
+    int rank = Ranks_GetClientRank(client);
 
     if (args < 1)
     {
@@ -601,7 +601,7 @@ void SendChatToAll(int client, char[] message)
     char staffTag[64];
     char name[255];
 
-    int rank = GetPlayerRank(client);
+    int rank = Ranks_GetClientRank(client);
     
     if(AreClientCookiesCached(client))
     {
@@ -631,7 +631,7 @@ void SendChatToAdmin(int client, char[] message)
     char staffTag[64];
     char name[255];
 
-    int rank = GetPlayerRank(client);
+    int rank = Ranks_GetClientRank(client);
 
     if(AreClientCookiesCached(client))
     {
@@ -650,7 +650,7 @@ void SendChatToAdmin(int client, char[] message)
 
     LoopValidClients(i)
     {
-        if(GetPlayerRank(i) > RANK_VIP)
+        if(GetPlayerRank(i) > RANK_PLEB)
         {
             CPrintToChat(i, "\x09[STAFF] %s\x09 %s: {bluegrey}%s", staffTag, name, message);
         }
@@ -673,7 +673,7 @@ void SendChatToAdminPleb(int client, char[] message)
     
     LoopValidClients(i)
     {
-        if(GetPlayerRank(i) > RANK_VIP)
+        if(Ranks_GetClientRank(i) > RANK_VIP)
         {
             CPrintToChat(i,"\x09[TO STAFF] %s:  {bluegrey}%s", name, message);  
         }
@@ -755,7 +755,7 @@ void SendPrivateChat(int client, int target, char[] message)
             continue;
         if(x == client)
             continue;
-        if(GetPlayerRank(x) < RANK_SADMIN)
+        if(Ranks_GetClientRank(x) < RANK_SADMIN)
             continue;
         if(!AreClientCookiesCached(x))
             continue;

@@ -46,12 +46,12 @@ public void InitDBs() {
 public Action Command_InformerMute(int client, int args) {
   // Usage is "/imute <target> <time> <reason>"
   // Player is not tmod or above AND is not an active informer.
-  if (GetPlayerRank(client) != RANK_INFORMER) {
+  if (Ranks_GetClientRank(client) != RANK_INFORMER) {
     TTT_Error(client, "You do not have access to this command!");
     return Plugin_Handled;
   }
 
-  if(IsHigherStaffOnline(GetPlayerRank(client)))
+  if(IsHigherStaffOnline(Ranks_GetClientRank(client)))
   {
     TTT_Error(client, "Please contact higher staff.");
     return Plugin_Handled;
@@ -128,12 +128,12 @@ public Action Command_InformerMute(int client, int args) {
 public Action Command_InformerGag(int client, int args) {
   // Usage is "/igag <target> <time> <reason>"
   // Player is not tmod or above AND is not an active informer.
-  if (GetPlayerRank(client) != RANK_INFORMER) {
+  if (Ranks_GetClientRank(client) != RANK_INFORMER) {
     TTT_Error(client, "You do not have access to this command!");
     return Plugin_Handled;
   }
 
-  if(IsHigherStaffOnline(GetPlayerRank(client)))
+  if(IsHigherStaffOnline(Ranks_GetClientRank(client)))
   {
     TTT_Error(client, "Please contact higher staff.");
     return Plugin_Handled;
@@ -210,12 +210,12 @@ public Action Command_InformerGag(int client, int args) {
 public Action Command_InformerKick(int client, int args) {
   // Usage is "/ikick <target> <reason>"
   // Player is not tmod or above AND is not an active informer.
-  if (GetPlayerRank(client) != RANK_INFORMER) {
+  if (Ranks_GetClientRank(client) != RANK_INFORMER) {
     TTT_Error(client, "You do not have access to this command!");
     return Plugin_Handled;
   }
 
-  if(IsHigherStaffOnline(GetPlayerRank(client)))
+  if(IsHigherStaffOnline(Ranks_GetClientRank(client)))
   {
     TTT_Error(client, "Please contact higher staff.");
     return Plugin_Handled;
@@ -269,12 +269,12 @@ public Action Command_InformerKick(int client, int args) {
 public Action Command_InformerUnMute(int client, int args) {
   // Usage is "/imute <target> <time> <reason>"
   // Player is not tmod or above AND is not an active informer.
-  if (GetPlayerRank(client) != RANK_INFORMER) {
+  if (Ranks_GetClientRank(client) != RANK_INFORMER) {
     TTT_Error(client, "You do not have access to this command!");
     return Plugin_Handled;
   }
 
-  if(IsHigherStaffOnline(GetPlayerRank(client)))
+  if(IsHigherStaffOnline(Ranks_GetClientRank(client)))
   {
     TTT_Error(client, "Please contact higher staff.");
     return Plugin_Handled;
@@ -329,12 +329,12 @@ public Action Command_InformerUnMute(int client, int args) {
 public Action Command_InformerUnGag(int client, int args) {
   // Usage is "/imute <target> <time> <reason>"
   // Player is not tmod or above AND is not an active informer.
-  if (GetPlayerRank(client) != RANK_INFORMER) {
+  if (Ranks_GetClientRank(client) != RANK_INFORMER) {
     TTT_Error(client, "You do not have access to this command!");
     return Plugin_Handled;
   }
 
-  if(IsHigherStaffOnline(GetPlayerRank(client)))
+  if(IsHigherStaffOnline(Ranks_GetClientRank(client)))
   {
     TTT_Error(client, "Please contact higher staff.");
     return Plugin_Handled;

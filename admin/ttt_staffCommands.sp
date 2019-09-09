@@ -1,19 +1,11 @@
 #pragma semicolon 1
 
-/*
-* Base CS:GO plugin requirements.
-*/
 #include <sourcemod>
-#include <sdktools>
 #include <cstrike>
 
-/*
-* Custom include files.
-*/
 #include <ttt>
 #include <colorvariables>
 #include <generics>
-#include <ttt_ranks>
 #include <ttt_messages>
 #include <ttt_targeting>
 #include <raytrace>

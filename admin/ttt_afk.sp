@@ -6,6 +6,7 @@
 
 #include <colorvariables>
 #include <generics>
+#include <ttt_messages>
 
 public Plugin myinfo = {
     name = "TTT AFK",

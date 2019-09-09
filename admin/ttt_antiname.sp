@@ -1,15 +1,9 @@
 #pragma semicolon 1
 
-/*
- * Base CS:GO plugin requirements.
- */
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
-/*
- * Custom include files.
- */
 #include <colorvariables>
 #include <generics>
 #include <ttt_messages>
@@ -38,7 +32,7 @@ public void InitDBs() {
 public Action OnChangeName(Event event, const char[] name, bool dontBroadcast) {
 	char oldName[64], newName[64];
 
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(event.GetInt("userid"));
 
 	if (!client)
     {

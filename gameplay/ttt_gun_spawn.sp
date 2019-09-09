@@ -1,15 +1,9 @@
 #pragma semicolon 1
 
-/*
- * Base CS:GO plugin requirements.
- */
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 
-/*
- * Custom include files.
- */
 #include <colorvariables>
 #include <generics>
 #include <ttt_messages>
@@ -187,7 +181,8 @@ public void ShowLootSpawns(int client)
     }
 }
 
-public void LoadPoints() {
+public void LoadPoints()
+{
     char map[255], path[PLATFORM_MAX_PATH];
 
     GetCurrentMap(map, sizeof(map));
@@ -248,7 +243,8 @@ public void SpawnGuns()
     }
 }
 
-public int SpawnGun(char[] cWeaponName, float[3] pos) {
+public int SpawnGun(char[] cWeaponName, float[3] pos)
+{
     float angle[3];
     angle[1] = GetRandomFloat(0.0, 360.0);
 
@@ -263,7 +259,8 @@ public int SpawnGun(char[] cWeaponName, float[3] pos) {
     return weapon;
 }
 
-public void GetPos(float[3] pos) {
+public void GetPos(float[3] pos)
+{
     if (totalPositions)
     {
         int item = GetRandomInt(0, totalPositions - 1);
@@ -276,7 +273,8 @@ public void GetPos(float[3] pos) {
     }
 }
 
-public void AddLoc(float pos[3]) {
+public void AddLoc(float pos[3])
+{
     positions[totalPositions][0] = pos[0];
     positions[totalPositions][1] = pos[1];
     positions[totalPositions][2] = pos[2];

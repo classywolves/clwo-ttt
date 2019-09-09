@@ -10,11 +10,11 @@
 #if !defined REQUIRE_PLUGIN
 public __pl_ttt_ranks_SetNTVOptional()
 {
-    MarkNativeAsOptional("TTT_Ranks_IsStaff");
-	MarkNativeAsOptional("GetRankName");
-	MarkNativeAsOptional("GetPermission");
-    MarkNativeAsOptional("GetPlayerRank");
-    MarkNativeAsOptional("GetRankTag");
+    MarkNativeAsOptional("Ranks_IsStaff");
+	MarkNativeAsOptional("Ranks_GetRankName");
+	MarkNativeAsOptional("Ranks_GetPermission");
+    MarkNativeAsOptional("Ranks_GetClientRank");
+    MarkNativeAsOptional("Ranks_GetRankTag");
 }
 #endif
 
@@ -39,12 +39,12 @@ public __pl_ttt_ranks_SetNTVOptional()
 
 #define LoopStaff(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(IsValidClient(%1) && TTT_Ranks_IsStaff(i))
 
-native bool TTT_Ranks_IsStaff(int client);
+native bool Ranks_IsStaff(int client);
 
-native bool GetPermission(int client, int requiredRank);
-native void GetRankName(int rank, char name[32]);
-native void GetRankTag(int rank, char tag[16]);
-native int GetPlayerRank(int client);
+native bool Ranks_GetPermission(int client, int requiredRank);
+native void Ranks_GetRankName(int rank, char name[32]);
+native void Ranks_GetRankTag(int rank, char tag[16]);
+native int Ranks_GetClientRank(int client);
 
 stock int GetStaffArray(int staff[32])
 {
@@ -89,7 +89,8 @@ stock int GetActiveStaffCount()
 
 stock void CPrintToChatStaff(const char[] message, any ...)
 {
-    LoopStaff(i) {
+    LoopStaff(i)
+    {
         char buffer[1024];
     	VFormat(buffer, 1024, message, 2);
         CPrintToChat(i, buffer);

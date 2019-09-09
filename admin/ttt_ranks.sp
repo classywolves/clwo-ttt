@@ -84,11 +84,11 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
     RegPluginLibrary("ttt_ranks");
 
-    CreateNative("TTT_Ranks_IsStaff", Native_IsStaff);
-    CreateNative("GetRankName", Native_GetRankName);
-    CreateNative("GetRankTag", Native_GetRankTag);
-    CreateNative("GetPermission", Native_GetPermission);
-    CreateNative("GetPlayerRank", Native_GetPlayerRank);
+    CreateNative("Ranks_IsStaff", Native_IsStaff);
+    CreateNative("Ranks_GetRankName", Native_GetRankName);
+    CreateNative("Ranks_GetRankTag", Native_GetRankTag);
+    CreateNative("Ranks_GetPermission", Native_GetPermission);
+    CreateNative("Ranks_GetClientRank", Native_GetClientRank);
 
     return APLRes_Success;
 }
@@ -113,7 +113,7 @@ public void DbInitCallback(Database db, const char[] error, any data)
     {
         if (IsValidClient(i))
         {
-            playerRanks[i] = Db_GetPlayerRank(i);
+            playerRanks[i] = Db_GetClientRank(i);
         }
         else
         {
@@ -124,7 +124,7 @@ public void DbInitCallback(Database db, const char[] error, any data)
 
 public void RegisterCmds()
 {
-    RegAdminCmd("admin_refreshranks", Command_RefreshRanks, ADMFLAG_RCON, "Refreshes the custom ranks from the config file.");
+    RegAdminCmd("sm_refreshranks", Command_RefreshRanks, ADMFLAG_RCON, "Refetches the ranks from the database.");
     RegConsoleCmd("sm_rankcheck", Command_Rank, "Outputs a users current rank.");
 }
 
@@ -134,7 +134,7 @@ public void OnMapLoad()
     {
         if (IsValidClient(i))
         {
-            playerRanks[i] = Db_GetPlayerRank(i);
+            playerRanks[i] = Db_GetClientRank(i);
         }
         else
         {
@@ -150,7 +150,7 @@ public void OnClientPutInServer(int client)
 
 public void OnClientPostAdminCheck(int client)
 {
-    playerRanks[client] = Db_GetPlayerRank(client);
+    playerRanks[client] = Db_GetClientRank(client);
 }
 
 public Action Command_RefreshRanks(int client, int args)
@@ -159,7 +159,7 @@ public Action Command_RefreshRanks(int client, int args)
     {
         if (IsValidClient(i))
         {
-            playerRanks[i] = Db_GetPlayerRank(i);
+            playerRanks[i] = Db_GetClientRank(i);
         }
     }
 
@@ -213,28 +213,28 @@ public int Native_GetPermission(Handle plugin, int numParams)
     return playerRanks[client] >=  rank;
 }
 
-public int Native_GetPlayerRank(Handle plugin, int numParams)
+public int Native_GetClientRank(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
 
     return playerRanks[client];
 }
 
-public int Db_GetPlayerRank(int client)
+public int Db_GetClientRank(int client)
 {
     char steamId[64];
     GetClientAuthId(client, AuthId_Steam2, steamId, 64);
 
     char query[768];
     sourcebansDb.Format(query, sizeof(query), "SELECT `sb_admins`.`srv_group` as `rank` FROM `sb_admins` WHERE `sb_admins`.`authid` REGEXP '^STEAM_[0-9]:%s$' LIMIT 1;", steamId[8]);
-    sourcebansDb.Query(DbCallback_GetPlayerRank, query, client);
+    sourcebansDb.Query(DbCallback_GetClientRank, query, client);
 }
 
-public void DbCallback_GetPlayerRank(Database db, DBResultSet results, const char[] error, int client)
+public void DbCallback_GetClientRank(Database db, DBResultSet results, const char[] error, int client)
 {
     if (results == null)
     {
-        LogError("GetPlayerRankCallback: %s", error);
+        LogError("GetClientRankCallback: %s", error);
         return;
     }
 
