@@ -1,0 +1,9 @@
+*.smx
+*.project
+rewrite/upload.sh
+cmake-build-debug/
+.vscode/
+.idea/
+
+*.exe 
+*.dat
