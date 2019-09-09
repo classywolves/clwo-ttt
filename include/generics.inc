@@ -93,7 +93,7 @@ stock int GetUnfoundPlayers(char playerNames[MAXPLAYERS][64])
 }
 */
 
-stock void CallTimer(&Handle:timer)
+stock void CallTimer(Handle& timer)
 {
     if (timer != INVALID_HANDLE)
     {
@@ -102,7 +102,7 @@ stock void CallTimer(&Handle:timer)
     }
 }
 
-stock void ClearTimer(&Handle:timer)
+stock void ClearTimer(Handle& timer)
 {
     if (timer != INVALID_HANDLE)
     {
