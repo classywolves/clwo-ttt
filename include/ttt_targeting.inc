@@ -19,13 +19,13 @@ stock int TTT_Target(char[] target, int client, bool respond = true, bool alive 
     }
 
     if (respond) {
-        if (result == -1) TTT_Error(client, "No targets were found.");
-        if (result == -2) TTT_Error(client, "Target is not alive.");
-        if (result == -3) TTT_Error(client, "Target is not dead.");
-        if (result == -4) TTT_Error(client, "Target is not in game.");
-        if (result == -5) TTT_Error(client, "Target is immune.");
-        if (result == -6) TTT_Error(client, "Target is not human.");
-        if (result == -7) TTT_Error(client, "Ambiguous target string.");
+        if (result == -1) CPrintToChat(client, TTT_ERROR ... "No targets were found.");
+        if (result == -2) CPrintToChat(client, TTT_ERROR ... "Target is not alive.");
+        if (result == -3) CPrintToChat(client, TTT_ERROR ... "Target is not dead.");
+        if (result == -4) CPrintToChat(client, TTT_ERROR ... "Target is not in game.");
+        if (result == -5) CPrintToChat(client, TTT_ERROR ... "Target is immune.");
+        if (result == -6) CPrintToChat(client, TTT_ERROR ... "Target is not human.");
+        if (result == -7) CPrintToChat(client, TTT_ERROR ... "Ambiguous target string.");
     }
 
     return result;
@@ -44,13 +44,13 @@ stock bool TTT_Targets(int[] targets, int admin, char[] target, bool respond = t
     }
 
     if (respond) {
-        if (result == -1) TTT_Error(admin, "No targets were found.");
-        if (result == -2) TTT_Error(admin, "Target is not alive.");
-        if (result == -3) TTT_Error(admin, "Target is not dead.");
-        if (result == -4) TTT_Error(admin, "Target is not in game.");
-        if (result == -5) TTT_Error(admin, "Target is immune.");
-        if (result == -6) TTT_Error(admin, "Target is not human.");
-        if (result == -7) TTT_Error(admin, "Ambiguous target string.");
+        if (result == -1) CPrintToChat(admin, TTT_ERROR ... "No targets were found.");
+        if (result == -2) CPrintToChat(admin, TTT_ERROR ... "Target is not alive.");
+        if (result == -3) CPrintToChat(admin, TTT_ERROR ... "Target is not dead.");
+        if (result == -4) CPrintToChat(admin, TTT_ERROR ... "Target is not in game.");
+        if (result == -5) CPrintToChat(admin, TTT_ERROR ... "Target is immune.");
+        if (result == -6) CPrintToChat(admin, TTT_ERROR ... "Target is not human.");
+        if (result == -7) CPrintToChat(admin, TTT_ERROR ... "Ambiguous target string.");
     }
 
     return result > 0;

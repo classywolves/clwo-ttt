@@ -101,7 +101,7 @@ stock bool IsHigherStaffOnline(int rank)
 {
   LoopValidClients(i)
   {
-    if((GetPlayerRank(i) > rank) && (GetClientTeam(i) != CS_TEAM_SPECTATOR))
+    if((Ranks_GetClientRank(i) > rank) && (GetClientTeam(i) != CS_TEAM_SPECTATOR))
     {
       return true;
     }

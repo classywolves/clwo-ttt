@@ -1,19 +1,14 @@
 #pragma semicolon 1
 
-/*
-* Base CS:GO plugin requirements.
-*/
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 #include <timers>
 
-/*
-* Custom include files.
-*/
 #include <ttt>
 #include <colorvariables>
 #include <generics>
+#include <ttt_messages>
 
 public Plugin myinfo =
 {
@@ -77,7 +72,7 @@ public Action BloodLustStart(Handle timer, int userid)
         return Plugin_Continue;
     }
 
-    TTT_Message(client, "{red}You are longing for blood!  Better kill again soon, lest there lie concequences.");
+    CPrintToChat(client, TTT_MESSAGE ... "{red}You are longing for blood!  Better kill again soon, lest there lie concequences.");
     //ShowOverlayToClient(client, traitorBloodLustOverlay);
     BloodLustScreenColor(client);
     ClearTimer(bloodLustTimers[client]);
@@ -94,7 +89,7 @@ public Action BloodLustFinal(Handle timer, int userid) {
         return Plugin_Continue;
     }
 
-    TTT_Message(client, "{red}You have gone without blood for too long; you are now revealed to the players around you.");
+    CPrintToChat(client, TTT_MESSAGE ... "{red}You have gone without blood for too long; you are now revealed to the players around you.");
     SetEntityRenderColor(client, 255, 0, 0, 255);
     ClearTimer(bloodLustTimers[client]);
 

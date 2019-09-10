@@ -45,7 +45,7 @@ public void TTT_OnRoundStart()
         {
             SetEntityHealth(i, 100 + hpKarmaReward);
             TTT_AddClientCredits(i, creditKarmaReward);
-            TTT_Message(i, "Due to your high karma, you recieved some extra health and credits! (+{orange}%i {default}HP and +{orange}%i {default}credits!)", hpKarmaReward, creditKarmaReward);
+            CPrintToChat(i, TTT_MESSAGE ... "Due to your high karma, you recieved some extra health and credits! (+{orange}%i {default}HP and +{orange}%i {default}credits!)", hpKarmaReward, creditKarmaReward);
             
             if (!g_clientDamagedHooked[i])
             {
@@ -68,7 +68,7 @@ public Action HookOnTakeDamage(int victim, int &attacker, int &inflictor, float 
 
     damage -= damage * fallDamageReduction;
 
-    TTT_Message(victim, "Due to your high karma, your fall damage was reduced from {orange}%.0f {default}to {orange}%.0f", oldDamage, damage);
+    CPrintToChat(victim, TTT_MESSAGE ... "Due to your high karma, your fall damage was reduced from {orange}%.0f {default}to {orange}%.0f", oldDamage, damage);
     return Plugin_Changed;
 }
 

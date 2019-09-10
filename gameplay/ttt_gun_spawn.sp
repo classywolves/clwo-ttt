@@ -149,10 +149,8 @@ public Action Command_AddLoc(int client, int args)
 {
     float pos[3];
     GetClientEyePosition(client, pos);
-
-    char msg[255];
-    Format(msg, sizeof(msg), "Adding loc at %f;%f;%f", pos[0], pos[1], pos[2]);
-    TTT_Message(client, msg);
+    
+    CPrintToChat(client, TTT_MESSAGE ... "Adding loc at %f;%f;%f", pos[0], pos[1], pos[2]);
 
     AddLoc(pos);
 
@@ -173,7 +171,7 @@ public Action Command_ShowLocs(int client, int args)
 
 public void ShowLootSpawns(int client)
 {
-    TTT_Message(client, "Showing all %i loot spawning locations", totalPositions + 1);
+    CPrintToChat(client, TTT_MESSAGE ... "Showing all %i loot spawning locations", totalPositions + 1);
     for (int i = 0; i < totalPositions + 1; i++) 
     {
         TE_SetupGlowSprite(positions[i], g_iGlow, 10.0, 1.0, 235);

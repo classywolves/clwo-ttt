@@ -165,7 +165,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
                     rank = StringToInt(cCookie);
                 }
             }
-            GetRankTag(rank, cRankBuffer);
+            Ranks_GetRankTag(rank, cRankBuffer);
             Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
         }
 
@@ -250,7 +250,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             }
         }
 
-        GetRankTag(rank, cRankBuffer);
+        Ranks_GetRankTag(rank, cRankBuffer);
         Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
 
         Format(name, iBufferSize, "\x09[STAFF] %s\x09 %s", staffTag, name);
@@ -284,7 +284,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             }
         }
 
-        GetRankTag(rank, cRankBuffer);
+        Ranks_GetRankTag(rank, cRankBuffer);
         Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
 
         Format(name, iBufferSize, "{red}[ALL] %s {red}%s\x01", staffTag, name);
@@ -327,7 +327,7 @@ public Action Command_Say(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Usage(client, "sm_say <message>");
+        CPrintToChat(client, TTT_USAGE ... "sm_say <message>");
         return Plugin_Handled;
     }
 
@@ -349,7 +349,7 @@ public Action Command_MSay(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Usage(client, "sm_msay <message>");
+        CPrintToChat(client, TTT_USAGE ... "sm_msay <message>");
         return Plugin_Handled;
     }
 
@@ -376,7 +376,7 @@ public Action Command_SMSay(int client, int args)
 {
     if (args < 2)
     {
-        TTT_Usage(client, "sm_smsay <#userid|name> <message>");
+        CPrintToChat(client, TTT_USAGE ... "sm_smsay <#userid|name> <message>");
         return Plugin_Handled;
     }
 
@@ -412,7 +412,7 @@ public Action Command_CSay(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Usage(client, "sm_csay <message>");
+        CPrintToChat(client, TTT_USAGE ... "sm_csay <message>");
         return Plugin_Handled;
     }
 
@@ -433,7 +433,7 @@ public Action Command_SCSay(int client, int args)
 {
     if (args < 2)
     {
-        TTT_Usage(client, "sm_scsay <#userid|name> <message>");
+        CPrintToChat(client, TTT_USAGE ... "sm_scsay <#userid|name> <message>");
         return Plugin_Handled;
     }
 
@@ -471,7 +471,7 @@ public Action Command_Chat(int client, int args)
 
     if (args < 1)
     {
-        TTT_Usage(client, "sm_chat <message>");
+        CPrintToChat(client, TTT_USAGE ... "sm_chat <message>");
         return Plugin_Handled;
     }
     
@@ -500,7 +500,7 @@ public Action Command_Msg(int client, int args)
 {
     if (args < 2)
     {
-        TTT_Usage(client, "sm_msg <#userid|name> <message>");
+        CPrintToChat(client, TTT_USAGE ... "sm_msg <#userid|name> <message>");
         return Plugin_Handled;
     }
 
@@ -525,7 +525,7 @@ public Action Command_Reply(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Usage(client, "sm_reply <message>");
+        CPrintToChat(client, TTT_USAGE ... "sm_reply <message>");
         return Plugin_Handled;  
     }
     int target = g_iReplyTo[client];
@@ -586,7 +586,7 @@ public Action Command_RankOverride(int client, int args)
         {
             SetClientCookie(target, g_hClientCookieOverRideRank, arg2);
             char buffer[16];
-            GetRankTag(rank_int, buffer);
+            Ranks_GetRankTag(rank_int, buffer);
             ReplyToCommand(client, " [SM] Set the rank override of %N to [%s]", target, buffer);
         }
         
@@ -613,7 +613,7 @@ void SendChatToAll(int client, char[] message)
         }
     }
 
-    GetRankTag(rank, buffer);
+    Ranks_GetRankTag(rank, buffer);
     Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
 
     GetClientName(client, name, sizeof(name));
@@ -644,13 +644,13 @@ void SendChatToAdmin(int client, char[] message)
     }
 
 
-    GetRankTag(rank, buffer);
+    Ranks_GetRankTag(rank, buffer);
     Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
     GetClientName(client, name, sizeof(name));
 
     LoopValidClients(i)
     {
-        if(GetPlayerRank(i) > RANK_PLEB)
+        if(Ranks_GetClientRank(i) > RANK_PLEB)
         {
             CPrintToChat(i, "\x09[STAFF] %s\x09 %s: {bluegrey}%s", staffTag, name, message);
         }

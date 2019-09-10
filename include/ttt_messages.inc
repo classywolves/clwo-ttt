@@ -6,55 +6,9 @@
 #define MAX_MESSAGE_LENGTH 1024
 #define MAX_MSAY_LENGTH 255
 
-stock void TTT_Message(int client, const char[] msg, any ...)
-{
-    char buffer[MAX_MESSAGE_LENGTH];
-    char formatted[MAX_MESSAGE_LENGTH];
-    VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 3);
-
-    Format(formatted, MAX_MESSAGE_LENGTH, "{default}[TTT] >  %s", buffer);
-    CPrintToChat(client, formatted);
-}
-
-stock void TTT_MessageAll(const char[] msg, any ...)
-{
-    char buffer[MAX_MESSAGE_LENGTH];
-    char formatted[MAX_MESSAGE_LENGTH];
-    VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 2);
-
-    Format(formatted, MAX_MESSAGE_LENGTH, "{default}[TTT] >  %s", buffer);
-    CPrintToChatAll(formatted);
-}
-
-stock void TTT_MessageStaff(int adminFlag, const char[] msg, any ...)
-{
-    char buffer[MAX_MESSAGE_LENGTH];
-    char formatted[MAX_MESSAGE_LENGTH];
-    VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 3);
-
-    Format(formatted, MAX_MESSAGE_LENGTH, "{default}[TTT] >  %s", buffer);
-    CPrintToChatAdmins(adminFlag, formatted);
-}
-
-stock void TTT_Error(int client, const char[] msg, any ...)
-{
-    char buffer[MAX_MESSAGE_LENGTH];
-    char formatted[MAX_MESSAGE_LENGTH];
-    VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 3);
-
-    Format(formatted, MAX_MESSAGE_LENGTH, "{default}[TTT] > Error! %s", buffer);
-    CPrintToChat(client, formatted);
-}
-
-stock void TTT_Usage(int client, const char[] msg, any ...)
-{
-    char buffer[MAX_MESSAGE_LENGTH];
-    char formatted[MAX_MESSAGE_LENGTH];
-    VFormat(buffer, MAX_MESSAGE_LENGTH, msg, 3);
-
-    Format(formatted, MAX_MESSAGE_LENGTH, "{default}[SM] Usage: %s", buffer);
-    CPrintToChat(client, formatted);
-}
+#define TTT_MESSAGE "{default}[TTT] > "
+#define TTT_ERROR   "{default}[TTT] > Error! "
+#define TTT_USAGE   "{default}[SM] Usage: "
 
 stock void TTT_SendPanelMsg(int client, char[] title, char[] message) {
     ReplaceString(message, MAX_MSAY_LENGTH, "\\n", "\n");

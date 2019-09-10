@@ -6,10 +6,9 @@
 
 #include <colorvariables>
 #include <generics>
+#include <ttt_messages>
 #include <ttt_targeting>
 #include <clwo-store-messages>
-
-#define TTT_USAGE "{default}[SM] Usage: "
 
 public Plugin myinfo =
 {

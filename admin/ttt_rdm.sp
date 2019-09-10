@@ -66,7 +66,7 @@ public void TTT_OnClientDeath(int victim, int attacker)
 
     if (BadKill(TTT_GetClientRole(attacker), TTT_GetClientRole(victim)))
     {
-        TTT_MessageStaff(ADMFLAG_GENERIC, "{default}Bad Action: [{yellow}%N{default}] ({orange}%d{default}) killed [{yellow}%N{default}] ({orange}%d{default})", attacker, attackerKarma, victim, victimKarma);
+        CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "{default}Bad Action: [{yellow}%N{default}] ({orange}%d{default}) killed [{yellow}%N{default}] ({orange}%d{default})", attacker, attackerKarma, victim, victimKarma);
     }
 
     RdmDeathInsert(victim, victimKarma, attacker, attackerKarma);
@@ -83,7 +83,7 @@ public Action Command_CaseCount(int client, int args)
 
 public Action Command_Handle(int client, int args) {
     if (currentCase[client] != -1) {
-        TTT_Error(client, "You cannot handle a new case whilst you still have a case awaiting your verdict.");
+        CPrintToChat(client, TTT_ERROR ... "You cannot handle a new case whilst you still have a case awaiting your verdict.");
         return Plugin_Handled;
     }
 
@@ -127,7 +127,7 @@ public Action Command_RDM(int client, int args)
 public Action Command_Verdict(int client, int args)
 {
     if (currentCase[client] < 0) {
-        TTT_Error(client, "You do not currently have a case to cast a verdict upon.");
+        CPrintToChat(client, TTT_ERROR ... "You do not currently have a case to cast a verdict upon.");
         return Plugin_Handled;
     }
 
@@ -155,7 +155,7 @@ public Action Command_Verdict(int client, int args)
             rdmDb.Query(RdmVerdictCallback, query, client);
         }
         else {
-            TTT_Error(client, "Please pass either Innocent or Guilty.");
+            CPrintToChat(client, TTT_ERROR ... "Please pass either Innocent or Guilty.");
         }
     }
 

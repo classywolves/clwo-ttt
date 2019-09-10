@@ -88,7 +88,7 @@ public Action Command_VoiceRestrict(int client, int args)
         }
     }
     
-    TTT_MessageAll("{default}Voice Restrict has now been %s.", voiceRestrictEnabled ? "{green}Enabled" : "{red}Disabled");
+    CPrintToChatAll(TTT_MESSAGE ... "{default}Voice Restrict has now been %s.", voiceRestrictEnabled ? "{green}Enabled" : "{red}Disabled");
 
     return Plugin_Handled;
 }

@@ -47,18 +47,18 @@ public Action Command_InformerMute(int client, int args) {
   // Usage is "/imute <target> <time> <reason>"
   // Player is not tmod or above AND is not an active informer.
   if (Ranks_GetClientRank(client) != RANK_INFORMER) {
-    TTT_Error(client, "You do not have access to this command!");
+    CPrintToChat(client, TTT_ERROR ... "You do not have access to this command!");
     return Plugin_Handled;
   }
 
   if(IsHigherStaffOnline(Ranks_GetClientRank(client)))
   {
-    TTT_Error(client, "Please contact higher staff.");
+    CPrintToChat(client, TTT_ERROR ... "Please contact higher staff.");
     return Plugin_Handled;
   }
 
   if (args < 1) {
-    TTT_Usage(client, "sm_imute <target> [time] <reason>");
+    CPrintToChat(client, TTT_USAGE ... "sm_imute <target> [time] <reason>");
     return Plugin_Handled;
   }
 
@@ -69,13 +69,13 @@ public Action Command_InformerMute(int client, int args) {
   int target = TTT_Target(arg1, client, true, false, false);
 
   if (target == -1) {
-    TTT_Error(client, "Invalid target!");
+    CPrintToChat(client, TTT_ERROR ... "Invalid target!");
     return Plugin_Handled;
   }
 
   //Check if client has not been muted already
   if (SourceComms_GetClientMuteType(target) != bNot) {
-    TTT_Error(client, "This player is already muted!");
+    CPrintToChat(client, TTT_ERROR ... "This player is already muted!");
     return Plugin_Handled;
   }
 
@@ -90,13 +90,13 @@ public Action Command_InformerMute(int client, int args) {
     time = StringToInt(arg2);
 
     if (time < 1) {
-      TTT_Error(client, "Invalid time frame entered.");
+      CPrintToChat(client, TTT_ERROR ... "Invalid time frame entered.");
       return Plugin_Handled;
     }
 
     if (time > 60) {
       time = 60;
-      TTT_Error(client, "The time has been reduced to 60 minutes, the maximum amount of time an informer can mute for.");
+      CPrintToChat(client, TTT_ERROR ... "The time has been reduced to 60 minutes, the maximum amount of time an informer can mute for.");
     }
   }
 
@@ -117,9 +117,9 @@ public Action Command_InformerMute(int client, int args) {
 
   SourceComms_SetClientMute(target, true, time, true, reason);
   if (args >= 3) {
-    TTT_MessageAll("{yellow}%N {default}has been muted for {orange}%i {default}minutes by {yellow}%N {default}due to {grey}'%s'", target, time, client, mini);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has been muted for {orange}%i {default}minutes by {yellow}%N {default}due to {grey}'%s'", target, time, client, mini);
   } else {
-    TTT_MessageAll("{yellow}%N {default}has been muted for {orange}%i {default}minutes by {yellow}%N", target, time, client);  
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has been muted for {orange}%i {default}minutes by {yellow}%N", target, time, client);  
   }
 
   return Plugin_Handled;
@@ -129,18 +129,18 @@ public Action Command_InformerGag(int client, int args) {
   // Usage is "/igag <target> <time> <reason>"
   // Player is not tmod or above AND is not an active informer.
   if (Ranks_GetClientRank(client) != RANK_INFORMER) {
-    TTT_Error(client, "You do not have access to this command!");
+    CPrintToChat(client, TTT_ERROR ... "You do not have access to this command!");
     return Plugin_Handled;
   }
 
   if(IsHigherStaffOnline(Ranks_GetClientRank(client)))
   {
-    TTT_Error(client, "Please contact higher staff.");
+    CPrintToChat(client, TTT_ERROR ... "Please contact higher staff.");
     return Plugin_Handled;
   }
 
   if (args < 1) {
-    TTT_Usage(client, "sm_igag <target> [time] <reason>");
+    CPrintToChat(client, TTT_USAGE ... "sm_igag <target> [time] <reason>");
     return Plugin_Handled;
   }
 
@@ -151,13 +151,13 @@ public Action Command_InformerGag(int client, int args) {
   int target = TTT_Target(arg1, client, true, false, false);
 
   if (target == -1) {
-    TTT_Error(client, "Invalid target!");
+    CPrintToChat(client, TTT_ERROR ... "Invalid target!");
     return Plugin_Handled;
   }
 
   //Check if target is not gagged already
   if (SourceComms_GetClientGagType(target) != bNot) {
-    TTT_Error(client, "This player is already gagged!");
+    CPrintToChat(client, TTT_ERROR ... "This player is already gagged!");
     return Plugin_Handled;
   }
 
@@ -172,13 +172,13 @@ public Action Command_InformerGag(int client, int args) {
     time = StringToInt(arg2);
 
     if (time < 1) {
-      TTT_Error(client, "Invalid time frame entered.");
+      CPrintToChat(client, TTT_ERROR ... "Invalid time frame entered.");
       return Plugin_Handled;
     }
 
     if (time > 60) {
       time = 60;
-      TTT_Error(client, "The time has been reduced to 60 minutes, the maximum amount of time an informer can gag for.");
+      CPrintToChat(client, TTT_ERROR ... "The time has been reduced to 60 minutes, the maximum amount of time an informer can gag for.");
     }
   }
 
@@ -199,9 +199,9 @@ public Action Command_InformerGag(int client, int args) {
 
   SourceComms_SetClientGag(target, true, time, true, reason);
   if (args >= 3) {
-    TTT_MessageAll("{yellow}%N {default}has been gagged for {orange}%i {default}minutes by {yellow}%N {default}due to {grey}'%s'", target, time, client, mini);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has been gagged for {orange}%i {default}minutes by {yellow}%N {default}due to {grey}'%s'", target, time, client, mini);
   } else {
-    TTT_MessageAll("{yellow}%N {default}has been gagged for {orange}%i {default}minutes by {yellow}%N", target, time, client);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has been gagged for {orange}%i {default}minutes by {yellow}%N", target, time, client);
   }
 
   return Plugin_Handled;
@@ -211,18 +211,18 @@ public Action Command_InformerKick(int client, int args) {
   // Usage is "/ikick <target> <reason>"
   // Player is not tmod or above AND is not an active informer.
   if (Ranks_GetClientRank(client) != RANK_INFORMER) {
-    TTT_Error(client, "You do not have access to this command!");
+    CPrintToChat(client, TTT_ERROR ... "You do not have access to this command!");
     return Plugin_Handled;
   }
 
   if(IsHigherStaffOnline(Ranks_GetClientRank(client)))
   {
-    TTT_Error(client, "Please contact higher staff.");
+    CPrintToChat(client, TTT_ERROR ... "Please contact higher staff.");
     return Plugin_Handled;
   }
 
   if (args < 1) {
-    TTT_Usage(client, "sm_ikick <target> <reason>");
+    CPrintToChat(client, TTT_USAGE ... "sm_ikick <target> <reason>");
     return Plugin_Handled;
   }
 
@@ -232,7 +232,7 @@ public Action Command_InformerKick(int client, int args) {
   int target = TTT_Target(arg1, client, true, false, false);
 
   if (target == -1) {
-    TTT_Error(client, "Invalid target!");
+    CPrintToChat(client, TTT_ERROR ... "Invalid target!");
     return Plugin_Handled;
   }
 
@@ -258,9 +258,9 @@ public Action Command_InformerKick(int client, int args) {
 
   KickClient(target, reason);
   if (args >= 3) {
-    TTT_MessageAll("{yellow}%N {default}has been kicked by {yellow}%N {default}due to {grey}'%s'", target, client, mini);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has been kicked by {yellow}%N {default}due to {grey}'%s'", target, client, mini);
   } else {
-    TTT_Message("{yellow}%N {default}has been kicked by {yellow}%N", target, client);
+    CPrintToChat(client, TTT_MESSAGE ... "{yellow}%N {default}has been kicked by {yellow}%N", target, client);
   }
 
   return Plugin_Handled;
@@ -270,18 +270,18 @@ public Action Command_InformerUnMute(int client, int args) {
   // Usage is "/imute <target> <time> <reason>"
   // Player is not tmod or above AND is not an active informer.
   if (Ranks_GetClientRank(client) != RANK_INFORMER) {
-    TTT_Error(client, "You do not have access to this command!");
+    CPrintToChat(client, TTT_ERROR ... "You do not have access to this command!");
     return Plugin_Handled;
   }
 
   if(IsHigherStaffOnline(Ranks_GetClientRank(client)))
   {
-    TTT_Error(client, "Please contact higher staff.");
+    CPrintToChat(client, TTT_ERROR ... "Please contact higher staff.");
     return Plugin_Handled;
   }
 
   if (args < 1) {
-    TTT_Usage(client, "sm_iunmute <target> <reason>");
+    CPrintToChat(client, TTT_USAGE ... "sm_iunmute <target> <reason>");
     return Plugin_Handled;
   }
 
@@ -291,13 +291,13 @@ public Action Command_InformerUnMute(int client, int args) {
   int target = TTT_Target(arg1, client, true, false, false);
 
   if (target == -1) {
-    TTT_Error(client, "Invalid target!");
+    CPrintToChat(client, TTT_ERROR ... "Invalid target!");
     return Plugin_Handled;
   }
 
   //Check if client has not been muted already
   if (SourceComms_GetClientMuteType(target) == bNot) {
-    TTT_Error(client, "This player is not muted!");
+    CPrintToChat(client, TTT_ERROR ... "This player is not muted!");
     return Plugin_Handled;
   }
 
@@ -318,9 +318,9 @@ public Action Command_InformerUnMute(int client, int args) {
 
   SourceComms_SetClientMute(target, false);
   if (args >= 2) {
-    TTT_MessageAll("{yellow}%N {default}has been unmuted by {yellow}%N {default}due to {grey}'%s'", target, client, mini);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has been unmuted by {yellow}%N {default}due to {grey}'%s'", target, client, mini);
   } else {
-    TTT_MessageAll("{yellow}%N {default}has been unmuted by {yellow}%N", target, client);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has been unmuted by {yellow}%N", target, client);
   }
 
   return Plugin_Handled;
@@ -330,18 +330,18 @@ public Action Command_InformerUnGag(int client, int args) {
   // Usage is "/imute <target> <time> <reason>"
   // Player is not tmod or above AND is not an active informer.
   if (Ranks_GetClientRank(client) != RANK_INFORMER) {
-    TTT_Error(client, "You do not have access to this command!");
+    CPrintToChat(client, TTT_ERROR ... "You do not have access to this command!");
     return Plugin_Handled;
   }
 
   if(IsHigherStaffOnline(Ranks_GetClientRank(client)))
   {
-    TTT_Error(client, "Please contact higher staff.");
+    CPrintToChat(client, TTT_ERROR ... "Please contact higher staff.");
     return Plugin_Handled;
   }
 
   if (args < 1) {
-    TTT_Usage(client, "sm_iungag <target> <reason>");
+    CPrintToChat(client, TTT_USAGE ... "sm_iungag <target> <reason>");
     return Plugin_Handled;
   }
 
@@ -351,13 +351,13 @@ public Action Command_InformerUnGag(int client, int args) {
   int target = TTT_Target(arg1, client, true, false, false);
 
   if (target == -1) {
-    TTT_Error(client, "Invalid target!");
+    CPrintToChat(client, TTT_ERROR ... "Invalid target!");
     return Plugin_Handled;
   }
 
   //Check if client has not been muted already
   if (SourceComms_GetClientMuteType(target) == bNot) {
-    TTT_Error(client, "This player is not gagged!");
+    CPrintToChat(client, TTT_ERROR ... "This player is not gagged!");
     return Plugin_Handled;
   }
 
@@ -378,9 +378,9 @@ public Action Command_InformerUnGag(int client, int args) {
 
   SourceComms_SetClientMute(target, false);
   if (args >= 2) {
-    TTT_MessageAll("{yellow}%N {default}has been ungagged by {yellow}%N {default}due to {grey}'%s'", target, client, mini);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has been ungagged by {yellow}%N {default}due to {grey}'%s'", target, client, mini);
   } else {
-    TTT_MessageAll("{yellow}%N {default}has been ungagged by {yellow}%N", target, client);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has been ungagged by {yellow}%N", target, client);
   }
 
   return Plugin_Handled;

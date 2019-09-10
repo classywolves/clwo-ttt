@@ -7,6 +7,7 @@
 #include <colorvariables>
 #include <generics>
 #include <ttt_messages>
+#include <ttt_ranks>
 #include <ttt_targeting>
 #include <raytrace>
 
@@ -38,12 +39,12 @@ public void RegisterCmds()
 }
 
 public Action Command_BanTimes(int client, int args) {
-    TTT_Message(client, "The following are some common ban times:");
-    TTT_Message(client, "{orange}1 {default}hour  --> {orange}60    {default}minutes");
-    TTT_Message(client, "{orange}1 {default}day   --> {orange}1440  {default}minutes");
-    TTT_Message(client, "{orange}2 {default}days  --> {orange}2880  {default}minutes");
-    TTT_Message(client, "{orange}1 {default}week  --> {orange}10080 {default}minutes");
-    TTT_Message(client, "{orange}1 {default}month --> {orange}40320 {default}minutes");
+    CPrintToChat(client, TTT_MESSAGE ... "The following are some common ban times:");
+    CPrintToChat(client, TTT_MESSAGE ... "{orange}1 {default}hour  --> {orange}60    {default}minutes");
+    CPrintToChat(client, TTT_MESSAGE ... "{orange}1 {default}day   --> {orange}1440  {default}minutes");
+    CPrintToChat(client, TTT_MESSAGE ... "{orange}2 {default}days  --> {orange}2880  {default}minutes");
+    CPrintToChat(client, TTT_MESSAGE ... "{orange}1 {default}week  --> {orange}10080 {default}minutes");
+    CPrintToChat(client, TTT_MESSAGE ... "{orange}1 {default}month --> {orange}40320 {default}minutes");
 
     return Plugin_Handled;
 }
@@ -52,7 +53,7 @@ public Action Command_ForceSpectator(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Usage(client, "sm_forcespec <target>");
+        CPrintToChat(client, TTT_USAGE ... "sm_forcespec <target>");
         return Plugin_Handled;
     }
 
@@ -62,24 +63,24 @@ public Action Command_ForceSpectator(int client, int args)
 
     if(!IsValidClient(target))
     {
-        TTT_Error(client, "Invalid target!");
+        CPrintToChat(client, TTT_ERROR ... "Invalid target!");
         return Plugin_Handled;
     }
 
     if (client == target)
     {
-        TTT_Error(client, "Just use /afk.");
+        CPrintToChat(client, TTT_ERROR ... "Just use /afk.");
         return Plugin_Handled;
     }
     
     if (GetClientTeam(target) == CS_TEAM_SPECTATOR)
     {
-        TTT_Error(client, "Target already spectating.");
+        CPrintToChat(client, TTT_ERROR ... "Target already spectating.");
         return Plugin_Handled;
     }
 
     ChangeClientTeam(target, CS_TEAM_SPECTATOR);
-    TTT_MessageAll("{yellow}%N {default}was forced to spectator by {yellow}%N", target, client);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}was forced to spectator by {yellow}%N", target, client);
 
     return Plugin_Handled;
 }
@@ -87,7 +88,7 @@ public Action Command_ForceSpectator(int client, int args)
 public Action Command_ReloadPlugin(int client, int args)
 {
     if (args < 1) {
-        TTT_Usage(client, "sm_reload <plugin>");
+        CPrintToChat(client, TTT_USAGE ... "sm_reload <plugin>");
         return Plugin_Handled;
     }
 
@@ -99,7 +100,7 @@ public Action Command_ReloadPlugin(int client, int args)
     PrintToConsole(client, reload);
     ServerCommandEx(load, sizeof(load), "sm plugins load %s", plugin);
     PrintToConsole(client, load);
-    TTT_Message(client, "{default}Reloaded {green}%s {default}successfully!", plugin);
+    CPrintToChat(client, TTT_MESSAGE ... "{default}Reloaded {green}%s {default}successfully!", plugin);
 
     return Plugin_Handled;
 }
@@ -108,7 +109,7 @@ public Action Command_SlayNextRound(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Usage(client, "sm_slaynr <#userid|name>");
+        CPrintToChat(client, TTT_USAGE ... "sm_slaynr <#userid|name>");
         return Plugin_Handled;
     }
 
@@ -118,13 +119,13 @@ public Action Command_SlayNextRound(int client, int args)
         
     if(!IsValidClient(target))
     {
-        TTT_Error(client, "Invalid target!");
+        CPrintToChat(client, TTT_ERROR ... "Invalid target!");
         return Plugin_Handled;
     }
     
     if (!IsValidClient(target))
     {
-        TTT_Error(client, "Invalid target!");
+        CPrintToChat(client, TTT_ERROR ... "Invalid target!");
         return Plugin_Handled;
     }
     
@@ -133,7 +134,7 @@ public Action Command_SlayNextRound(int client, int args)
         TTT_AddRoundSlays(target, 1, false);
     }
 
-    TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%N {default}will be slain next round.", target);
+    CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "{yellow}%N {default}will be slain next round.", target);
     return Plugin_Handled;
 }
 
@@ -141,7 +142,7 @@ public Action Command_RemoveSlayNextRound(int client, int args)
 {
     if (args < 1)
     {
-        TTT_Usage(client, "sm_unslaynr <#userid|name>");
+        CPrintToChat(client, TTT_USAGE ... "sm_unslaynr <#userid|name>");
         return Plugin_Handled;
     }
 	
@@ -151,17 +152,7 @@ public Action Command_RemoveSlayNextRound(int client, int args)
         
     if (!IsValidClient(target))
     {
-        TTT_Error(client, "Invalid target!");
-        return Plugin_Handled;
-    }
-	
-    char buffer[MAX_NAME_LENGTH];
-    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
-    int target = TTT_Target(buffer, client, true, false, false);
-        
-    if(!IsValidClient(target))
-    {
-        TTT_Error(client, "Invalid target!");
+        CPrintToChat(client, TTT_ERROR ... "Invalid target!");
         return Plugin_Handled;
     }
 
@@ -170,21 +161,21 @@ public Action Command_RemoveSlayNextRound(int client, int args)
         TTT_SetRoundSlays(target, 0, false);
     }
 
-    TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%N {default}will no longer be slain next round.", target);
+    CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "{yellow}%N {default}will no longer be slain next round.", target);
     return Plugin_Handled;
 }
 
 public Action Command_Teleport(int client, int args)
 {
-    if((GetPlayerRank(client) == RANK_INFORMER) && (IsHigherStaffOnline(GetPlayerRank(client))))
+    if((Ranks_GetClientRank(client) == RANK_INFORMER) && (IsHigherStaffOnline(Ranks_GetClientRank(client))))
     {
-        TTT_Error(client, "Please contact higher staff.");
+        CPrintToChat(client, TTT_ERROR ... "Please contact higher staff.");
         return Plugin_Handled;
     } 
     
     if (args < 1)
     {
-        TTT_Usage(client, "sm_teleport <#userid|name> <#userid|name>");
+        CPrintToChat(client, TTT_USAGE ... "sm_teleport <#userid|name> <#userid|name>");
         return Plugin_Handled;
     }
 
@@ -194,7 +185,7 @@ public Action Command_Teleport(int client, int args)
         
     if(!IsValidClient(target))
     {
-        TTT_Error(client, "Invalid target!");
+        CPrintToChat(client, TTT_ERROR ... "Invalid target!");
         return Plugin_Handled;
     }
 
@@ -204,7 +195,7 @@ public Action Command_Teleport(int client, int args)
     {
         if (!RayTrace(client, pos))
         {
-            TTT_Error(client, "Please look at a valid location.");
+            CPrintToChat(client, TTT_ERROR ... "Please look at a valid location.");
             return Plugin_Handled;
         }
     }

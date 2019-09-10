@@ -52,7 +52,7 @@ public Action OnChangeName(Event event, const char[] name, bool dontBroadcast) {
 
 	if (!StrEqual(oldName, newName) && IsPlayerAlive(client))
     {
-		TTT_Error(client, "Sorry, you are not allowed to change your name whilst alive.");
+		CPrintToChat(client, TTT_ERROR ... "Sorry, you are not allowed to change your name whilst alive.");
 		SetClientName(client, oldName);
 
 		return Plugin_Stop;

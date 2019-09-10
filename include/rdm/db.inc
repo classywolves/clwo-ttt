@@ -108,7 +108,7 @@ public void RdmReportCallback(Database db, DBResultSet results, const char[] err
 
     TTT_Message(client, "Thanks for submitting a case, a staff member shall be in contact shortly.");
 
-    TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%N {default}opened a new RDM case.", client);
+    CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "{yellow}%N {default}opened a new RDM case.", client);
 
     char query[768];
     rdmDb.Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `reports` LEFT JOIN `handles` ON `reports`.`death_index` = `handles`.`death_index` WHERE `handles`.`verdict` IS NULL;");
@@ -127,15 +127,15 @@ public void RdmCaseCountCallback(Database db, DBResultSet results, const char[] 
         int caseCount = results.FetchInt(0);
         if (caseCount < 1)
         {
-            TTT_MessageStaff(ADMFLAG_GENERIC, "There are currently no unhandled cases.");
+            CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "There are currently no unhandled cases.");
         }
         else if (caseCount < 2)
         {
-            TTT_MessageStaff(ADMFLAG_GENERIC, "There is now {orange}%d {default}unhandled case.", caseCount);
+            CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "There is now {orange}%d {default}unhandled case.", caseCount);
         }
         else
         {
-            TTT_MessageStaff(ADMFLAG_GENERIC, "There are now {orange}%d {default}unhandled cases.", caseCount);
+            CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "There are now {orange}%d {default}unhandled cases.", caseCount);
         }
     }
 }
@@ -205,7 +205,7 @@ public void RdmHandleCallback(Database db, DBResultSet results, const char[] err
         GetClientName(handler, staffName, sizeof(staffName));
         GetClientAuthId(handler, AuthId_Steam2, staffSteamId, sizeof(staffSteamId));
 
-        TTT_MessageStaff(ADMFLAG_GENERIC, "{yellow}%s {default}has taken an RDM case.", staffName);
+        CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "{yellow}%s {default}has taken an RDM case.", staffName);
 
         DataPack data = new DataPack();
         data.WriteCell(handler);
@@ -216,7 +216,7 @@ public void RdmHandleCallback(Database db, DBResultSet results, const char[] err
     }
     else
     {
-        TTT_Error(handler, "There are currently no available cases.");
+        CPrintToChat(handler, TTT_ERROR ... "There are currently no available cases.");
     }
 }
 

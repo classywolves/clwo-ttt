@@ -53,7 +53,7 @@ public void RegisterCmds() {
 public Action Command_AddHistory(int client, int args) {
 	// Usage is "/addhistory <target> <message>"
 	if (args < 2) {
-		TTT_Usage(client, "sm_addhistory <target> <message>");
+		CPrintToChat(client, TTT_USAGE ... "sm_addhistory <target> <message>");
 		return Plugin_Handled;
 	}
 
@@ -86,7 +86,7 @@ public Action Command_AddHistory(int client, int args) {
 public Action Command_History(int client, int args) {
 	// Usage is "/history <target> <page>"
 	if (args < 1) {
-		TTT_Usage(client, "sm_addhistory <target> <page>");
+		CPrintToChat(client, TTT_USAGE ... "sm_addhistory <target> <page>");
 		return Plugin_Handled;
 	}
 

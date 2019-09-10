@@ -168,7 +168,7 @@ public Action Command_RefreshRanks(int client, int args)
 
 public Action Command_Rank(int client, int args)
 {
-    TTT_Message(client, "{yellow}%N {default}has the rank: {lime}%s", client, rankNames[playerRanks[client]]);
+    CPrintToChat(client, TTT_MESSAGE ... "{yellow}%N {default}has the rank: {lime}%s", client, rankNames[playerRanks[client]]);
 
     return Plugin_Handled;
 }
@@ -178,7 +178,7 @@ public Action Command_DebugRank(int client, int args)
     char steamId[64];
     GetClientAuthId(client, AuthId_Steam2, steamId, 64);
 
-    TTT_Message(client, "{yellow}%N {default}(%s) {default}has the rank: {lime}%i", client, steamId, rankNames[playerRanks[client]]);
+    CPrintToChat(client, TTT_MESSAGE ... "{yellow}%N {default}(%s) {default}has the rank: {lime}%i", client, steamId, rankNames[playerRanks[client]]);
 }
 
 public int Native_IsStaff(Handle plugin, int numParams)

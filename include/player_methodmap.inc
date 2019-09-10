@@ -201,7 +201,7 @@ methodmap Player {
     }
 
 	public void GetRankName(char rankName[64], int type) {
-		GetRankName(GetPlayerRank(that), rankName, type);
+		GetRankName(Ranks_GetClientRank(that), rankName, type);
 	}
 
 	public void Pos(float pos[3]) {
@@ -257,7 +257,7 @@ methodmap Player {
 	public bool ActiveInformer(bool response = true) {
 		// A good addition to this function would be some way for staff to specify that they want
 		// the informers help for a command.  A similar system to "adopt" on JB.
-		bool activeInformer = GetPlayerRank(that) == RANK_INFORMER;
+		bool activeInformer = Ranks_GetClientRank(that) == RANK_INFORMER;
 
 		if (activeInformer && !GetActiveStaffCount()) {
 			return true;
@@ -368,13 +368,13 @@ methodmap Player {
 
 	property int Rank {
 		public get() {
-			return GetPlayerRank(that);
+			return Ranks_GetClientRank(that);
 		}
 	}
 
 	property bool Informer {
 		public get() {
-			return GetPlayerRank(that) == RANK_INFORMER;
+			return Ranks_GetClientRank(that) == RANK_INFORMER;
 		}
 	}
 
@@ -496,7 +496,7 @@ methodmap Player {
 	property bool Staff {
 		public get() {
 			// Returns true, even for blocked informers.
-			return GetPlayerRank(that) >= RANK_INFORMER;
+			return Ranks_GetClientRank(that) >= RANK_INFORMER;
 		}
 	}
 

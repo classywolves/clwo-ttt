@@ -163,7 +163,7 @@ public Action Command_Spectate(int client, int args)
 public Action Command_Terrorist(int client, int args)
 {
     ChangeClientTeam(client, CS_TEAM_T);
-    TTT_Message(client, "You have been moved to the {team1}T {default}side.");
+    CPrintToChat(client, TTT_MESSAGE ... "You have been moved to the {team1}T {default}side.");
 
     return Plugin_Handled;
 }
@@ -171,7 +171,7 @@ public Action Command_Terrorist(int client, int args)
 public Action Command_Spectator(int client, int args)
 {
     ChangeClientTeam(client, CS_TEAM_SPECTATOR);
-    TTT_Message(client, "You have been moved to {team0}Spectator.");
+    CPrintToChat(client, TTT_MESSAGE ... "You have been moved to {team0}Spectator.");
 
     return Plugin_Handled;
 }
@@ -179,7 +179,7 @@ public Action Command_Spectator(int client, int args)
 public Action Command_CounterTerrorist(int client, int args)
 {
     ChangeClientTeam(client, CS_TEAM_CT);
-    TTT_Message(client, "You have been moved to the {team2}CT {default}side.");
+    CPrintToChat(client, TTT_MESSAGE ... "You have been moved to the {team2}CT {default}side.");
 
     return Plugin_Handled;
 }
@@ -212,9 +212,9 @@ public Action Command_Playtime(int client, int args)
         playTime -= 60;
         minutes++;
     }
-    if (days > 0) { TTT_MessageAll("{yellow}%N {default}has played for {orange}%i {default}days and {orange}%i {default}hours.", client, days, hours); }
-    else if (hours > 0) { TTT_MessageAll("{yellow}%N {default}has played for {orange}%i {default}hours.", client, hours); }
-    else { TTT_MessageAll("{yellow}%N {default}has played for {orange}%i {default}minutes.", client, minutes); }
+    if (days > 0) { CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has played for {orange}%i {default}days and {orange}%i {default}hours.", client, days, hours); }
+    else if (hours > 0) { CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has played for {orange}%i {default}hours.", client, hours); }
+    else { CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has played for {orange}%i {default}minutes.", client, minutes); }
 
     return Plugin_Handled;
 }
@@ -222,7 +222,7 @@ public Action Command_Playtime(int client, int args)
 public Action Command_Give(int client, int args)
 {
     if (args < 2) {
-        TTT_Usage(client, "sm_give <#userid|name> [credits].");
+        CPrintToChat(client, TTT_USAGE ... "sm_give <#userid|name> [credits].");
         return Plugin_Handled;
     }
 
@@ -239,39 +239,39 @@ public Action Command_Give(int client, int args)
 
     if (credits < 1 || credits > TTT_GetClientCredits(client))
     {
-        TTT_Error(client, "You have an insufficient amount of credits to give {yellow}%N {orange}%i {default}credits.", target, credits);
+        CPrintToChat(client, TTT_ERROR ... "You have an insufficient amount of credits to give {yellow}%N {orange}%i {default}credits.", target, credits);
         return Plugin_Handled;
     }
 
     if (!IsPlayerAlive(client) || !IsPlayerAlive(target))
     {
-        TTT_Error(client, "Cannot give credits while you or the target is dead");
+        CPrintToChat(client, TTT_ERROR ... "Cannot give credits while you or the target is dead");
         return Plugin_Handled;
     }
 
     if (client == target)
     {
-        TTT_Error(client, "You can't give yourself credits, nice try");
+        CPrintToChat(client, TTT_ERROR ... "You can't give yourself credits, nice try");
         return Plugin_Handled;
     }
 
     TTT_AddClientCredits(target, credits);
     TTT_SetClientCredits(client, TTT_GetClientCredits(client) - credits);
-    TTT_Message(client, "You have given {yellow}%N {orange}%i {default}credits!", target, credits);
-    TTT_Message(target, "{yellow}%N {defalt}has given you {orange}%i {default}credits!", client, credits);
+    CPrintToChat(client, TTT_MESSAGE ... "You have given {yellow}%N {orange}%i {default}credits!", target, credits);
+    CPrintToChat(target, TTT_MESSAGE ... "{yellow}%N {defalt}has given you {orange}%i {default}credits!", client, credits);
 
     return Plugin_Handled;
 }
 
 public Action Command_Rules(int client, int args)
 {
-    TTT_Message(client, "The rules can be found here: {lime}https://clwo.eu/thread-1614.html");
+    CPrintToChat(client, TTT_MESSAGE ... "The rules can be found here: {lime}https://clwo.eu/thread-1614.html");
     return Plugin_Handled;
 }
 
 public Action Command_Guide(int client, int args)
 {
-    TTT_Message(client, "A guide on how to play can be found here: {lime}https://clwo.eu/thread-2123.html");
+    CPrintToChat(client, TTT_MESSAGE ... "A guide on how to play can be found here: {lime}https://clwo.eu/thread-2123.html");
     return Plugin_Handled;
 }
 
@@ -286,7 +286,7 @@ public int MenuHandler_Spectate(Menu menu, MenuAction action, int client, int da
             int index = Char4ToInt(indexChars);
             if (IsValidClient(index))
             {
-                TTT_Message(client, "You started specating {blue}%N", index);
+                CPrintToChat(client, TTT_MESSAGE ... "You started specating {blue}%N", index);
                 SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", index);
     	        SetEntProp(client, Prop_Send, "m_iObserverMode", 4);
             }
@@ -327,7 +327,7 @@ public void TTTKarmaRankCallback(Database db, DBResultSet results, const char[] 
         int rank = results.FetchInt(2);
         int playerCount = results.FetchInt(3);
 
-        TTT_MessageAll("{yellow}%N {default}has {orange}%d {default}karma making them rank {orange}%d{default}/{orange}%d", client, karma, rank, playerCount);
+        CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has {orange}%d {default}karma making them rank {orange}%d{default}/{orange}%d", client, karma, rank, playerCount);
     }
     else
     {
@@ -337,6 +337,6 @@ public void TTTKarmaRankCallback(Database db, DBResultSet results, const char[] 
         int nextRank = rank - 1;
         int playerCount = results.FetchInt(3);
 
-        TTT_MessageAll("{yellow}%N {default}has {orange}%d {default}karma making them rank {orange}%d{default}/{orange}%d{default}. They need {orange}%d {default}more karma to get to rank {orange}%s!", client, karma, rank, playerCount, nextKarma, nextRank);
+        CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}has {orange}%d {default}karma making them rank {orange}%d{default}/{orange}%d{default}. They need {orange}%d {default}more karma to get to rank {orange}%s!", client, karma, rank, playerCount, nextKarma, nextRank);
     }
 }
