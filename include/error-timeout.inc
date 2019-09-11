@@ -8,7 +8,7 @@ int g_iLastErrorMessage[MAXPLAYERS + 1];
 stock bool ErrorTimeout(int client, int timout)
 {
     int errorCurrentTime = GetTime();
-    if (errorCurrentTime >= g_iLastErrorMessage[%1] + %3)
+    if (errorCurrentTime >= g_iLastErrorMessage[client] + timout)
     {
         g_iLastErrorMessage[%1] = errorCurrentTime;
 
