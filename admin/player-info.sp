@@ -46,7 +46,7 @@ public void Db_InsertPlayerInfo(int client, int accountId, const char[] name, co
 public void Db_InsertPlayerName(int client, int accountId, const char[] name)
 {
     char query[256];
-    Format(query, sizeof(query), "INSERT INTO `player_names` (`account_id`, `name`) VALUES ('%d', '%s') ON DUPLICATE KEY UPDATE `id`=`id`;", accountId, name);
+    Format(query, sizeof(query), "INSERT INTO `player_names` (`account_id`, `name`) VALUES ('%d', '%s') ON DUPLICATE KEY UPDATE `account_id`=`account_id`;", accountId, name);
 
     g_database.Query(DbCallback_InsertPlayerName, query, GetClientUserId(client));
 }

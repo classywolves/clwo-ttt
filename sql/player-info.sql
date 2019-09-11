@@ -22,4 +22,4 @@ ENGINE = InnoDB;
 
 INSERT INTO `player_info` (`account_id`, `name`, `auth_id`, `community_id`) VALUES ('%d', '%s', '%s', '%s') ON DUPLICATE KEY UPDATE `name` = '%s';
 
-INSERT INTO `player_names` (`account_id`, `name`) VALUES ('%d', '%s') ON DUPLICATE KEY UPDATE `id`=`id`;
+INSERT INTO `player_names` (`account_id`, `name`) VALUES ('%d', '%s') ON DUPLICATE KEY UPDATE `account_id`=`account_id`;
