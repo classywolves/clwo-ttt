@@ -16,10 +16,13 @@
 #include <smlib/math>
 
 ConVar g_cvMPTeammatesAreEnemies;
-bool gb_TDM_Round = false;
-bool gb_TDM_RoundNR = false;
+bool gb_TDMRound = false;
+bool gb_TDMRoundNR = false;
 int gi_TDMCountdown = 10;
 int g_Client = 0;
+
+bool gba_WantsTDM[MAXPLAYERS + 1] = { false, ... }; 
+int gi_HowManyWantTDM = 0;
 
 public OnPluginStart()
 {
@@ -29,6 +32,9 @@ public OnPluginStart()
 
     g_cvMPTeammatesAreEnemies = FindConVar("mp_teammates_are_enemies");
 
+    RegConsoleCmd("say", Command_Say);
+
+    RegAdminCmd("sm_reloadtdm", Command_ReloadTDM, ADMFLAG_GENERIC, "Reload TDM Plugin");
     RegAdminCmd("sm_tdm", Command_TDM, ADMFLAG_VOTE, "Start a heavy suit team deathmatch");
     RegAdminCmd("sm_canceltdm", Command_CancelTDM, ADMFLAG_VOTE, "Cancel heavy suit team deathmatch");
     RegAdminCmd("sm_teamdeathmatch", Command_TDM, ADMFLAG_VOTE, "Start a heavy suit team deathmatch");
@@ -37,11 +43,78 @@ public OnPluginStart()
     RegAdminCmd("sm_heavy", Command_Heavy, ADMFLAG_ROOT, "Gib heavy");
 }
 
+public Action Command_Say(int client, int args)
+{
+    char text[192], command[64];
+	GetCmdArgString(text, sizeof(text));
+	GetCmdArg(0, command, sizeof(command));
+
+	int startidx = 0;
+	if(text[strlen(text)-1] == '"')
+	{
+		text[strlen(text)-1] = '\0';
+		startidx = 1;
+	}
+
+	if (strcmp(text[startidx], "TDM", false) == 0 || strcmp(text[startidx], "team deathmatch", false) == 0)
+	{
+        if(gb_TDMRoundNR)
+        {
+            PrintToChat(client, "[TDM] TDM has already been voted for");
+            return Plugin_Continue;
+        }
+        if(gb_TDMRound)
+        {
+            PrintToChat(client, "[TDM] TDM has already started");
+            return Plugin_Continue;
+        }
+        if(gba_WantsTDM[client])
+        {
+            PrintToChat(client, "[TDM] You already voted for TDM");
+            return Plugin_Continue;
+        }
+        int total = 0;
+        int votesNeeded = 0;
+        LoopValidClients(i)
+        {  
+            total++;
+        }
+        votesNeeded = total - total/3;
+        gba_WantsTDM[client] = true;
+        gi_HowManyWantTDM++;
+        WantsToPlay(client, "TDM", gi_HowManyWantTDM, votesNeeded);
+        if(gi_HowManyWantTDM == votesNeeded)
+        {
+            CPrintToChatAll("[TDM] Next round will be TDM");
+            LoopValidClients(i)
+            {
+                gba_WantsTDM[i] = false;
+                gi_HowManyWantTDM = 0;
+            }
+            gb_TDMRoundNR = true;
+            return Plugin_Continue;
+        }
+        return Plugin_Continue;
+    }
+    else 
+    {
+        return Plugin_Continue;
+    }
+}
+
+public Action Command_ReloadTDM(int client, int args)
+{
+    char buffer[256];
+    ServerCommandEx(buffer, sizeof(buffer), "sm plugins reload clwo/gameplay/tdm");
+    PrintToConsole(client, "%s", buffer);
+    return Plugin_Handled;
+}
+
 public void TTT_OnRoundStart(int innocents, int traitors, int detective)
 {
     gi_TDMCountdown = 10;
 
-    if(gb_TDM_RoundNR)
+    if(gb_TDMRoundNR)
     {
         TDMPanel();
         HookDMG();
@@ -53,7 +126,7 @@ public void TTT_OnRoundEnd(int winner, Handle array)
 {
     gi_TDMCountdown = 10;
 
-    if(gb_TDM_Round)
+    if(gb_TDMRound)
     {
         EndTDM();
     }
@@ -61,7 +134,7 @@ public void TTT_OnRoundEnd(int winner, Handle array)
 
 public Action Command_TDM(int client, int args)
 {
-    if(gb_TDM_Round)
+    if(gb_TDMRoundNR)
     {
         CPrintToChat(client, "[TDM] TDM Round has already been started!");
         return Plugin_Handled;
@@ -70,23 +143,17 @@ public Action Command_TDM(int client, int args)
     {
         CPrintToChatAll("[TDM] Next round will be a Team Deathmatch!");
         g_Client = client;
-        gb_TDM_RoundNR = true;
+        gb_TDMRoundNR = true;
         return Plugin_Handled;
     }
 }
 
 public Action Command_CancelTDM(int client, int args)
 {
-    if(TTT_IsRoundActive())
-    {
-        TTT_Error(client, "Can't cancel mid round!");
-        return Plugin_Handled;
-    }
-
-    if(gb_TDM_RoundNR)
+    if(gb_TDMRoundNR)
     {
         CPrintToChatAll("[TDM] Team deathmatch cancelled");
-        gb_TDM_RoundNR = false;
+        gb_TDMRoundNR = false;
     }
 
     return Plugin_Handled;
@@ -112,7 +179,7 @@ public Action Command_Heavy(int client, int args)
 
     if(!IsValidClient(target) || !IsAliveClient(target))
     {
-        TTT_Error(client, "Invalid target!");
+        CPrintToChat(client, TTT_ERROR ... "Invalid target!");
         return Plugin_Handled;
     }
 
@@ -124,22 +191,23 @@ public void BeginTDM(int client)
 {
     g_cvMPTeammatesAreEnemies.SetBool(false, true, true);
     
-    if(!gb_TDM_Round)
+    if(!gb_TDMRound)
     {
-        gb_TDM_Round = true;
+        gb_TDMRound = true;
     }
 
     SetUpTeams(2);
     GiveHeavy(TTT_TEAM_DETECTIVE);
     GiveHeavy(TTT_TEAM_TRAITOR);
-
+    
+    UnHookDMG();
     CPrintToChatAll("[TDM] A Team deathmatch has started!");
 }
 
 public void EndTDM()
 {
     g_cvMPTeammatesAreEnemies.SetBool(true, true, true);
-    gb_TDM_Round = false;
+    gb_TDMRound = false;
 }
 
 public void TDMPanel()
@@ -166,10 +234,9 @@ public Action Timer_TDMCountdown(Handle timer, int client)
 {
     if(gi_TDMCountdown == 0)
     {
-        UnHookDMG();
         BeginTDM(client);
         ClearTimer(timer);
-        gb_TDM_RoundNR = false;
+        gb_TDMRoundNR = false;
         return Plugin_Stop;
     }
 
@@ -178,6 +245,7 @@ public Action Timer_TDMCountdown(Handle timer, int client)
     gi_TDMCountdown--;
     return Plugin_Continue;
 }
+
 public void HookDMG()
 {
     LoopValidClients(i)
@@ -196,7 +264,7 @@ public void UnHookDMG()
 
 public Action TDM_TakeDMG(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-    if(gb_TDM_RoundNR && damagetype != DMG_FALL)
+    if(gb_TDMRoundNR && damagetype != DMG_FALL)
     {
         damage = 0.0;
         return Plugin_Changed;
@@ -205,4 +273,14 @@ public Action TDM_TakeDMG(int victim, int &attacker, int &inflictor, float &dama
     {
         return Plugin_Continue;
     }
+}
+
+public void OnClientDisconnect(int client)
+{
+    if(gba_WantsTDM[client])
+    {
+        gba_WantsTDM[client] = false;
+        gi_HowManyWantTDM--;
+    }
+    SDKUnhook(client, SDKHook_OnTakeDamage, TDM_TakeDMG);
 }

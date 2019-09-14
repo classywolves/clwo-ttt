@@ -9,6 +9,7 @@
 //Custom includes
 #include <ttt>
 #include <gamemodes>
+#include <chat-processor>
 #include <ttt_messages>
 #include <ttt_targeting>    
 #include <generics>
@@ -17,16 +18,20 @@
 
 Handle gha_HiddenGravityTimers[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
 Handle gha_HiddenDustTimers[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
+
+bool gba_WantsHidden[MAXPLAYERS + 1] = { false, ... }; 
 bool gba_Hidden[MAXPLAYERS + 1] = { false, ... };
+
 bool gb_HiddenRoundNR = false;
 bool gb_HiddenRound = false;
+
 int gia_ErrorTimeout[MAXPLAYERS + 1];
 int gia_ClientKnife[MAXPLAYERS + 1] = { 0, ... };
 int gia_LastPounceTime[MAXPLAYERS + 1] = { 0, ... };
 int gia_LastPounceError[MAXPLAYERS + 1] = { 0, ... };
 
 int gi_HiddenCountdown = 10;
-int gi_Client = 0;
+int gi_HowManyWantHidden = 0;
 
 ConVar cv_MPTeammatesAreEnemies;
 ConVar cv_MPDropKnife;
@@ -44,22 +49,18 @@ ConVar cv_HiddenPounceAngle = null;
 
 public void OnPluginStart()
 {
-    AddCommandListener(Command_JoinTeam, "jointeam");
-
     PrintToChatAll("[HID] Loaded successfully");
     
     LoopValidClients(i)
     {
         HookActions(i);
     }
-    
-    gi_HiddenCountdown = 10;
 
     cv_MPTeammatesAreEnemies = FindConVar("mp_teammates_are_enemies");
     cv_MPDropKnife = FindConVar("mp_drop_knife_enable");
 
     cv_HiddenSpeed = CreateConVar("cv_HiddenSpeed", "1.1", "Speed of the Hidden", FCVAR_NOTIFY, true, 1.0, true, 10.0);
-    cv_HiddenGravity = CreateConVar("cv_HiddenGravity", "0.8", "Gravity of the Hidden", FCVAR_NOTIFY, true, 0.1, true, 1.0);
+    cv_HiddenGravity = CreateConVar("cv_HiddenGravity", "0.9", "Gravity of the Hidden", FCVAR_NOTIFY, true, 0.1, true, 1.0);
     cv_HiddenHealth = CreateConVar("cv_HiddenHealth", "100", "Health of the Hidden", FCVAR_NOTIFY, true, 25.0, true, 100.0);
     cv_HiddenHealthCT = CreateConVar("cv_HiddenHealthCT", "100", "Health of the CT side", FCVAR_NOTIFY, true, 100.0, true, 500.0);
     cv_HiddenDustTime = CreateConVar("cv_HiddenDustTime", "4", "How many seconds between each dust particle is created", FCVAR_NOTIFY, true, 0.0, true, 600.0);
@@ -68,23 +69,69 @@ public void OnPluginStart()
     cv_HiddenPouncePower = CreateConVar("cv_HiddenPouncePower", "700.0", "Power of the Hidden pounce", FCVAR_NOTIFY, true, 450.0, true, 1000.0);
     cv_HiddenPounceAngle = CreateConVar("cv_HiddenPounceAngle", "35.0", "Angle forced upwards of pounce", FCVAR_NOTIFY, true, 20.0, true, 50.0);
 
-    RegAdminCmd("sm_reloadhidden", Command_ReloadHidden, ADMFLAG_ROOT, "Reload Hidden Plugin");
+    RegConsoleCmd("say", Command_Say);
+
+    RegAdminCmd("sm_reloadhidden", Command_ReloadHidden, ADMFLAG_GENERIC, "Reload Hidden Plugin");
     RegAdminCmd("sm_hidden", Command_Hidden, ADMFLAG_VOTE, "Begin Hidden Gamemode");
     RegAdminCmd("sm_cancelhidden", Command_CancelHidden, ADMFLAG_VOTE, "Cancel Hidden Gamemode");
-    RegAdminCmd("sm_chs", Command_CHS, ADMFLAG_VOTE, "Change Hidden Speed");
-    RegAdminCmd("sm_chg", Command_CHG, ADMFLAG_VOTE, "Change Hidden Gravity");
-    RegAdminCmd("sm_chh", Command_CHH, ADMFLAG_VOTE, "Change Hidden Health");
-    RegAdminCmd("sm_chhct", Command_CHHCT, ADMFLAG_VOTE, "Change Hidden CT Health");
-
-    RegAdminCmd("sm_reloadhidden", Command_ReloadHidden, ADMFLAG_ROOT, "Reload Hidden Plugin");
-    RegAdminCmd("sm_testpounce", Command_TestPounce, ADMFLAG_ROOT, "Test pounce");
+    RegAdminCmd("sm_chs", Command_CHS, ADMFLAG_ROOT, "Change Hidden Speed");
+    RegAdminCmd("sm_chg", Command_CHG, ADMFLAG_ROOT, "Change Hidden Gravity");
+    RegAdminCmd("sm_chh", Command_CHH, ADMFLAG_ROOT, "Change Hidden Health");
+    RegAdminCmd("sm_chhct", Command_CHHCT, ADMFLAG_ROOT, "Change Hidden CT Health");
 }
 
-public Action Command_JoinTeam(int client, char[] command, int args)
+public Action Command_Say(int client, int args)
 {
-    if((gb_HiddenRound || gb_HiddenRoundNR) && !IsPlayerAlive(client))
-    {
-        return Plugin_Handled;
+    char text[192], command[64];
+	GetCmdArgString(text, sizeof(text));
+	GetCmdArg(0, command, sizeof(command));
+
+	int startidx = 0;
+	if(text[strlen(text)-1] == '"')
+	{
+		text[strlen(text)-1] = '\0';
+		startidx = 1;
+	}
+
+	if (strcmp(text[startidx], "hidden", false) == 0)
+	{
+        if(gb_HiddenRoundNR)
+        {
+            PrintToChat(client, "[HID] Hidden has already been voted for");
+            return Plugin_Continue;
+        }
+        if(gb_HiddenRound)
+        {
+            PrintToChat(client, "[HID] Hidden has already started");
+            return Plugin_Continue;
+        }
+        if(gba_WantsHidden[client])
+        {
+            PrintToChat(client, "[HID] You already voted for hidden");
+            return Plugin_Continue;
+        }
+        int total = 0;
+        int votesNeeded = 0;
+        LoopValidClients(i)
+        {  
+            total++;
+        }
+        votesNeeded = total - total/3;
+        gba_WantsHidden[client] = true;
+        gi_HowManyWantHidden++;
+        WantsToPlay(client, "Hidden", gi_HowManyWantHidden, votesNeeded);
+        if(gi_HowManyWantHidden == votesNeeded)
+        {
+            CPrintToChatAll("[HID] Next round will be Hidden");
+            LoopValidClients(i)
+            {
+                gba_WantsHidden[i] = false;
+                gi_HowManyWantHidden = 0;
+            }
+            gb_HiddenRoundNR = true;
+            return Plugin_Continue;
+        }
+        return Plugin_Continue;
     }
     else 
     {
@@ -110,7 +157,6 @@ public Action Command_Hidden(int client, int args)
     else
     {
         CPrintToChatAll("[HID] Next round will be Hidden");
-        gi_Client = client;
         gb_HiddenRoundNR = true;
         return Plugin_Handled;
     }
@@ -118,18 +164,11 @@ public Action Command_Hidden(int client, int args)
 
 public Action Command_CancelHidden(int client, int args)
 {
-    if(TTT_IsRoundActive())
-    {
-        TTT_Error(client, "Can't cancel mid round!");
-        return Plugin_Handled;
-    }
-
     if(gb_HiddenRoundNR)
     {
         gb_HiddenRoundNR = false;
         CPrintToChatAll("[HID] Hidden cancelled");
     }
-
     return Plugin_Handled;
 }
 
@@ -138,7 +177,7 @@ public Action Command_CHS(int client, int args)
     if(args < 1)
     {
         CPrintToChat(client, "[HID] cv_HiddenSpeed = %f", cv_HiddenSpeed.FloatValue);
-        TTT_Usage(client, "sm_chs [speed]");
+        CPrintToChat(client, TTT_USAGE ... "sm_chs [speed]");
         return Plugin_Handled;
     }
 
@@ -154,7 +193,7 @@ public Action Command_CHG(int client, int args)
     if(args < 1)
     {
         CPrintToChat(client, "[HID] cv_HiddenGravity = %f", cv_HiddenGravity.FloatValue);
-        TTT_Usage(client, "sm_chg [gravity]");
+        CPrintToChat(client, TTT_USAGE ... "sm_chg [gravity]");
         return Plugin_Handled;
     }
 
@@ -170,7 +209,7 @@ public Action Command_CHH(int client, int args)
     if(args < 1)
     {
         CPrintToChat(client, "[HID] cv_HiddenHealth = %i", cv_HiddenHealth.IntValue);
-        TTT_Usage(client, "sm_chh [health]");
+        CPrintToChat(client, TTT_USAGE ... "sm_chh [health]");
         return Plugin_Handled;
     }
 
@@ -186,7 +225,7 @@ public Action Command_CHHCT(int client, int args)
     if(args < 1)
     {
         CPrintToChat(client, "[HID] cv_HiddenHealthCT = %i", cv_HiddenHealthCT.IntValue);
-        TTT_Usage(client, "sm_chhct [health]");
+        CPrintToChat(client, TTT_USAGE ... "sm_chhct [health]");
         return Plugin_Handled;
     }
 
@@ -194,34 +233,6 @@ public Action Command_CHHCT(int client, int args)
     GetCmdArg(1, buffer, sizeof(buffer));
 
     cv_HiddenHealthCT.SetInt(StringToInt(buffer), false, true);
-    return Plugin_Handled;
-}
-
-public Action Command_TestPounce(int client, int args)
-{
-    float ClientAbsOrigin[3];
-    float ClientEyeAngles[3];
-    float Velocity[3];
-    GetClientAbsOrigin(client, ClientAbsOrigin);
-    GetClientEyeAngles(client, ClientEyeAngles);
-    float ClientEyeZero = ClientEyeAngles[0];
-
-    char buff1[256];
-    GetCmdArg(1, buff1, sizeof(buff1));
-    float f_buff1 = StringToFloat(buff1);
-    
-    char buff2[256];
-    GetCmdArg(2, buff2, sizeof(buff2));
-    float f_buff2 = StringToFloat(buff2);
-
-    ClientEyeAngles[0] = ClientEyeAngles[0] - f_buff2;
-
-    GetAngleVectors(ClientEyeAngles, Velocity, NULL_VECTOR, NULL_VECTOR);
-    ScaleVector(Velocity, f_buff1);
-
-    ClientEyeAngles[0] = ClientEyeZero;
-    TeleportEntity(client, ClientAbsOrigin, ClientEyeAngles, Velocity);
-
     return Plugin_Handled;
 }
 
@@ -285,13 +296,61 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detectives)
     {
         HiddenPanel();
         HookDMG();
-        CreateTimer(1.0, Timer_HiddenCountdown, gi_Client, TIMER_REPEAT);
-        gb_HiddenRoundNR = false;
+        CreateTimer(1.0, Timer_HiddenCountdown, 1, TIMER_REPEAT);
     }
-    if(!gb_HiddenRoundNR)
+}
+
+public void TTT_OnRoundEnd(int winner, Handle array)
+{
+    if(gb_HiddenRound)
     {
         EndHidden();
     }
+}
+
+public void BeginHidden()
+{
+    cv_MPTeammatesAreEnemies.SetBool(false, true, true);
+    cv_MPDropKnife.SetBool(false, true, true);
+
+    HiddenPanel();
+    
+    gb_HiddenRoundNR = false;
+    gb_HiddenRound = true;
+
+    SetUpTeams(4);
+    SetHealth(cv_HiddenHealthCT.IntValue, cv_HiddenHealth.IntValue);
+    SetSpeed(TTT_TEAM_TRAITOR, cv_HiddenSpeed.FloatValue);
+    SetGravity(TTT_TEAM_TRAITOR, cv_HiddenGravity.FloatValue);
+    CreateHiddenTimers();
+
+    LoopAliveClients(i)
+    {
+        if(TTT_GetClientRole(i) == TTT_TEAM_TRAITOR)
+        {
+            gba_Hidden[i] = true;
+        }
+    }
+
+    UnHookDMG();
+    CPrintToChatAll("[HID] Hidden has started!");
+}
+
+public Action Timer_HiddenCountdown(Handle timer, int pass)
+{
+    if(gi_HiddenCountdown == 0)
+    {
+        UnHookDMG();
+        BeginHidden();
+        ClearTimer(timer);
+        gb_HiddenRoundNR = false;
+        return Plugin_Stop;
+    }
+
+    PrintCenterTextAll("Hidden Starting in: %i", gi_HiddenCountdown);
+    CPrintToChatAll("[HID] Hidden starting in: %i", gi_HiddenCountdown);    
+    gi_HiddenCountdown--;
+    return Plugin_Continue;
 }
 
 public void HiddenPanel()
@@ -316,99 +375,6 @@ public void HiddenPanel()
     delete panel;    
 }
 
-public Action Timer_HiddenCountdown(Handle timer, int client)
-{
-    if(gi_HiddenCountdown == 0)
-    {
-        UnHookDMG();
-        BeginHidden();
-        ClearTimer(timer);
-        return Plugin_Stop;
-    }
-
-    PrintCenterTextAll("Hidden Starting in: %i", gi_HiddenCountdown);
-    CPrintToChatAll("[HID] Hidden starting in: %i", gi_HiddenCountdown);    
-    gi_HiddenCountdown--;
-    return Plugin_Continue;
-}
-
-public void TTT_OnRoundEnd(int winner, Handle array)
-{
-    gi_HiddenCountdown = 10;
-    
-    if(gb_HiddenRound)
-    {
-        EndHidden();
-    }
-}
-
-public void BeginHidden()
-{
-    cv_MPTeammatesAreEnemies.SetBool(false, true, true);
-    cv_MPDropKnife.SetBool(false, true, true);
-
-    HiddenPanel();
-    
-    if(gb_HiddenRoundNR)
-    {
-        gb_HiddenRoundNR = false;
-    }
-
-    gb_HiddenRound = true;
-
-    SetUpTeams(4);
-    SetHealth(cv_HiddenHealthCT.IntValue, cv_HiddenHealth.IntValue);
-    SetSpeed(TTT_TEAM_TRAITOR, cv_HiddenSpeed.FloatValue);
-    SetGravity(TTT_TEAM_TRAITOR, cv_HiddenGravity.FloatValue);
-    CreateHiddenTimers();
-
-    LoopAliveClients(i)
-    {
-        if(TTT_GetClientRole(i) == TTT_TEAM_TRAITOR)
-        {
-            gba_Hidden[i] = true;
-        }
-    }
-
-    UnHookDMG();
-
-    CPrintToChatAll("[HID] Hidden has started!");
-}
-
-public void CreateHiddenTimers()
-{
-    LoopValidClients(i)
-    {
-        if(TTT_GetClientRole(i) == TTT_TEAM_TRAITOR)
-        {
-            gha_HiddenGravityTimers[i] = CreateTimer(0.1, HiddenGravityTimer, i, TIMER_REPEAT);
-            gha_HiddenDustTimers[i] = CreateTimer(cv_HiddenDustTime.FloatValue, HiddenDustTimer, i, TIMER_REPEAT);
-        }   
-    }   
-}
-
-public Action HiddenGravityTimer(Handle timer, int client)
-{
-    if(gba_Hidden[client] && gb_HiddenRound)
-    {
-        SetEntityGravity(client, cv_HiddenGravity.FloatValue);
-    }
-}
-
-public Action HiddenDustTimer(Handle timer, int client)
-{
-    if(gba_Hidden[client] && gb_HiddenRound && TTT_GetClientRole(client) == TTT_TEAM_TRAITOR && IsPlayerAlive(client))
-    {
-        float ClientAbsOrigin[3];
-
-        GetClientAbsOrigin(client, ClientAbsOrigin);
-        ClientAbsOrigin[2] += 10.0;
-
-        TE_SetupDust(ClientAbsOrigin, NULL_VECTOR, cv_HiddenDustSize.FloatValue, cv_HiddenDustSpeed.FloatValue);
-        TE_SendToAll(0.0);
-    }
-}
-
 public void EndHidden()  
 {
     LoopValidClients(i)
@@ -429,16 +395,6 @@ public void HookActions(int client)
     SDKHook(client, SDKHook_SetTransmit, Hook_HiddenSetTransmit);
     SDKHook(client, SDKHook_WeaponSwitchPost, Hook_HiddenOnWeaponSwitchPost);
     SDKHook(client, SDKHook_WeaponCanUse, Hook_HiddenWeaponCanUse);
-    SDKHook(client, SDKHook_OnTakeDamage, Hidden_TakeDMG);
-}
-
-public void UnhookActions(int client)
-{
-    SDKUnhook(client, SDKHook_SetTransmit, Hook_HiddenSetTransmit);
-    SDKUnhook(client, SDKHook_WeaponSwitchPost, Hook_HiddenOnWeaponSwitchPost);
-    SDKUnhook(client, SDKHook_WeaponCanUse, Hook_HiddenWeaponCanUse);
-    SDKUnhook(client, SDKHook_OnTakeDamage, Hidden_TakeDMG);
-    ClearHiddenTimers(client);
 }
 
 public void HookDMG()
@@ -449,24 +405,20 @@ public void HookDMG()
     }
 }
 
+public void UnhookActions(int client)
+{
+    SDKUnhook(client, SDKHook_SetTransmit, Hook_HiddenSetTransmit);
+    SDKUnhook(client, SDKHook_WeaponSwitchPost, Hook_HiddenOnWeaponSwitchPost);
+    SDKUnhook(client, SDKHook_WeaponCanUse, Hook_HiddenWeaponCanUse);
+    ClearHiddenTimers(client);
+}
+
 public void UnHookDMG()
 {
     LoopValidClients(i)
     {
         SDKUnhook(i, SDKHook_OnTakeDamage, Hidden_TakeDMG);
     }
-}
-
-public void OnClientPutInServer(int client)
-{
-    gba_Hidden[client] = false;
-    HookActions(client);
-}
-
-public void OnClientDisconnect(int client)
-{
-    gba_Hidden[client] = false;
-    UnhookActions(client);
 }
 
 public Action Hidden_TakeDMG(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, 
@@ -573,16 +525,56 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
     return Plugin_Continue;
 }
 
-public bool ErrorTimeout(int client, int timeout)
+public void CreateHiddenTimers()
 {
-    int currentTime = GetTime();
-    if (currentTime - gia_ErrorTimeout[client] < timeout)
+    LoopValidClients(i)
     {
-        return true;
-    }
+        if(TTT_GetClientRole(i) == TTT_TEAM_TRAITOR)
+        {
+            gha_HiddenGravityTimers[i] = CreateTimer(0.1, HiddenGravityTimer, i, TIMER_REPEAT);
+            gha_HiddenDustTimers[i] = CreateTimer(cv_HiddenDustTime.FloatValue, HiddenDustTimer, i, TIMER_REPEAT);
+        }   
+    }   
+}
 
-    gia_ErrorTimeout[client] = currentTime;
-    return false;
+public Action HiddenGravityTimer(Handle timer, int client)
+{
+    if(gba_Hidden[client] && gb_HiddenRound)
+    {
+        SetEntityGravity(client, cv_HiddenGravity.FloatValue);
+    }
+}
+
+public Action HiddenDustTimer(Handle timer, int client)
+{
+    if(gba_Hidden[client] && gb_HiddenRound && TTT_GetClientRole(client) == TTT_TEAM_TRAITOR && IsPlayerAlive(client))
+    {
+        float ClientAbsOrigin[3];
+
+        GetClientAbsOrigin(client, ClientAbsOrigin);
+        ClientAbsOrigin[2] += 10.0;
+
+        TE_SetupDust(ClientAbsOrigin, NULL_VECTOR, cv_HiddenDustSize.FloatValue, cv_HiddenDustSpeed.FloatValue);
+        TE_SendToAll(0.0);
+    }
+}
+
+public void OnClientPutInServer(int client)
+{
+    gba_Hidden[client] = false;
+    HookActions(client);
+}
+
+public void OnClientDisconnect(int client)
+{
+    gba_Hidden[client] = false;
+    if(gba_WantsHidden[client])
+    {
+        gba_WantsHidden[client] = false;
+        gi_HowManyWantHidden--;
+    }
+    SDKUnhook(client, SDKHook_OnTakeDamage, Hidden_TakeDMG);
+    UnhookActions(client);
 }
 
 public bool CanHiddenUse(char[] weaponName)
@@ -591,7 +583,8 @@ public bool CanHiddenUse(char[] weaponName)
     StrContains(weaponName, "healthshot", false) != -1 || 
     StrContains(weaponName, "fists", false) != -1 || 
     StrContains(weaponName, "bump", false) != -1 || 
-    StrContains(weaponName, "breach", false) != -1)
+    StrContains(weaponName, "breach", false) != -1 ||
+    StrContains(weaponName, "taser", false) != -1)
     {
         return true;
     }
@@ -611,4 +604,16 @@ public void ClearHiddenTimers(int client)
         ClearTimer(gha_HiddenGravityTimers[client]);
         PrintToConsoleAll("[HID] %N's dust timer cleared", client);
     }
+}
+
+public bool ErrorTimeout(int client, int timeout)
+{
+    int currentTime = GetTime();
+    if (currentTime - gia_ErrorTimeout[client] < timeout)
+    {
+        return true;
+    }
+
+    gia_ErrorTimeout[client] = currentTime;
+    return false;
 }

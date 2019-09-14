@@ -16,10 +16,13 @@
 #include <smlib/math>
 
 
-bool gb_Jugg_Round = false;
-bool gb_Jugg_RoundNR = false;
+bool gb_JuggRound = false;
+bool gb_JuggRoundNR = false;
 int gi_JuggCountdown = 10;
 int gi_Client = 0;
+
+bool gba_WantsJugg[MAXPLAYERS + 1] = { false, ... }; 
+int gi_HowManyWantJugg = 0;
 
 ConVar cv_MPTeammatesAreEnemies;
 ConVar cv_HealthBoostPerT = null;
@@ -38,6 +41,9 @@ public OnPluginStart()
 
     cv_Ratio = CreateConVar("cv_Ratio", "6", "How many CT per T", FCVAR_NOTIFY, true, 2.0, true, 10.0);
 
+    RegConsoleCmd("say", Command_Say);
+
+    RegAdminCmd("sm_reloadjugg", Command_ReloadJugg, ADMFLAG_GENERIC, "Reload Jugg Plugin");
     RegAdminCmd("sm_jugg", Command_Jugg, ADMFLAG_VOTE, "Start a Juggernaut round");
     RegAdminCmd("sm_canceljugg", Command_CancelJugg, ADMFLAG_VOTE, "Cancel Juggernaut");
     RegAdminCmd("sm_juggernaut", Command_Jugg, ADMFLAG_VOTE, "Start a Juggernaut round");
@@ -45,40 +51,94 @@ public OnPluginStart()
     RegAdminCmd("sm_ratio", Command_Ratio, ADMFLAG_VOTE, "Change how many CTs per T");
 }
 
+public Action Command_Say(int client, int args)
+{
+    char text[192], command[64];
+	GetCmdArgString(text, sizeof(text));
+	GetCmdArg(0, command, sizeof(command));
+
+	int startidx = 0;
+	if(text[strlen(text)-1] == '"')
+	{
+		text[strlen(text)-1] = '\0';
+		startidx = 1;
+	}
+
+	if (strcmp(text[startidx], "Jugg", false) == 0)
+	{
+        if(gb_JuggRoundNR)
+        {
+            PrintToChat(client, "[JUGG] Jugg has already been voted for");
+            return Plugin_Continue;
+        }
+        if(gb_JuggRound)
+        {
+            PrintToChat(client, "[JUGG] Jugg has already started");
+            return Plugin_Continue;
+        }
+        if(gba_WantsJugg[client])
+        {
+            PrintToChat(client, "[JUGG] You already voted for Jugg");
+            return Plugin_Continue;
+        }
+        int total = 0;
+        int votesNeeded = 0;
+        LoopValidClients(i)
+        {  
+            total++;
+        }
+        votesNeeded = total - total/3;
+        gba_WantsJugg[client] = true;
+        gi_HowManyWantJugg++;
+        WantsToPlay(client, "Jugg", gi_HowManyWantJugg, votesNeeded);
+        if(gi_HowManyWantJugg == votesNeeded)
+        {
+            CPrintToChatAll("[JUGG] Next round will be Jugg");
+            LoopValidClients(i)
+            {
+                gba_WantsJugg[i] = false;
+                gi_HowManyWantJugg = 0;
+            }
+            gb_JuggRoundNR = true;
+            return Plugin_Continue;
+        }
+        return Plugin_Continue;
+    }
+    else 
+    {
+        return Plugin_Continue;
+    }
+}
+
+public Action Command_ReloadJugg(int client, int args)
+{
+    char buffer[256];
+    ServerCommandEx(buffer, sizeof(buffer), "sm plugins reload clwo/gameplay/juggernaut");
+    PrintToConsole(client, "%s", buffer);
+    return Plugin_Handled;
+}
 
 public Action Command_Jugg(int client, int args)
 {
-    if(gb_Jugg_Round || gb_Jugg_RoundNR)
+    if(gb_JuggRoundNR)
     {
         CPrintToChat(client, "[JUGG] JUGG Round has already been started!");
         return Plugin_Handled;
     }
-
-    if(TTT_IsRoundActive())
-    {
-        CPrintToChat(client, "[JUGG] A TTT round has already started");
-        return Plugin_Handled;
-    }
-
     else
     {
         CPrintToChatAll("[JUGG] Next round will be the Juggernaut gamemode!");
         gi_Client = client;
-        gb_Jugg_RoundNR = true;
+        gb_JuggRoundNR = true;
         return Plugin_Handled;
     }
 }
 
 public Action Command_CancelJugg(int client, int args)
 {
-    if(TTT_IsRoundActive())
+    if(gb_JuggRoundNR)
     {
-        TTT_Error(client, "Can't cancel mid round!");
-        return Plugin_Handled;
-    }
-    if(gb_Jugg_RoundNR)
-    {
-        gb_Jugg_RoundNR = false;
+        gb_JuggRoundNR = false;
         CPrintToChatAll("[JUGG] Juggernaut cancelled");
     }
 
@@ -90,7 +150,7 @@ public Action Command_CHB(int client, int args)
     if(args < 1)
     {
         CPrintToChat(client, "[JUGG] cv_HealthBoostPerT = %i", cv_HealthBoostPerT.IntValue);
-        TTT_Usage(client, "sm_chb [healthboost]");
+        CPrintToChat(client, TTT_USAGE ... "sm_chb [healthboost]");
         return Plugin_Handled;
     }
 
@@ -106,7 +166,7 @@ public Action Command_Ratio(int client, int args)
     if(args < 1)
     {
         CPrintToChat(client, "[JUGG] cv_Ratio = %i", cv_Ratio.IntValue);
-        TTT_Usage(client, "sm_ratio [amount]");
+        CPrintToChat(client, TTT_USAGE ... "sm_ratio [amount]");
         return Plugin_Handled;
     }
 
@@ -121,7 +181,7 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective)
 {
     gi_JuggCountdown = 10;
 
-    if(gb_Jugg_RoundNR)
+    if(gb_JuggRoundNR)
     {
         JuggPanel();
         HookDMG();
@@ -154,10 +214,9 @@ public Action Timer_JuggCountdown(Handle timer, int client)
 {
     if(gi_JuggCountdown == 0)
     {
-        UnHookDMG();
         BeginJugg(client);
         ClearTimer(timer);
-        gb_Jugg_RoundNR = false;
+        gb_JuggRoundNR = false;
         return Plugin_Stop;
     }
 
@@ -171,7 +230,7 @@ public void TTT_OnRoundEnd(int winner, Handle array)
 {
     gi_JuggCountdown = 10;
 
-    if(gb_Jugg_Round)
+    if(gb_JuggRound)
     {
         EndJugg();
     }
@@ -181,9 +240,9 @@ public void BeginJugg(int client)
 {
     cv_MPTeammatesAreEnemies.SetBool(false, true, true);
     
-    if(!gb_Jugg_Round)
+    if(!gb_JuggRound)
     {
-        gb_Jugg_Round = true;
+        gb_JuggRound = true;
     }
 
     SetUpTeams(cv_Ratio.IntValue, TTT_TEAM_TRAITOR, TTT_TEAM_DETECTIVE);
@@ -201,13 +260,14 @@ public void BeginJugg(int client)
     SetHealth(cv_HealthBoostPerT.IntValue*numOfT);
     GiveHeavy(TTT_TEAM_DETECTIVE);
 
+    UnHookDMG();
     CPrintToChatAll("[JUGG] Juggernaut has started!");
 }
 
 public void EndJugg()
 {
     cv_MPTeammatesAreEnemies.SetBool(true, true, true);
-    gb_Jugg_Round = false;
+    gb_JuggRound = false;
 }
 
 public void HookDMG()
@@ -228,7 +288,7 @@ public void UnHookDMG()
 
 public Action Jugg_TakeDMG(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-    if(gb_Jugg_Round && damagetype != DMG_FALL)
+    if(gb_JuggRoundNR && damagetype != DMG_FALL)
     {
         damage = 0.0;
         return Plugin_Changed;
@@ -237,4 +297,14 @@ public Action Jugg_TakeDMG(int victim, int &attacker, int &inflictor, float &dam
     {
         return Plugin_Continue;
     }
+}
+
+public void OnClientDisconnect(int client)
+{
+    if(gba_WantsJugg[client])
+    {
+        gba_WantsJugg[client] = false;
+        gi_HowManyWantJugg--;
+    }
+    SDKUnhook(client, SDKHook_OnTakeDamage, Jugg_TakeDMG);
 }
