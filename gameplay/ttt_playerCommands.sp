@@ -101,20 +101,20 @@ public Action Command_Staff(int client, int args)
 /*
 public Action Command_Alive(int client, int args)
 {
-	Player player = Player(client);
+    Player player = Player(client);
 
-	char playerNames[MAXPLAYERS][64];
-	int unfound = GetUnfoundPlayers(playerNames);
+    char playerNames[MAXPLAYERS][64];
+    int unfound = GetUnfoundPlayers(playerNames);
 
-	char message[1024];
+    char message[1024];
 
-	Format(message, sizeof(message), "Players Alive: %s", playerNames[0]);
+    Format(message, sizeof(message), "Players Alive: %s", playerNames[0]);
 
-	for(int i = 1; i < unfound; i++) {
-		Format(message, sizeof(message), "%s, %s", message, playerNames[i]);
-	}
+    for(int i = 1; i < unfound; i++) {
+        Format(message, sizeof(message), "%s, %s", message, playerNames[i]);
+    }
 
-	player.Msg(message);
+    player.Msg(message);
 }
 */
 
@@ -132,22 +132,22 @@ public Action Command_Spectate(int client, int args)
         char display[512];
         switch(TTT_GetClientRole(i))
         {
-			case TTT_TEAM_UNASSIGNED:
+            case TTT_TEAM_UNASSIGNED:
             {
                 Format(display, sizeof(display), "%s [%s]", name, "Unassigned");
-			}
-			case TTT_TEAM_INNOCENT:
+            }
+            case TTT_TEAM_INNOCENT:
             {
                 Format(display, sizeof(display), "%s [%s]", name, "Innocent");
-			}
-			case TTT_TEAM_TRAITOR:
+            }
+            case TTT_TEAM_TRAITOR:
             {
                 Format(display, sizeof(display), "%s [%s]", name, "Traitor");
-			}
-			case TTT_TEAM_DETECTIVE:
+            }
+            case TTT_TEAM_DETECTIVE:
             {
                 Format(display, sizeof(display), "%s [%s]", name, "Detective");
-			}
+            }
             default:
             {
                 Format(display, sizeof(display), "%s [%s]", name, "Unassigned");
@@ -288,7 +288,7 @@ public int MenuHandler_Spectate(Menu menu, MenuAction action, int client, int da
             {
                 CPrintToChat(client, TTT_MESSAGE ... "You started specating {blue}%N", index);
                 SetEntPropEnt(client, Prop_Send, "m_hObserverTarget", index);
-    	        SetEntProp(client, Prop_Send, "m_iObserverMode", 4);
+                SetEntProp(client, Prop_Send, "m_iObserverMode", 4);
             }
         }
     }

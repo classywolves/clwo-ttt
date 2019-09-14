@@ -145,7 +145,7 @@ public Action Command_RemoveSlayNextRound(int client, int args)
         CPrintToChat(client, TTT_USAGE ... "sm_unslaynr <#userid|name>");
         return Plugin_Handled;
     }
-	
+    
     char buffer[MAX_NAME_LENGTH];
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
     int target = TTT_Target(buffer, client, true, false, false);
@@ -212,9 +212,9 @@ public Action Command_Teleport(int client, int args)
     
     if (recipient > 0)
     {
-    	CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N {yellow}to {blue}%N{yellow}.", client, target, recipient);
-	}
-	else
+        CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N {yellow}to {blue}%N{yellow}.", client, target, recipient);
+    }
+    else
     {
         CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N{yellow}.", client, target);
     }
