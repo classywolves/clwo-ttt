@@ -150,7 +150,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
     char sChatTag[512];
     char cPreChatTag[512];
 
-    int rank = GetPlayerRank(author);
+    int rank = Ranks_GetClientRank(author);
     
     if (message[0] != '@') // Not staff / all say or pm.
     {   
@@ -165,7 +165,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
                     rank = StringToInt(cCookie);
                 }
             }
-            GetRankTag(rank, cRankBuffer);
+            Ranks_GetRankTag(rank, cRankBuffer);
             Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
         }
 
@@ -225,7 +225,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         return Plugin_Changed;
     }
 
-    if ((rank > RANK_VIP && StrContains(flagstring, "All", false) == -1) || rank == RANK_INFORMER)
+    if (rank > RANK_VIP && (StrContains(flagstring, "team", false) != -1 ||  StrContains(flagstring, "Cstrike_Chat_CT", false) != -1 ||  StrContains(flagstring, "Cstrike_Chat_T", false) != -1||  StrContains(flagstring, "Cstrike_Chat_Spec", false) != -1))
     {
         strcopy(message, strlen(message), message[1]);
 
@@ -233,7 +233,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
         LoopValidClients(i)
         {
-            int nrank = GetPlayerRank(i);
+            int nrank = Ranks_GetClientRank(i);
             if(RANK_VIP < nrank)
             {
                 recipients.Push(GetClientUserId(i));
@@ -250,7 +250,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             }
         }
 
-        GetRankTag(rank, cRankBuffer);
+        Ranks_GetRankTag(rank, cRankBuffer);
         Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
 
         Format(name, iBufferSize, "\x09[STAFF]%s\x09 %s", staffTag, name);
@@ -284,7 +284,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             }
         }
 
-        GetRankTag(rank, cRankBuffer);
+        Ranks_GetRankTag(rank, cRankBuffer);
         Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
 
         Format(name, iBufferSize, "\x07[ALL]%s \x07%s\x01", staffTag, name);
@@ -294,6 +294,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
         return Plugin_Changed;
     }
+
     else
     {
         strcopy(message, strlen(message), message[1]);
@@ -302,7 +303,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
         LoopValidClients(i)
         {
-            int nrank = GetPlayerRank(i);
+            int nrank = Ranks_GetClientRank(i);
             if(nrank > RANK_INFORMER)
             {
                 recipients.Push(GetClientUserId(i));
@@ -466,7 +467,7 @@ public Action Command_Chat(int client, int args)
 {
     char message[255], buffer [128];
 
-    int rank = GetPlayerRank(client);
+    int rank = Ranks_GetClientRank(client);
 
     if (args < 1)
     {
@@ -585,7 +586,7 @@ public Action Command_RankOverride(int client, int args)
         {
             SetClientCookie(target, g_hClientCookieOverRideRank, arg2);
             char buffer[16];
-            GetRankTag(rank_int, buffer);
+            Ranks_GetRankTag(rank_int, buffer);
             ReplyToCommand(client, " [SM] Set the rank override of %N to [%s]", target, buffer);
         }
         
@@ -600,7 +601,7 @@ void SendChatToAll(int client, char[] message)
     char staffTag[64];
     char name[255];
 
-    int rank = GetPlayerRank(client);
+    int rank = Ranks_GetClientRank(client);
     
     if(AreClientCookiesCached(client))
     {
@@ -612,7 +613,7 @@ void SendChatToAll(int client, char[] message)
         }
     }
 
-    GetRankTag(rank, buffer);
+    Ranks_GetRankTag(rank, buffer);
     Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
 
     GetClientName(client, name, sizeof(name));
@@ -630,7 +631,7 @@ void SendChatToAdmin(int client, char[] message)
     char staffTag[64];
     char name[255];
 
-    int rank = GetPlayerRank(client);
+    int rank = Ranks_GetClientRank(client);
 
     if(AreClientCookiesCached(client))
     {
@@ -643,13 +644,13 @@ void SendChatToAdmin(int client, char[] message)
     }
 
 
-    GetRankTag(rank, buffer);
+    Ranks_GetRankTag(rank, buffer);
     Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
     GetClientName(client, name, sizeof(name));
 
     LoopValidClients(i)
     {
-        if(GetPlayerRank(i) > RANK_PLEB)
+        if(Ranks_GetClientRank(i) > RANK_PLEB)
         {
             CPrintToChat(i, "\x09[STAFF]%s\x09 %s: \x0A%s", staffTag, name, message);
         }
@@ -672,7 +673,7 @@ void SendChatToAdminPleb(int client, char[] message)
     
     LoopValidClients(i)
     {
-        if(GetPlayerRank(i) > RANK_VIP)
+        if(Ranks_GetClientRank(i) > RANK_VIP)
         {
             CPrintToChat(i,"\x09[TO STAFF] %s: \x0A%s", name, message);  
         }
@@ -754,7 +755,7 @@ void SendPrivateChat(int client, int target, char[] message)
             continue;
         if(x == client)
             continue;
-        if(GetPlayerRank(x) < RANK_SADMIN)
+        if(Ranks_GetClientRank(x) < RANK_SADMIN)
             continue;
         if(!AreClientCookiesCached(x))
             continue;
