@@ -224,6 +224,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
         if(message[0] == '!' || message[0] == '/')
         {
+            //Only send message to player if it's a command
             recipients.Clear();
             recipients.Push(GetClientUserId(author));
         }
@@ -231,7 +232,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         return Plugin_Changed;
     }
 
-    if (rank > RANK_VIP && (StrContains(flagstring, "team", false) != -1 ||  StrContains(flagstring, "Cstrike_Chat_CT", false) != -1 ||  StrContains(flagstring, "Cstrike_Chat_T", false) != -1||  StrContains(flagstring, "Cstrike_Chat_Spec", false) != -1))
+    if (rank > RANK_VIP && StrContains(flagstring, "All", false) == -1 || rank == RANK_INFORMER)
     {
         strcopy(message, strlen(message), message[1]);
 
