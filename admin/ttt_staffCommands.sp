@@ -122,19 +122,13 @@ public Action Command_SlayNextRound(int client, int args)
         CPrintToChat(client, TTT_ERROR ... "Invalid target!");
         return Plugin_Handled;
     }
-    
-    if (!IsValidClient(target))
-    {
-        CPrintToChat(client, TTT_ERROR ... "Invalid target!");
-        return Plugin_Handled;
-    }
-    
+
     if (target > 0)
     {
         TTT_AddRoundSlays(target, 1, false);
     }
 
-    CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "{yellow}%N {default}will be slain next round.", target);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}will be slain next round by {yellow}%N", target, client);
     return Plugin_Handled;
 }
 
@@ -161,7 +155,7 @@ public Action Command_RemoveSlayNextRound(int client, int args)
         TTT_SetRoundSlays(target, 0, false);
     }
 
-    CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "{yellow}%N {default}will no longer be slain next round.", target);
+    CPrintToChatAll(TTT_MESSAGE ... "{yellow}%N {default}will no longer be slain next round by {yellow}%N", target, client);
     return Plugin_Handled;
 }
 
@@ -205,18 +199,18 @@ public Action Command_Teleport(int client, int args)
         recipient = TTT_Target(buffer, client, true, true, false);
         if (!IsValidClient(recipient)) { return Plugin_Handled; }
 
-        GetClientEyePosition(recipient, pos);
+        GetClientAbsOrigin(recipient, pos);
     }
 
     TeleportEntity(target, pos, NULL_VECTOR, NULL_VECTOR);
     
     if (recipient > 0)
     {
-        CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N {yellow}to {blue}%N{yellow}.", client, target, recipient);
+        CPrintToChatAll("{purple}[TTT] {yellow}%N {default}teleported {yellow}%N {default}to {yellow}%N", client, target, recipient);
     }
     else
     {
-        CPrintToChatAll("{purple}[TTT] {blue}%N {yellow}teleported {blue}%N{yellow}.", client, target);
+        CPrintToChatAll("{purple}[TTT] {yellow}%N {default}teleported {yellow}%N", client, target);
     }
 
     return Plugin_Handled;

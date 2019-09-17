@@ -222,6 +222,12 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         Format(cFullBuffer, sizeof(cFullBuffer), "%s%s%s {%s}%s\x01", cPreChatTag, staffTag, sChatTag, teamColor, name);
         Format(name, iBufferSize, "%s", cFullBuffer);
 
+        if(message[0] == '!' || message[0] == '/')
+        {
+            recipients.Clear();
+            recipients.Push(GetClientUserId(author));
+        }
+
         return Plugin_Changed;
     }
 
