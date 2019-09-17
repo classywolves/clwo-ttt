@@ -11,8 +11,8 @@
 public __pl_ttt_ranks_SetNTVOptional()
 {
     MarkNativeAsOptional("Ranks_IsStaff");
-	MarkNativeAsOptional("Ranks_GetRankName");
-	MarkNativeAsOptional("Ranks_GetPermission");
+    MarkNativeAsOptional("Ranks_GetRankName");
+    MarkNativeAsOptional("Ranks_GetPermission");
     MarkNativeAsOptional("Ranks_GetClientRank");
     MarkNativeAsOptional("Ranks_GetRankTag");
 }
@@ -37,7 +37,7 @@ public __pl_ttt_ranks_SetNTVOptional()
 #define USER_RANK_CHAT_NAME  4
 #define USER_RANK_DEV_NAME   5
 
-#define LoopStaff(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(IsValidClient(%1) && TTT_Ranks_IsStaff(i))
+#define LoopStaff(%1) for(int %1 = 1; %1 <= MaxClients; %1++) if(IsValidClient(%1) && Ranks_IsStaff(i))
 
 native bool Ranks_IsStaff(int client);
 
@@ -51,7 +51,7 @@ stock int GetStaffArray(int staff[32])
     int staffCount = 0;
     LoopValidClients(i)
     {
-        if (TTT_Ranks_IsStaff(i))
+        if (Ranks_IsStaff(i))
         {
             staff[staffCount] = i;
             staffCount++;
@@ -92,19 +92,20 @@ stock void CPrintToChatStaff(const char[] message, any ...)
     LoopStaff(i)
     {
         char buffer[1024];
-    	VFormat(buffer, 1024, message, 2);
+        VFormat(buffer, 1024, message, 2);
         CPrintToChat(i, buffer);
     }
 }
 
 stock bool IsHigherStaffOnline(int rank)
 {
-  LoopValidClients(i)
-  {
-    if((Ranks_GetClientRank(i) > rank) && (GetClientTeam(i) != CS_TEAM_SPECTATOR))
+    LoopValidClients(i)
     {
-      return true;
+        if((Ranks_GetClientRank(i) > rank) && (GetClientTeam(i) != CS_TEAM_SPECTATOR))
+        {
+            return true;
+        }
     }
-  }
-  return false;
+
+    return false;
 }
