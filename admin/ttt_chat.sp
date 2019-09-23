@@ -1,13 +1,3 @@
-/**
-Warning to all that will gaze upon this code
-This was written by a very rookie programmer stressed by exams
-I had no time (nor patience) to make this code look good, 
-and for that I apologise
-This code should work, but not well, it's the best I could do with my ever shrnking sanity
-No, I will never return and make it pretty, deal with it
-**/
-
-
 #pragma semicolon 1
 
 #include <sourcemod>
@@ -228,6 +218,8 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
             recipients.Clear();
             recipients.Push(GetClientUserId(author));
         }
+
+        LogAction(author, -1, "\"%L\" said in chat (text %s)", author, message);
 
         return Plugin_Changed;
     }
