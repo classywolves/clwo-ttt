@@ -35,7 +35,7 @@ public OnPluginStart()
 
     Database.Connect(DbCallback_Connect, "store");
 
-    PrintToServer("[RFL] Loaded succcessfully");
+    PrintToServer("[PHR] Loaded succcessfully");
 }
 
 public Action Store_OnClientGainCredits(int client, int& credits)
