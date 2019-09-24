@@ -4,6 +4,14 @@
 #define _clwo_store_credits_included
 
 /*
+ * Called when a player gains cR.
+ *
+ * @param client            The client who purchased the item.
+ * @param credits           The amount of credits the player is to gain.
+ */
+forward Action Store_OnClientGainCredits(int client, int& credits);
+
+/*
  * Gets the clients total credits.
  *
  * @param client            The client to be checked.

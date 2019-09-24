@@ -21,12 +21,16 @@ Database g_database = null;
 
 char g_sQuery[256];
 
+GlobalForward g_OnClientGainCredits = null;
+
 ConVar g_cCredits = null;
 
 int g_iCredits[MAXPLAYERS + 1] = { -1, ... };
 
 public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max)
 {
+    g_OnClientGainCredits = new GlobalForward("Store_OnClientGainCredits", ET_Event, Param_Cell, Param_CellByRef);
+
     CreateNative("Store_GetClientCredits", Native_GetCredits);
     CreateNative("Store_SetClientCredits", Native_SetCredits);
     CreateNative("Store_AddClientCredits", Native_AddCredits);
@@ -272,6 +276,17 @@ public int Native_AddCredits(Handle plugin, int numParams)
     }
 
     int amount = GetNativeCell(2);
+
+    Action result;
+    Call_StartForward(g_OnClientGainCredits);
+    Call_PushCell(client);
+    Call_PushCellRef(amount);
+    Call_Finish(result);
+
+    if (result == Plugin_Stop || result == Plugin_Handled)
+    {
+        return g_iCredits[client];
+    }
     AddClientCredits(client, amount);
 
     return g_iCredits[client];
