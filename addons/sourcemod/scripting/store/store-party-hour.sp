@@ -138,7 +138,7 @@ public void DbCallback_SelectLastTime(Database db, DBResultSet results, const ch
 public void PartyHour_Start(int client)
 {
     g_isPartyHour = true;
-    CPrintToChatAll(STORE_MESSAGE ... "%N has just called for a party hour, therefor there shall be double cR for everyone for one hour.");
+    CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}has just called for a party hour, therefor there shall be double cR for everyone for one hour.");
 
     Db_InsertLastTime(client);
     CreateTimer(3600.0, Timer_PartyHourEnd);
