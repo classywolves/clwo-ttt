@@ -35,6 +35,7 @@ int gi_HowManyWantHidden = 0;
 
 ConVar cv_MPTeammatesAreEnemies;
 ConVar cv_MPDropKnife;
+ConVar cv_CustomGMNR;
 
 ConVar cv_HiddenSpeed = null;
 ConVar cv_HiddenGravity = null;
@@ -58,6 +59,7 @@ public void OnPluginStart()
 
     cv_MPTeammatesAreEnemies = FindConVar("mp_teammates_are_enemies");
     cv_MPDropKnife = FindConVar("mp_drop_knife_enable");
+    cv_CustomGMNR = FindConVar("cv_CustomGMNR");
 
     cv_HiddenSpeed = CreateConVar("cv_HiddenSpeed", "1.1", "Speed of the Hidden", FCVAR_NOTIFY, true, 1.0, true, 10.0);
     cv_HiddenGravity = CreateConVar("cv_HiddenGravity", "0.9", "Gravity of the Hidden", FCVAR_NOTIFY, true, 0.1, true, 1.0);
@@ -110,6 +112,11 @@ public Action Command_Say(int client, int args)
             PrintToChat(client, "[HID] You already voted for hidden");
             return Plugin_Continue;
         }
+        if(cv_CustomGMNR.BoolValue)
+        {
+            PrintToChat(client, "[TDM] A custom gamemode has already been voted for");
+            return Plugin_Continue;
+        }
         int total = 0;
         int votesNeeded = 0;
         LoopValidClients(i)
@@ -120,7 +127,7 @@ public Action Command_Say(int client, int args)
         gba_WantsHidden[client] = true;
         gi_HowManyWantHidden++;
         WantsToPlay(client, "Hidden", gi_HowManyWantHidden, votesNeeded);
-        if(gi_HowManyWantHidden == votesNeeded)
+        if(gi_HowManyWantHidden >= votesNeeded)
         {
             CPrintToChatAll("[HID] Next round will be Hidden");
             LoopValidClients(i)
@@ -128,6 +135,7 @@ public Action Command_Say(int client, int args)
                 gba_WantsHidden[i] = false;
                 gi_HowManyWantHidden = 0;
             }
+            cv_CustomGMNR.SetBool(true, false, true);
             gb_HiddenRoundNR = true;
             return Plugin_Continue;
         }
@@ -158,6 +166,7 @@ public Action Command_Hidden(int client, int args)
     {
         CPrintToChatAll("[HID] Next round will be Hidden");
         gb_HiddenRoundNR = true;
+        cv_CustomGMNR.SetBool(true, false, true);
         return Plugin_Handled;
     }
 }
@@ -168,6 +177,7 @@ public Action Command_CancelHidden(int client, int args)
     {
         gb_HiddenRoundNR = false;
         CPrintToChatAll("[HID] Hidden cancelled");
+        cv_CustomGMNR.SetBool(false, false, true);
     }
     return Plugin_Handled;
 }
@@ -344,6 +354,7 @@ public Action Timer_HiddenCountdown(Handle timer, int pass)
         BeginHidden();
         ClearTimer(timer);
         gb_HiddenRoundNR = false;
+        cv_CustomGMNR.SetBool(false, false, true);
         return Plugin_Stop;
     }
 

@@ -16,6 +16,7 @@
 #include <smlib/math>
 
 ConVar g_cvMPTeammatesAreEnemies;
+ConVar cv_CustomGMNR;
 bool gb_TDMRound = false;
 bool gb_TDMRoundNR = false;
 int gi_TDMCountdown = 10;
@@ -31,6 +32,7 @@ public OnPluginStart()
     gi_TDMCountdown = 10;
 
     g_cvMPTeammatesAreEnemies = FindConVar("mp_teammates_are_enemies");
+    cv_CustomGMNR = FindConVar("cv_CustomGMNR");
 
     RegConsoleCmd("say", Command_Say);
 
@@ -73,6 +75,11 @@ public Action Command_Say(int client, int args)
             PrintToChat(client, "[TDM] You already voted for TDM");
             return Plugin_Continue;
         }
+        if(cv_CustomGMNR.BoolValue)
+        {
+            PrintToChat(client, "[TDM] A custom gamemode has already been voted for");
+            return Plugin_Continue;
+        }
         int total = 0;
         int votesNeeded = 0;
         LoopValidClients(i)
@@ -83,7 +90,7 @@ public Action Command_Say(int client, int args)
         gba_WantsTDM[client] = true;
         gi_HowManyWantTDM++;
         WantsToPlay(client, "TDM", gi_HowManyWantTDM, votesNeeded);
-        if(gi_HowManyWantTDM == votesNeeded)
+        if(gi_HowManyWantTDM >= votesNeeded)
         {
             CPrintToChatAll("[TDM] Next round will be TDM");
             LoopValidClients(i)
@@ -91,6 +98,7 @@ public Action Command_Say(int client, int args)
                 gba_WantsTDM[i] = false;
                 gi_HowManyWantTDM = 0;
             }
+            cv_CustomGMNR.SetBool(true, false, true);
             gb_TDMRoundNR = true;
             return Plugin_Continue;
         }
@@ -144,6 +152,7 @@ public Action Command_TDM(int client, int args)
         CPrintToChatAll("[TDM] Next round will be a Team Deathmatch!");
         g_Client = client;
         gb_TDMRoundNR = true;
+        cv_CustomGMNR.SetBool(true, false, true);
         return Plugin_Handled;
     }
 }
@@ -154,6 +163,7 @@ public Action Command_CancelTDM(int client, int args)
     {
         CPrintToChatAll("[TDM] Team deathmatch cancelled");
         gb_TDMRoundNR = false;
+        cv_CustomGMNR.SetBool(false, false, true);
     }
 
     return Plugin_Handled;
@@ -237,6 +247,7 @@ public Action Timer_TDMCountdown(Handle timer, int client)
         BeginTDM(client);
         ClearTimer(timer);
         gb_TDMRoundNR = false;
+        cv_CustomGMNR.SetBool(false, false, true);
         return Plugin_Stop;
     }
 

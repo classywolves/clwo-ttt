@@ -25,6 +25,7 @@ bool gba_WantsJugg[MAXPLAYERS + 1] = { false, ... };
 int gi_HowManyWantJugg = 0;
 
 ConVar cv_MPTeammatesAreEnemies;
+ConVar cv_CustomGMNR;
 ConVar cv_HealthBoostPerT = null;
 ConVar cv_Ratio = null;
 
@@ -36,6 +37,7 @@ public OnPluginStart()
     gi_JuggCountdown = 10;
 
     cv_MPTeammatesAreEnemies = FindConVar("mp_teammates_are_enemies");
+    cv_CustomGMNR = FindConVar("cv_CustomGMNR");
 
     cv_HealthBoostPerT = CreateConVar("cv_HealthBoostPerT", "50", "Health boost given to CT per T in Juggernaut gamemode", FCVAR_NOTIFY, true, 20.0, true, 500.0);
 
@@ -81,6 +83,11 @@ public Action Command_Say(int client, int args)
             PrintToChat(client, "[JUGG] You already voted for Jugg");
             return Plugin_Continue;
         }
+        if(cv_CustomGMNR.BoolValue)
+        {
+            PrintToChat(client, "[TDM] A custom gamemode has already been voted for");
+            return Plugin_Continue;
+        }
         int total = 0;
         int votesNeeded = 0;
         LoopValidClients(i)
@@ -91,7 +98,7 @@ public Action Command_Say(int client, int args)
         gba_WantsJugg[client] = true;
         gi_HowManyWantJugg++;
         WantsToPlay(client, "Jugg", gi_HowManyWantJugg, votesNeeded);
-        if(gi_HowManyWantJugg == votesNeeded)
+        if(gi_HowManyWantJugg >= votesNeeded)
         {
             CPrintToChatAll("[JUGG] Next round will be Jugg");
             LoopValidClients(i)
@@ -99,6 +106,7 @@ public Action Command_Say(int client, int args)
                 gba_WantsJugg[i] = false;
                 gi_HowManyWantJugg = 0;
             }
+            cv_CustomGMNR.SetBool(true, false, true);
             gb_JuggRoundNR = true;
             return Plugin_Continue;
         }
@@ -130,6 +138,7 @@ public Action Command_Jugg(int client, int args)
         CPrintToChatAll("[JUGG] Next round will be the Juggernaut gamemode!");
         gi_Client = client;
         gb_JuggRoundNR = true;
+        cv_CustomGMNR.SetBool(true, false, true);
         return Plugin_Handled;
     }
 }
@@ -140,6 +149,7 @@ public Action Command_CancelJugg(int client, int args)
     {
         gb_JuggRoundNR = false;
         CPrintToChatAll("[JUGG] Juggernaut cancelled");
+        cv_CustomGMNR.SetBool(false, false, true);
     }
 
     return Plugin_Handled;
@@ -217,6 +227,7 @@ public Action Timer_JuggCountdown(Handle timer, int client)
         BeginJugg(client);
         ClearTimer(timer);
         gb_JuggRoundNR = false;
+        cv_CustomGMNR.SetBool(false, false, true);
         return Plugin_Stop;
     }
 
