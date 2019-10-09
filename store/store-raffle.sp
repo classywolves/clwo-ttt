@@ -11,10 +11,10 @@
 
 public Plugin myinfo =
 {
-    name = "CLWO Store Rewards",
+    name = "CLWO Store Raffle",
     author = "c0rp3n",
-    description = "Example plugin for the clwo store plugin.",
-    version = "1.0.0",
+    description = "CLWO Store plugin to host raffle based giveaways.",
+    version = "1.1.0",
     url = ""
 };
 
@@ -31,7 +31,7 @@ enum struct Raffle
 
 Raffle g_raffle;
 
-public OnPluginStart()
+public void OnPluginStart()
 {
     g_raffle.participants = new ArrayList(1, 0);
 
@@ -39,7 +39,8 @@ public OnPluginStart()
 
     RegConsoleCmd("sm_raffle", Command_Raffle, "Hosts a raffle on the server.");
     RegAdminCmd("sm_araffle", Command_AdminRaffle, ADMFLAG_CHEATS, "Hosts a raffle on the server.");
-    RegConsoleCmd("sm_draw", Command_Draw, "Draws a winner for the raffle.");
+    RegConsoleCmd("sm_rlist", Command_List, "Lists all of the players currently entered in the raffle.");
+    RegConsoleCmd("sm_rdraw", Command_Draw, "Draws a winner for the raffle.");
 
     RegConsoleCmd("sm_join", Command_Join, "Join the current raffle.");
 
@@ -48,14 +49,20 @@ public OnPluginStart()
     PrintToServer("[RFL] Loaded succcessfully");
 }
 
-public OnClientPutInServer(int client)
+public void OnClientPutInServer(int client)
 {
     
 }
 
-public OnClientDisconnect(int client)
+public void OnClientDisconnect(int client)
 {
-    int userid = GetClientOfUserId(client);
+    if (client == GetClientOfUserId(g_raffle.hostid))
+    {
+        Raffle_Cancel();
+        return;
+    }
+
+    int userid = GetClientUserId(client);
     int index = g_raffle.participants.FindValue(userid);
     if (index)
     {
@@ -74,7 +81,14 @@ public Action Command_Raffle(int client, int args)
     if (g_bRaffleRunning)
     {
         CPrintToChat(client, STORE_ERROR ... "There is already a raffle running, you will have to wait for it to finish before starting a new one.");
-        return Plugin_Stop;
+        return Plugin_Handled;
+    }
+
+    int reqCleints = g_cRaffleMin.IntValue;
+    if (GetClientCount(true) < reqCleints)
+    {
+        CPrintToChat(client, STORE_ERROR ... "There must be {orange}%d {default} players on the server in order to host a raffle.", reqCleints);
+        return Plugin_Handled;
     }
 
     char buffer[16];
@@ -141,7 +155,26 @@ public Action Command_Join(int client, int args)
     }
 
     g_raffle.participants.Push(userid);
-    CPrintToChat(client, STORE_MESSAGE ... "You just joined {yellow}%N's {default}raffle.", GetClientOfUserId(g_raffle.hostid));
+    CPrintToChatAll(STORE_MESSAGE ... "%N just joined {yellow}%N's {default}for {orange}%dcR {default}raffle. Use /join to enter yourself.", client, g_raffle.prizePool, GetClientOfUserId(g_raffle.hostid));
+
+    return Plugin_Handled;
+}
+
+public Action Command_List(int client, int args)
+{
+    if (!g_bRaffleRunning)
+    {
+        CPrintToChat(client, STORE_ERROR ... "There is not currently a raffle to join. Use {yellow}/raffle {default}to host one.");
+        return Plugin_Stop;
+    }
+
+    int host = GetClientOfUserId(g_raffle.hostid);
+    CPrintToChat(client, STORE_MESSAGE ... "{yellow}%N's {default}raffle entrants:", host);
+    for (int i = 0; i < g_raffle.participants.Length; i++)
+    {
+        int entrant = GetClientOfUserId(g_raffle.participants.Get(i));
+        CPrintToChat(client, " - {yellow}%N", entrant);
+    }
 
     return Plugin_Handled;
 }
