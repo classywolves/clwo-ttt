@@ -20,7 +20,6 @@ ConVar cv_CustomGMNR;
 bool gb_TDMRound = false;
 bool gb_TDMRoundNR = false;
 int gi_TDMCountdown = 10;
-int g_Client = 0;
 
 bool gba_WantsTDM[MAXPLAYERS + 1] = { false, ... }; 
 int gi_HowManyWantTDM = 0;
@@ -38,11 +37,8 @@ public OnPluginStart()
 
     RegAdminCmd("sm_reloadtdm", Command_ReloadTDM, ADMFLAG_GENERIC, "Reload TDM Plugin");
     RegAdminCmd("sm_tdm", Command_TDM, ADMFLAG_VOTE, "Start a heavy suit team deathmatch");
-    RegAdminCmd("sm_canceltdm", Command_CancelTDM, ADMFLAG_VOTE, "Cancel heavy suit team deathmatch");
     RegAdminCmd("sm_teamdeathmatch", Command_TDM, ADMFLAG_VOTE, "Start a heavy suit team deathmatch");
-    RegAdminCmd("sm_role", Command_Role, ADMFLAG_VOTE, "Gib role");
-    RegAdminCmd("sm_hvy", Command_Heavy, ADMFLAG_ROOT, "Gib heavy");
-    RegAdminCmd("sm_heavy", Command_Heavy, ADMFLAG_ROOT, "Gib heavy");
+    RegAdminCmd("sm_canceltdm", Command_CancelTDM, ADMFLAG_VOTE, "Cancel heavy suit team deathmatch");
 }
 
 public Action Command_Say(int client, int args)
@@ -118,28 +114,6 @@ public Action Command_ReloadTDM(int client, int args)
     return Plugin_Handled;
 }
 
-public void TTT_OnRoundStart(int innocents, int traitors, int detective)
-{
-    gi_TDMCountdown = 10;
-
-    if(gb_TDMRoundNR)
-    {
-        TDMPanel();
-        HookDMG();
-        CreateTimer(1.0, Timer_TDMCountdown, g_Client, TIMER_REPEAT);
-    }
-}
-
-public void TTT_OnRoundEnd(int winner, Handle array)
-{
-    gi_TDMCountdown = 10;
-
-    if(gb_TDMRound)
-    {
-        EndTDM();
-    }
-}
-
 public Action Command_TDM(int client, int args)
 {
     if(gb_TDMRoundNR)
@@ -150,7 +124,6 @@ public Action Command_TDM(int client, int args)
     else
     {
         CPrintToChatAll("[TDM] Next round will be a Team Deathmatch!");
-        g_Client = client;
         gb_TDMRoundNR = true;
         cv_CustomGMNR.SetBool(true, false, true);
         return Plugin_Handled;
@@ -169,48 +142,57 @@ public Action Command_CancelTDM(int client, int args)
     return Plugin_Handled;
 }
 
-public Action Command_Role(int client, int args)
+public void TTT_OnRoundStart(int innocents, int traitors, int detective)
 {
-    CPrintToChat(client, "Your role number is %i", TTT_GetClientRole(client));
-    return Plugin_Handled;
+    gi_TDMCountdown = 10;
+
+    if(gb_TDMRoundNR)
+    {
+        TDMPanel();
+        HookDMG();
+        CreateTimer(1.0, Timer_TDMCountdown, _ , TIMER_REPEAT);
+    }
 }
 
-public Action Command_Heavy(int client, int args)
+public void TTT_OnRoundEnd(int winner, Handle array)
 {
-    if(args < 1)
+    gi_TDMCountdown = 10;
+
+    if(gb_TDMRound)
     {
-        GivePlayerItem(client, "item_heavyassaultsuit");
-        return Plugin_Handled;
+        EndTDM();
+    }
+}
+
+public Action Timer_TDMCountdown(Handle timer)
+{
+    if(gi_TDMCountdown == 0)
+    {
+        BeginTDM(client);
+        ClearTimer(timer);
+        gb_TDMRoundNR = false;
+        cv_CustomGMNR.SetBool(false, false, true);
+        return Plugin_Stop;
     }
 
-    char buffer[MAX_NAME_LENGTH];
-    GetCmdArg(1, buffer, MAX_NAME_LENGTH);
-    int target = TTT_Target(buffer, client, true, false, false);
-
-    if(!IsValidClient(target) || !IsAliveClient(target))
-    {
-        CPrintToChat(client, TTT_ERROR ... "Invalid target!");
-        return Plugin_Handled;
-    }
-
-    GivePlayerItem(target, "item_heavyassaultsuit");
-    return Plugin_Handled;
+    PrintCenterTextAll("TDM Starting in: %i", gi_TDMCountdown);
+    CPrintToChatAll("[TDM] Team deathmatch starting in: %i", gi_TDMCountdown);    
+    gi_TDMCountdown--;
+    return Plugin_Continue;
 }
 
 public void BeginTDM(int client)
 {
     g_cvMPTeammatesAreEnemies.SetBool(false, true, true);
-    
-    if(!gb_TDMRound)
-    {
-        gb_TDMRound = true;
-    }
+
+    gb_TDMRound = true;
 
     SetUpTeams(2);
     GiveHeavy(TTT_TEAM_DETECTIVE);
     GiveHeavy(TTT_TEAM_TRAITOR);
     
     UnHookDMG();
+
     CPrintToChatAll("[TDM] A Team deathmatch has started!");
 }
 
@@ -240,23 +222,6 @@ public void TDMPanel()
     delete panel;    
 }
 
-public Action Timer_TDMCountdown(Handle timer, int client)
-{
-    if(gi_TDMCountdown == 0)
-    {
-        BeginTDM(client);
-        ClearTimer(timer);
-        gb_TDMRoundNR = false;
-        cv_CustomGMNR.SetBool(false, false, true);
-        return Plugin_Stop;
-    }
-
-    PrintCenterTextAll("TDM Starting in: %i", gi_TDMCountdown);
-    CPrintToChatAll("[TDM] Team deathmatch starting in: %i", gi_TDMCountdown);    
-    gi_TDMCountdown--;
-    return Plugin_Continue;
-}
-
 public void HookDMG()
 {
     LoopValidClients(i)
@@ -275,7 +240,7 @@ public void UnHookDMG()
 
 public Action TDM_TakeDMG(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-    if(gb_TDMRoundNR && damagetype != DMG_FALL)
+    if(gb_TDMRoundNR)
     {
         damage = 0.0;
         return Plugin_Changed;

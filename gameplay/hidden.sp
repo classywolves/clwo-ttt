@@ -114,7 +114,7 @@ public Action Command_Say(int client, int args)
         }
         if(cv_CustomGMNR.BoolValue)
         {
-            PrintToChat(client, "[TDM] A custom gamemode has already been voted for");
+            PrintToChat(client, "[HID] A custom gamemode has already been voted for");
             return Plugin_Continue;
         }
         int total = 0;
@@ -246,58 +246,6 @@ public Action Command_CHHCT(int client, int args)
     return Plugin_Handled;
 }
 
-public void HiddenPerformPounce(int client, int time)
-{
-    if (time - gia_LastPounceTime[client] > 3)
-    {
-        bool valid_jump = true;        
-        float ClientAbsOrigin[3];
-        float ClientEyeAngles[3];
-        float Velocity[3];
-
-        GetClientAbsOrigin(client, ClientAbsOrigin);
-        GetClientEyeAngles(client, ClientEyeAngles);
-        float EyeAngleZero = ClientEyeAngles[0];
-        float ClientOriginTwo = ClientAbsOrigin[2];
-
-        if(EyeAngleZero >= 30.0 && EyeAngleZero <= 90.0)
-        {
-            valid_jump = false;
-        }
-
-        ClientEyeAngles[0] = ClientEyeAngles[0] - cv_HiddenPounceAngle.FloatValue;
-
-        if(ClientEyeAngles[0] <= -90.0)
-        {
-            ClientEyeAngles[0] = EyeAngleZero;
-        }
-
-        GetAngleVectors(ClientEyeAngles, Velocity, NULL_VECTOR, NULL_VECTOR);
-        ScaleVector(Velocity, cv_HiddenPouncePower.FloatValue);
-
-        ClientAbsOrigin[2] += 10;
-        ClientEyeAngles[0] = EyeAngleZero;
-
-        if(valid_jump)
-        {
-            TE_SetupDust(ClientAbsOrigin, NULL_VECTOR, 100.0, 0.0);
-            TE_SendToAll(0.0);
-            ClientAbsOrigin[2] = ClientOriginTwo;
-            ClientEyeAngles[0] = EyeAngleZero; 
-            TeleportEntity(client, ClientAbsOrigin, ClientEyeAngles, Velocity);
-            gia_LastPounceTime[client] = GetTime();
-        }
-    }
-    else 
-    {    
-        if(time - gia_LastPounceError[client] > 1)
-        {
-            gia_LastPounceError[client] = time;
-            CPrintToChat(client, "[HID] You cannot pounce so often");
-        }
-    }
-}
-
 public void TTT_OnRoundStart(int innocents, int traitors, int detectives)
 {
     gi_HiddenCountdown = 10;
@@ -306,7 +254,7 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detectives)
     {
         HiddenPanel();
         HookDMG();
-        CreateTimer(1.0, Timer_HiddenCountdown, 1, TIMER_REPEAT);
+        CreateTimer(1.0, Timer_HiddenCountdown, _ , TIMER_REPEAT);
     }
 }
 
@@ -318,6 +266,23 @@ public void TTT_OnRoundEnd(int winner, Handle array)
     }
 }
 
+public Action Timer_HiddenCountdown(Handle timer)
+{
+    if(gi_HiddenCountdown == 0)
+    {
+        BeginHidden();
+        ClearTimer(timer);
+        gb_HiddenRoundNR = false;
+        cv_CustomGMNR.SetBool(false, false, true);
+        return Plugin_Stop;
+    }
+
+    PrintCenterTextAll("Hidden Starting in: %i", gi_HiddenCountdown);
+    CPrintToChatAll("[HID] Hidden starting in: %i", gi_HiddenCountdown);    
+    gi_HiddenCountdown--;
+    return Plugin_Continue;
+}
+
 public void BeginHidden()
 {
     cv_MPTeammatesAreEnemies.SetBool(false, true, true);
@@ -325,7 +290,6 @@ public void BeginHidden()
 
     HiddenPanel();
     
-    gb_HiddenRoundNR = false;
     gb_HiddenRound = true;
 
     SetUpTeams(4);
@@ -346,22 +310,19 @@ public void BeginHidden()
     CPrintToChatAll("[HID] Hidden has started!");
 }
 
-public Action Timer_HiddenCountdown(Handle timer, int pass)
+public void EndHidden()  
 {
-    if(gi_HiddenCountdown == 0)
+    LoopValidClients(i)
     {
-        UnHookDMG();
-        BeginHidden();
-        ClearTimer(timer);
-        gb_HiddenRoundNR = false;
-        cv_CustomGMNR.SetBool(false, false, true);
-        return Plugin_Stop;
+        SetEntPropFloat(i, Prop_Send, "m_flLaggedMovementValue", 1.0);
+        SetEntityGravity(i, 1.0);
+        ClearHiddenTimers(i);
+        gba_Hidden[i] = false;
     }
-
-    PrintCenterTextAll("Hidden Starting in: %i", gi_HiddenCountdown);
-    CPrintToChatAll("[HID] Hidden starting in: %i", gi_HiddenCountdown);    
-    gi_HiddenCountdown--;
-    return Plugin_Continue;
+    cv_MPTeammatesAreEnemies.SetBool(true, true, true);
+    cv_MPDropKnife.SetBool(true, true, true);
+    gb_HiddenRoundNR = false;
+    gb_HiddenRound = false;
 }
 
 public void HiddenPanel()
@@ -384,21 +345,6 @@ public void HiddenPanel()
     }
 
     delete panel;    
-}
-
-public void EndHidden()  
-{
-    LoopValidClients(i)
-    {
-        SetEntPropFloat(i, Prop_Send, "m_flLaggedMovementValue", 1.0);
-        SetEntityGravity(i, 1.0);
-        ClearHiddenTimers(i);
-        gba_Hidden[i] = false;
-    }
-    cv_MPTeammatesAreEnemies.SetBool(true, true, true);
-    cv_MPDropKnife.SetBool(true, true, true);
-    gb_HiddenRoundNR = false;
-    gb_HiddenRound = false;
 }
 
 public void HookActions(int client)
@@ -435,7 +381,7 @@ public void UnHookDMG()
 public Action Hidden_TakeDMG(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, 
                             int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-    if(gb_HiddenRoundNR && damagetype != DMG_FALL)
+    if(gb_HiddenRoundNR)
     {
         damage = 0.0;
         return Plugin_Changed;
@@ -627,4 +573,56 @@ public bool ErrorTimeout(int client, int timeout)
 
     gia_ErrorTimeout[client] = currentTime;
     return false;
+}
+
+public void HiddenPerformPounce(int client, int time)
+{
+    if (time - gia_LastPounceTime[client] > 3)
+    {
+        bool valid_jump = true;        
+        float ClientAbsOrigin[3];
+        float ClientEyeAngles[3];
+        float Velocity[3];
+
+        GetClientAbsOrigin(client, ClientAbsOrigin);
+        GetClientEyeAngles(client, ClientEyeAngles);
+        float EyeAngleZero = ClientEyeAngles[0];
+        float ClientOriginTwo = ClientAbsOrigin[2];
+
+        if(EyeAngleZero >= 30.0 && EyeAngleZero <= 90.0)
+        {
+            valid_jump = false;
+        }
+
+        ClientEyeAngles[0] = ClientEyeAngles[0] - cv_HiddenPounceAngle.FloatValue;
+
+        if(ClientEyeAngles[0] <= -90.0)
+        {
+            ClientEyeAngles[0] = EyeAngleZero;
+        }
+
+        GetAngleVectors(ClientEyeAngles, Velocity, NULL_VECTOR, NULL_VECTOR);
+        ScaleVector(Velocity, cv_HiddenPouncePower.FloatValue);
+
+        ClientAbsOrigin[2] += 10;
+        ClientEyeAngles[0] = EyeAngleZero;
+
+        if(valid_jump)
+        {
+            TE_SetupDust(ClientAbsOrigin, NULL_VECTOR, 100.0, 0.0);
+            TE_SendToAll(0.0);
+            ClientAbsOrigin[2] = ClientOriginTwo;
+            ClientEyeAngles[0] = EyeAngleZero; 
+            TeleportEntity(client, ClientAbsOrigin, ClientEyeAngles, Velocity);
+            gia_LastPounceTime[client] = GetTime();
+        }
+    }
+    else 
+    {    
+        if(time - gia_LastPounceError[client] > 1)
+        {
+            gia_LastPounceError[client] = time;
+            CPrintToChat(client, "[HID] You cannot pounce so often");
+        }
+    }
 }

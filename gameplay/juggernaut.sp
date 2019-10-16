@@ -19,7 +19,6 @@
 bool gb_JuggRound = false;
 bool gb_JuggRoundNR = false;
 int gi_JuggCountdown = 10;
-int gi_Client = 0;
 
 bool gba_WantsJugg[MAXPLAYERS + 1] = { false, ... }; 
 int gi_HowManyWantJugg = 0;
@@ -85,7 +84,7 @@ public Action Command_Say(int client, int args)
         }
         if(cv_CustomGMNR.BoolValue)
         {
-            PrintToChat(client, "[TDM] A custom gamemode has already been voted for");
+            PrintToChat(client, "[JUGG] A custom gamemode has already been voted for");
             return Plugin_Continue;
         }
         int total = 0;
@@ -136,7 +135,6 @@ public Action Command_Jugg(int client, int args)
     else
     {
         CPrintToChatAll("[JUGG] Next round will be the Juggernaut gamemode!");
-        gi_Client = client;
         gb_JuggRoundNR = true;
         cv_CustomGMNR.SetBool(true, false, true);
         return Plugin_Handled;
@@ -195,29 +193,18 @@ public void TTT_OnRoundStart(int innocents, int traitors, int detective)
     {
         JuggPanel();
         HookDMG();
-        CreateTimer(1.0, Timer_JuggCountdown, gi_Client, TIMER_REPEAT);
+        CreateTimer(1.0, Timer_JuggCountdown, _ , TIMER_REPEAT);
     }
 }
 
-public void JuggPanel()
+public void TTT_OnRoundEnd(int winner, Handle array)
 {
-    Panel panel = new Panel();
-    panel.SetTitle("JUGGERNAUT");
-    panel.DrawItem("", ITEMDRAW_SPACER);
-    panel.DrawText("This is the Juggernaut gamemode");
-    panel.DrawItem("", ITEMDRAW_SPACER);
-    panel.DrawText("There are some Detectives with heavy suit, everyone else is traitor");
-    panel.DrawText("Detective health is also boosted");
-    panel.DrawItem("", ITEMDRAW_SPACER);
-    panel.CurrentKey = GetMaxPageItems(panel.Style);
-    panel.DrawItem("Exit", ITEMDRAW_CONTROL);
+    gi_JuggCountdown = 10;
 
-    LoopValidClients(i)
+    if(gb_JuggRound)
     {
-        panel.Send(i, HandlerDoNothing, 30);
+        EndJugg();
     }
-
-    delete panel;    
 }
 
 public Action Timer_JuggCountdown(Handle timer, int client)
@@ -237,24 +224,12 @@ public Action Timer_JuggCountdown(Handle timer, int client)
     return Plugin_Continue;
 }
 
-public void TTT_OnRoundEnd(int winner, Handle array)
-{
-    gi_JuggCountdown = 10;
-
-    if(gb_JuggRound)
-    {
-        EndJugg();
-    }
-}
 
 public void BeginJugg(int client)
 {
     cv_MPTeammatesAreEnemies.SetBool(false, true, true);
     
-    if(!gb_JuggRound)
-    {
-        gb_JuggRound = true;
-    }
+    gb_JuggRound = true;
 
     SetUpTeams(cv_Ratio.IntValue, TTT_TEAM_TRAITOR, TTT_TEAM_DETECTIVE);
     
@@ -279,6 +254,27 @@ public void EndJugg()
 {
     cv_MPTeammatesAreEnemies.SetBool(true, true, true);
     gb_JuggRound = false;
+}
+
+public void JuggPanel()
+{
+    Panel panel = new Panel();
+    panel.SetTitle("JUGGERNAUT");
+    panel.DrawItem("", ITEMDRAW_SPACER);
+    panel.DrawText("This is the Juggernaut gamemode");
+    panel.DrawItem("", ITEMDRAW_SPACER);
+    panel.DrawText("There are some Detectives with heavy suit, everyone else is traitor");
+    panel.DrawText("Detective health is also boosted");
+    panel.DrawItem("", ITEMDRAW_SPACER);
+    panel.CurrentKey = GetMaxPageItems(panel.Style);
+    panel.DrawItem("Exit", ITEMDRAW_CONTROL);
+
+    LoopValidClients(i)
+    {
+        panel.Send(i, HandlerDoNothing, 30);
+    }
+
+    delete panel;    
 }
 
 public void HookDMG()

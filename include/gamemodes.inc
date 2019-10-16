@@ -4,6 +4,11 @@
     #include <ttt>
 #endif
 
+stock void WantsToPlay(int client, char[] gamemode, int wantsTo, int total)
+{
+    CPrintToChatAll("%N wants to play %s! (%i/%i)", client, gamemode, wantsTo, total);
+}
+
 stock void SetUpTeams(int ratio = 2, int aTeam = TTT_TEAM_DETECTIVE, int bTeam = TTT_TEAM_TRAITOR)
 {
     ArrayList aList = new ArrayList(1, 0);
