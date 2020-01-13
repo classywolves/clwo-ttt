@@ -172,3 +172,16 @@ stock int Char4ToInt(const char[] array, int index = 0)
 
     return value;
 }
+
+stock int GetClientOfAccountID(int accountID)
+{
+    LoopValidClients(i)
+    {
+        if (accountID == GetSteamAccountID(i))
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
