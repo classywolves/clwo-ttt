@@ -3,7 +3,7 @@ SELECT
     `reports`.`death_index`
 FROM `reports`
     LEFT JOIN `handles` ON `reports`.`death_index` = `handles`.`death_index`
-WHERE `handles`.`verdict` IS NULL
+WHERE `handles`.`admin_id` IS NULL
 GROUP BY `reports`.`death_index`;
 
 -- Db_SelectCaseCount
