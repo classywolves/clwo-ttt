@@ -157,11 +157,11 @@ public Action Command_Verdict(int client, int args)
         GetCmdArg(1, response, 64);
 
         CaseVerdict verdict = CaseVerdict_None;
-        if (strcmp(response, "innocent", false))
+        if (strcmp(response, "innocent", false) == 0)
         {
             verdict = CaseVerdict_Innocent;
         }
-        else if (strcmp(response, "guilty", false))
+        else if (strcmp(response, "guilty", false) == 0)
         {
             verdict = CaseVerdict_Guilty;
         }
