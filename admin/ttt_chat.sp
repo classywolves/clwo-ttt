@@ -256,7 +256,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         Format(message, _CV_MAX_MESSAGE_LENGTH, "\x0A%s", message);
         Format(flagstring, iBufferSize, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
 
-        LogAction(author, -1, "\"%L\" triggered sm_say (text %s)", author, message);
+        LogAction(author, -1, "\"%L\" triggered sm_chat (text %s)", author, message);
 
         return Plugin_Changed;
     }
@@ -289,7 +289,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         Format(name, iBufferSize, "\x07[ALL]%s \x07%s\x01", staffTag, name);
         Format(flagstring, iBufferSize, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
 
-        LogAction(author, -1, "\"%L\" triggered sm_chat (text %s)", author, message);
+        LogAction(author, -1, "\"%L\" triggered sm_say (text %s)", author, message);
 
         return Plugin_Changed;
     }
@@ -418,7 +418,7 @@ public Action Command_CSay(int client, int args)
     char message[255], buffer[128];
     GetCmdArg(1, message, sizeof(message));
 
-    for (int i; i <= args; i++)
+    for (int i = 2; i <= args; i++)
     {
         GetCmdArg(i, buffer, sizeof(buffer));
         Format(message, sizeof(message), "%s %s", message, buffer);
