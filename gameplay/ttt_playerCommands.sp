@@ -258,7 +258,7 @@ public Action Command_Give(int client, int args)
     TTT_AddClientCredits(target, credits);
     TTT_SetClientCredits(client, TTT_GetClientCredits(client) - credits);
     CPrintToChat(client, TTT_MESSAGE ... "You have given {yellow}%N {orange}%i {default}credits!", target, credits);
-    CPrintToChat(target, TTT_MESSAGE ... "{yellow}%N {defalt}has given you {orange}%i {default}credits!", client, credits);
+    CPrintToChat(target, TTT_MESSAGE ... "{yellow}%N {default}has given you {orange}%i {default}credits!", client, credits);
 
     return Plugin_Handled;
 }
