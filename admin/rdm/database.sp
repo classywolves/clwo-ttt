@@ -173,6 +173,7 @@ public void DbCallback_SelectNextCase(Database db, DBResultSet results, const ch
         int death = results.FetchInt(0);
         Db_InsertHandle(client, death);
         g_playerData[client].currentCase = death;
+        Db_SelectInfo(client)
     }
     else
     {

@@ -94,12 +94,15 @@ public void TTT_OnClientDeath(int victim, int attacker)
     int victimKarma = TTT_GetClientKarma(victim);
     int attackerKarma = TTT_GetClientKarma(attacker);
 
-    if (BadKill(TTT_GetClientRole(attacker), TTT_GetClientRole(victim)))
+    if (BadKill(TTT_GetClientRole(attacker), TTT_GetClientRole(victim)) && TTT_IsRoundActive())
     {
         CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "{default}Bad Action: [{yellow}%N{default}] ({orange}%d{default}) killed [{yellow}%N{default}] ({orange}%d{default})", attacker, attackerKarma, victim, victimKarma);
     }
-
-    Db_InsertDeath(victim, attacker);
+    
+    if(TTT_IsRoundActive())
+    {
+        Db_InsertDeath(victim, attacker);
+    }
 }
 
 public Action Command_CaseCount(int client, int args)
