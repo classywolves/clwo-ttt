@@ -85,7 +85,7 @@ public void RegisterCvars()
 
 public void OnMapStart()
 {
-    DynamicAddToDownloadTable(1, 1, "inilo/general_v1_452489/chat_v1_452489/chat_beep02_452489.mp3", true, true);
+    DynamicAddToDownloadTable(1, 4, "inilo/general_v1_452489/chat_v1_452489/chat_beep%02i_452489.mp3", true, true);
     CheckLibs();
 }
 public OnAllPluginsLoaded()
@@ -621,6 +621,16 @@ void SendChatToAll(int client, char[] message)
 
     CPrintToChatAll("%s: \x01%s", name, message);
 
+    char cSoundName[512];
+    DynamicGetRandomSoundFile(1, 1, "inilo/general_v1_452489/chat_v1_452489/chat_beep04_452489.mp3", cSoundName, sizeof(cSoundName));
+    for (int i = 1; i <= MaxClients; i++)
+    {
+        if(!IsValidClient(i))
+            continue;
+        ClientCommand(i, "play \"%s\"", cSoundName);
+    }
+
+
     LogAction(client, -1, "\"%L\" triggered sm_say (text %s)", client, message);
 }
 
@@ -629,6 +639,9 @@ void SendChatToAdmin(int client, char[] message)
     char buffer[16];
     char staffTag[64];
     char name[255];
+
+    char cSoundName[512];
+    DynamicGetRandomSoundFile(1, 1, "inilo/general_v1_452489/chat_v1_452489/chat_beep03_452489.mp3", cSoundName, sizeof(cSoundName));
 
     int rank = Ranks_GetClientRank(client);
 
@@ -652,6 +665,7 @@ void SendChatToAdmin(int client, char[] message)
         if(Ranks_GetClientRank(i) > RANK_PLEB)
         {
             CPrintToChat(i, "\x09[STAFF]%s\x09 %s: \x0A%s", staffTag, name, message);
+            ClientCommand(i, "play \"%s\"", cSoundName);
         }
     }
 
