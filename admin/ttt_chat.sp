@@ -16,6 +16,9 @@
 #include <clientprefs>
 
 
+#define CHAT_SYMBOL '@'
+
+
 public Plugin myinfo =
 {
     name = "CLWO Chat",
@@ -127,6 +130,151 @@ public OnLibraryAdded(const char[] name)
     }
 }
 
+
+
+public Action OnClientSayCommand(client, const char[] command, const char[] sArgs)
+{
+    int startidx;
+    if (sArgs[startidx] != CHAT_SYMBOL)
+    {
+        //no @ detected, kill any furhter progress
+        return Plugin_Continue;
+    }
+    startidx++;
+    
+    if (strcmp(command, "say", false) == 0)
+    {
+        if (sArgs[startidx] != CHAT_SYMBOL) // sm_say alias
+        {
+            if (!CheckCommandAccess(client, "sm_say", ADMFLAG_CHAT))
+            {
+                //does not have access to sm_say, so lets redirect to staff chat
+                if(!CheckCommandAccess(client, "sm_chat", ADMFLAG_CHAT))
+                {
+                    //PrintToChat(client, " [SM] Message sent to all staff.");
+                    //sArgs[startidx]
+                    char cStaffAddon[64];
+                    int staff_active = CountActiveStaffBackup();
+                    bool online_staff = !!GetStaffCountBackup();
+                    if(online_staff)
+                    {
+
+                        if(staff_active == 0)
+                        {
+                            Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07there is staff but afk\x01]");
+                        }
+                        else if(staff_active == 1)
+                        {
+                            Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x09%i staff member online\x01]",staff_active);
+                        }
+                        else if(staff_active > 1 )
+                        {
+                            Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x09%i staff members online\x01]",staff_active);
+                        }
+                    }
+                    else
+                    {
+                        Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07no staff online\x01]",staff_active);
+                    }
+                    PrintToChat(client, ">\x01[\x09STAFF\x01]%s\x09 %N\x01:\x08 %s", cStaffAddon, client, sArgs[startidx]);
+                    SendChatToAdmin(client, sArgs[startidx]);
+                    LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, sArgs[startidx]);
+                }
+                return Plugin_Stop;
+            }
+            SendChatToAll(client, sArgs[startidx]);
+            LogAction(client, -1, "\"%L\" triggered sm_say (text %s)", client, sArgs[startidx]);
+            return Plugin_Stop;
+        }
+        
+        startidx++;
+
+        if (sArgs[startidx] != CHAT_SYMBOL) // sm_psay alias
+        {
+            if (!CheckCommandAccess(client, "sm_psay", ADMFLAG_CHAT))
+            {
+                return Plugin_Continue;
+            }
+            
+            decl String:arg[64];
+            
+            new len = BreakString(sArgs[startidx], arg, sizeof(arg));
+            new target = FindTarget(client, arg, true, false);
+            
+            if (target == -1 || len == -1)
+                return Plugin_Stop;
+            
+            SendPrivateChat(client, target, sArgs[startidx+len]);
+            
+            return Plugin_Stop;
+        }
+        
+        startidx++;
+        
+        // sm_csay alias
+        if (!CheckCommandAccess(client, "sm_csay", ADMFLAG_CHAT))
+        {
+            return Plugin_Continue;
+        }
+        
+        DisplayCenterTextToAll(client, sArgs[startidx]);
+        LogAction(client, -1, "\"%L\" triggered sm_csay (text %s)", client, sArgs[startidx]);
+        
+        return Plugin_Stop;
+    }
+    else if (strcmp(command, "say_team", false) == 0 || strcmp(command, "say_squad", false) == 0)
+    {
+        if (!CheckCommandAccess(client, "sm_chat", ADMFLAG_CHAT))
+        {
+            return Plugin_Continue;
+        }
+        if(!CheckCommandAccess(client, "sm_chat", ADMFLAG_CHAT))
+        {
+            //PrintToChat(client, " [SM] Message sent to all staff.");
+            //sArgs[startidx]
+            char cStaffAddon[64];
+            int staff_active = CountActiveStaffBackup();
+            bool online_staff = !!GetStaffCountBackup();
+            if(online_staff)
+            {
+
+                if(staff_active == 0)
+                {
+                    //#if !defined TTT_COMPILE
+                    //ShowRequestStaffPanel(client);
+                    //#endif
+                    Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07there is staff but afk\x01]");
+                }
+                else if(staff_active == 1)
+                {
+                    Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x09%i staff member online\x01]",staff_active);
+                }
+                else if(staff_active > 1 )
+                {
+                    Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x09%i staff members online\x01]",staff_active);
+                }
+            }
+            else
+            {
+                Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07no staff online\x01]",staff_active);
+            }
+            PrintToChat(client, ">\x01[\x09STAFF\x01]%s\x09 %N\x01:\x08 %s",cStaffAddon,client,sArgs[startidx]);
+
+        }
+        SendChatToAdmin(client, sArgs[startidx]);
+        if(IsValidClient(client))
+        {
+            LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, sArgs[startidx]);
+        }
+        
+        
+        return Plugin_Stop;
+    }
+
+    return Plugin_Continue;
+}
+
+
 public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstring, char[] name, char[] message, bool& processcolors, bool& removecolors)
 {
     //please don't use {colors} here because it exceeds the buffers, example with anne:
@@ -141,8 +289,12 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
     char cPreChatTag[512];
 
     int rank = Ranks_GetClientRank(author);
-    
-    if (message[0] != '@') // Not staff / all say or pm.
+
+    char sChannel[32];
+    ProcessChannel(flagstring, sChannel, sizeof(sChannel));
+
+
+    if (message[0] != CHAT_SYMBOL) // Not staff / all say or pm.
     {   
         if (rank > RANK_PLEB)
         {
@@ -223,103 +375,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
         return Plugin_Changed;
     }
-
-    if (rank > RANK_VIP && StrContains(flagstring, "All", false) == -1 || rank == RANK_INFORMER)
-    {
-        strcopy(message, strlen(message), message[1]);
-
-        recipients.Clear();
-
-        LoopValidClients(i)
-        {
-            int nrank = Ranks_GetClientRank(i);
-            if(RANK_VIP < nrank)
-            {
-                recipients.Push(GetClientUserId(i));
-            }
-        }
-
-        if(AreClientCookiesCached(author))
-        {
-            char cCookie[128];
-            GetClientCookie(author, g_hClientCookieOverRideRank, cCookie, sizeof(cCookie));
-            if(strlen(cCookie) > 0)
-            {
-                rank = StringToInt(cCookie);
-            }
-        }
-
-        Ranks_GetRankTag(rank, cRankBuffer);
-        Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
-
-        Format(name, iBufferSize, "\x09[STAFF]%s\x09 %s", staffTag, name);
-        Format(message, _CV_MAX_MESSAGE_LENGTH, "\x0A%s", message);
-        Format(flagstring, iBufferSize, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
-
-        LogAction(author, -1, "\"%L\" triggered sm_chat (text %s)", author, message);
-
-        return Plugin_Changed;
-    }
-
-
-    if (rank > RANK_INFORMER && StrContains(flagstring, "All", false) != -1)
-    {
-        strcopy(message, strlen(message), message[1]);
-
-        recipients.Clear();
-
-        LoopValidClients(i)
-        {
-            recipients.Push(GetClientUserId(i));
-        }      
-
-        if(AreClientCookiesCached(author))
-        {
-            char cCookie[128];
-            GetClientCookie(author, g_hClientCookieOverRideRank, cCookie, sizeof(cCookie));
-            if(strlen(cCookie) > 0)
-            {
-                rank = StringToInt(cCookie);
-            }
-        }
-
-        Ranks_GetRankTag(rank, cRankBuffer);
-        Format(staffTag, sizeof(staffTag), "\x01[\x05%s\x01]", cRankBuffer);
-
-        Format(name, iBufferSize, "\x07[ALL]%s \x07%s\x01", staffTag, name);
-        Format(flagstring, iBufferSize, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
-
-        LogAction(author, -1, "\"%L\" triggered sm_say (text %s)", author, message);
-
-        return Plugin_Changed;
-    }
-
-    else
-    {
-        strcopy(message, strlen(message), message[1]);
-
-        recipients.Clear();
-
-        LoopValidClients(i)
-        {
-            int nrank = Ranks_GetClientRank(i);
-            if(nrank > RANK_INFORMER)
-            {
-                recipients.Push(GetClientUserId(i));
-            }
-        }
-
-        recipients.Push(GetClientUserId(author));
-
-        Format(name, iBufferSize, "\x09[TO STAFF] %s\x09", name);
-        Format(message, _CV_MAX_MESSAGE_LENGTH, "\x0A%s", message);
-        Format(flagstring, iBufferSize, "Cstrike_Chat_All"); //Yes, I hardcoded it, sorry, I cba to make it better
-
-        LogAction(author, -1, "\"%L\" triggered sm_chat (text %s)", author, message);
-
-        return Plugin_Changed;
-    }
-     
+    return Plugin_Changed;
 }
 
 public Action Command_Say(int client, int args)
@@ -594,14 +650,24 @@ public Action Command_RankOverride(int client, int args)
 
 }
 
-void SendChatToAll(int client, char[] message)
+void SendChatToAll(int client, const char[] unsafe_message)
 {
+    char message[2048];
+    FilterColorsFromMessage(message, sizeof(message), unsafe_message);
+    
+    char nameBuf[MAX_NAME_LENGTH];
+    
+    //PrintToConsoleAll("GetUserType[%N]=%i",client,GetUserType(client));
+    PrintToConsole(client, message);
+
     char buffer[16];
-    char staffTag[64];
-    char name[255];
+    char sFullPrint[1024];
+    char sChannel[32];
+    char sTeam[128];
+    char sPreTag[128];
+    //decl String:sMessage[1024];
 
     int rank = Ranks_GetClientRank(client);
-    
     if(AreClientCookiesCached(client))
     {
         char cCookie[128];
@@ -611,30 +677,30 @@ void SendChatToAll(int client, char[] message)
             rank = StringToInt(cCookie);
         }
     }
-
     Ranks_GetRankTag(rank, buffer);
-    Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
+    Format(sPreTag, 64, "\x01[\x05%s\x01]", buffer);
 
-    GetClientName(client, name, sizeof(name));
+    //fill them.
+    ProcessChannel("Cstrike_Chat_All", sChannel, sizeof(sChannel));
+    //ProcessTeam(client,sTeam,sizeof(sTeam));
     
-    Format(name, MAX_NAME_LENGTH, "\x07[ALL]%s \x07%s\x01", staffTag, name);
+    Format(sFullPrint, sizeof(sFullPrint), ">%s%s\x03 %N\x01:\x01 %s", sChannel, sPreTag, client, unsafe_message);
 
-    CPrintToChatAll("%s: \x01%s", name, message);
-
+    
     char cSoundName[512];
     DynamicGetRandomSoundFile(1, 1, "inilo/general_v1_452489/chat_v1_452489/chat_beep04_452489.mp3", cSoundName, sizeof(cSoundName));
     for (int i = 1; i <= MaxClients; i++)
     {
         if(!IsValidClient(i))
             continue;
+        FormatActivitySource(client, i, nameBuf, sizeof(nameBuf));
+        PrintToChat(i, sFullPrint);
         ClientCommand(i, "play \"%s\"", cSoundName);
     }
-
-
-    LogAction(client, -1, "\"%L\" triggered sm_say (text %s)", client, message);
+    LogAction(client, -1, "\"%L\" triggered sm_say (text %s)", client, unsafe_message);
 }
 
-void SendChatToAdmin(int client, char[] message)
+void SendChatToAdmin(int client, const char[] message)
 {
     char buffer[16];
     char staffTag[64];
@@ -696,9 +762,11 @@ void SendChatToAdminPleb(int client, char[] message)
     LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, message);
 }
 
-void SendPrivateChat(int client, int target, char[] message)
+void SendPrivateChat(int client, int target, const char[] unsafe_message)
 {
     //Remove colors from message
+    char message[2048];
+    Format(message, sizeof(message), "%s", unsafe_message);
     CRemoveColors(message, _CV_MAX_MESSAGE_LENGTH);
     RemoveHexColors(message, message, _CV_MAX_MESSAGE_LENGTH);
 
@@ -1195,4 +1263,137 @@ stock int AccountIDToClient(int AccountID)
             return client;
     }
     return 0;
+}
+
+stock void ProcessChannel(char[] sChatType, char[] output, int maxlen)
+{
+    //Allchat alive
+    if(StrEqual(sChatType,"Cstrike_Chat_All"))
+    {
+        Format(output,maxlen,"\x01");
+        return;
+    }
+    //Teamchat alive
+    if(StrEqual(sChatType,"Cstrike_Chat_CT")
+        ||StrEqual(sChatType,"Cstrike_Chat_T")
+        ||StrEqual(sChatType,"Cstrike_Chat_CT_Loc")
+        ||StrEqual(sChatType,"Cstrike_Chat_T_Loc"))
+    {
+        Format(output,maxlen,"\x01[\x01TEAM\x01]");
+        return;
+    }
+    //Allchat Dead
+    if(StrEqual(sChatType,"Cstrike_Chat_AllDead"))
+    {
+        Format(output,maxlen,"\x01[\x08DEAD\x01]");
+        return;
+    }
+    //Teamchat Dead.
+    if(StrEqual(sChatType,"Cstrike_Chat_CT_Dead")
+        ||StrEqual(sChatType,"Cstrike_Chat_T_Dead"))
+    {
+        Format(output,maxlen,"\x01[\x08DEAD\x01]\x01[\x08TEAM\x01]");
+        return;
+    }
+    //Specator
+    //Allchat Dead
+    if(StrEqual(sChatType,"Cstrike_Chat_AllSpec"))
+    {
+        Format(output, maxlen, "\x01[\x08SPEC\x01]");
+        return;
+    }
+
+    if(StrEqual(sChatType,"Cstrike_Chat_Spec"))
+    {
+        Format(output, maxlen, "\x01[\x08SPEC\x01]\x01[\x01TEAM\x01]");
+        return;
+    }
+
+    /*
+    "csgo"
+    {
+        "Cstrike_Chat_CT_Loc"   "{engine 1}[TEAM]{1}{2}"
+        "Cstrike_Chat_CT"   "{engine 1}[TEAM]{1}{2}"
+        "Cstrike_Chat_T_Loc"    "{engine 1}[TEAM]{1}{2}"
+        "Cstrike_Chat_T"    "{engine 1}[TEAM]{1}{2}"
+        "Cstrike_Chat_CT_Dead"  "{engine 1}[{engine 8}DEAD{engine 1}][{engine 8}TEAM{engine 1}]{1}{2}"
+        "Cstrike_Chat_T_Dead"   "{engine 1}[{engine 8}DEAD{engine 1}][{engine 8}TEAM{engine 1}]{1}{2}"
+        "Cstrike_Chat_Spec" "{engine 1}[{engine 8}SPEC{engine 1}][TEAM]{1}{2}"
+        "Cstrike_Chat_All"  "{1}{2}"
+        "Cstrike_Chat_AllDead"  "{engine 1}[{engine 8}DEAD{engine 1}]{1}{2}"
+        "Cstrike_Chat_AllSpec"  "{engine 1}[{engine 8}SPEC{engine 1}]{1}{2}"
+    }
+    */
+
+    //unknown
+    Format(output,maxlen,"\x01[\x01UNKNOWN-CHANNEL\x01]");
+}
+
+public int CountActiveStaffBackup()
+{
+    int counted_mods = 0;
+    for (int player = 1; player <= MaxClients ; player++)
+    {
+        if(IsValidClient(player))
+        {
+            AdminId id = GetUserAdmin(player);
+            if(id != INVALID_ADMIN_ID)
+            {
+                if(GetAdminFlag(id, Admin_Chat))
+                {
+                    if(GetClientTeam(player) == 2 || GetClientTeam(player) == 3)
+                    {
+                        counted_mods++;
+                    }
+                }
+            }
+        }
+    }
+    return counted_mods;
+}
+
+public int GetStaffCountBackup()
+{
+    int counted_mods = 0;
+    for (int player = 1; player <= MaxClients ; player++)
+    {
+        if(IsValidClient(player))
+        {
+            AdminId id = GetUserAdmin(player);
+            if(id != INVALID_ADMIN_ID)
+            {
+                if(GetAdminFlag(id, Admin_Chat))
+                {
+                    counted_mods++;
+                }
+            }
+        }
+    }
+    return counted_mods;
+}
+
+void DisplayCenterTextToAll(client, const char[] message)
+{
+    new String:nameBuf[MAX_NAME_LENGTH];
+    
+    for (new i = 1; i <= MaxClients; i++)
+    {
+        if (!IsClientInGame(i) || IsFakeClient(i))
+        {
+            continue;
+        }
+        FormatActivitySource(client, i, nameBuf, sizeof(nameBuf));
+        PrintCenterText(i, "%s: %s", nameBuf, message);
+    }
+}
+
+stock bool FilterColorsFromMessage(char[] safe_message, int iLength, const char[] unsafe_message)
+{
+    strcopy(safe_message,iLength,unsafe_message);
+    char sCodes[][] = {"\x01", "\x02", "\x03", "\x04", "\x05", "\x06", "\x07", "\x08", "\x09", "\x0A", "\x0B", "\x0C", "\x0D", "\x0E", "\x0F","\x10"};
+    for (int i = 0; i < sizeof(sCodes); i++)
+    {
+        ReplaceString(safe_message,iLength,sCodes[i],"");
+    }
+    return false;
 }
