@@ -140,55 +140,46 @@ public Action OnClientSayCommand(client, const char[] command, const char[] sArg
         //no @ detected, kill any furhter progress
         return Plugin_Continue;
     }
+    bool teamchat = (strcmp(command, "say_team", false) == 0);
+    bool allchat = (strcmp(command, "say", false) == 0);
     startidx++;
-    
-    if (strcmp(command, "say", false) == 0)
+    if (allchat || teamchat)
     {
+        //we have 1 x @ , this means allchat (for staff, for non staff we redirect to staff chat)
+        //however, 1 x @ in teamchat means admin chat.
         if (sArgs[startidx] != CHAT_SYMBOL) // sm_say alias
         {
-            if (!CheckCommandAccess(client, "sm_say", ADMFLAG_CHAT))
+            if(allchat)
             {
-                //does not have access to sm_say, so lets redirect to staff chat
-                if(!CheckCommandAccess(client, "sm_chat", ADMFLAG_CHAT))
+                if (CheckCommandAccess(client, "sm_say", ADMFLAG_CHAT))
                 {
-                    //PrintToChat(client, " [SM] Message sent to all staff.");
-                    //sArgs[startidx]
-                    char cStaffAddon[64];
-                    int staff_active = CountActiveStaffBackup();
-                    bool online_staff = !!GetStaffCountBackup();
-                    if(online_staff)
-                    {
-
-                        if(staff_active == 0)
-                        {
-                            Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07there is staff but afk\x01]");
-                        }
-                        else if(staff_active == 1)
-                        {
-                            Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x09%i staff member online\x01]",staff_active);
-                        }
-                        else if(staff_active > 1 )
-                        {
-                            Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x09%i staff members online\x01]",staff_active);
-                        }
-                    }
-                    else
-                    {
-                        Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07no staff online\x01]",staff_active);
-                    }
-                    PrintToChat(client, ">\x01[\x09STAFF\x01]%s\x09 %N\x01:\x08 %s", cStaffAddon, client, sArgs[startidx]);
-                    SendChatToAdmin(client, sArgs[startidx]);
-                    LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, sArgs[startidx]);
+                    //our user has access to sm_say, so we may forward it to everyone.
+                    SendChatToAll(client, sArgs[startidx]);
+                    LogAction(client, -1, "\"%L\" triggered sm_say (text %s)", client, sArgs[startidx]);
+                    return Plugin_Stop;
                 }
-                return Plugin_Stop;
+                else
+                {
+                    //our user does not have access to sm_say, meaning they are trying to talk to the admins.
+                    InitateStaffChat(client, sArgs[startidx]);
+                    return Plugin_Stop;
+                }
             }
-            SendChatToAll(client, sArgs[startidx]);
-            LogAction(client, -1, "\"%L\" triggered sm_say (text %s)", client, sArgs[startidx]);
-            return Plugin_Stop;
+            if(teamchat)
+            {
+                //user is typing an 1 x @ in teamchat, if they are staff we should send it to staff.
+                if(CanStaffChat(client))
+                {
+                    SendChatToAdmin(client, sArgs[startidx]);
+                }
+                else
+                {
+                    InitateStaffChat(client, sArgs[startidx]);
+                }
+            }
+           
         }
-        
         startidx++;
-
         if (sArgs[startidx] != CHAT_SYMBOL) // sm_psay alias
         {
             if (!CheckCommandAccess(client, "sm_psay", ADMFLAG_CHAT))
@@ -222,56 +213,38 @@ public Action OnClientSayCommand(client, const char[] command, const char[] sArg
         
         return Plugin_Stop;
     }
-    else if (strcmp(command, "say_team", false) == 0 || strcmp(command, "say_squad", false) == 0)
-    {
-        if (!CheckCommandAccess(client, "sm_chat", ADMFLAG_CHAT))
-        {
-            return Plugin_Continue;
-        }
-        if(!CheckCommandAccess(client, "sm_chat", ADMFLAG_CHAT))
-        {
-            //PrintToChat(client, " [SM] Message sent to all staff.");
-            //sArgs[startidx]
-            char cStaffAddon[64];
-            int staff_active = CountActiveStaffBackup();
-            bool online_staff = !!GetStaffCountBackup();
-            if(online_staff)
-            {
-
-                if(staff_active == 0)
-                {
-                    //#if !defined TTT_COMPILE
-                    //ShowRequestStaffPanel(client);
-                    //#endif
-                    Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07there is staff but afk\x01]");
-                }
-                else if(staff_active == 1)
-                {
-                    Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x09%i staff member online\x01]",staff_active);
-                }
-                else if(staff_active > 1 )
-                {
-                    Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x09%i staff members online\x01]",staff_active);
-                }
-            }
-            else
-            {
-                Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07no staff online\x01]",staff_active);
-            }
-            PrintToChat(client, ">\x01[\x09STAFF\x01]%s\x09 %N\x01:\x08 %s",cStaffAddon,client,sArgs[startidx]);
-
-        }
-        SendChatToAdmin(client, sArgs[startidx]);
-        if(IsValidClient(client))
-        {
-            LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, sArgs[startidx]);
-        }
-        
-        
-        return Plugin_Stop;
-    }
 
     return Plugin_Continue;
+}
+
+public void InitateStaffChat(int client, const char[] cMessage)
+{
+    char cStaffAddon[64];
+    int staff_active = CountActiveStaffBackup();
+    bool online_staff = !!GetStaffCountBackup();
+    if(online_staff)
+    {
+        if(staff_active == 0)
+        {
+            Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07there is staff but afk\x01]");
+        }
+        else if(staff_active == 1)
+        {
+            Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x09%i staff member online\x01]", staff_active);
+        }
+        else if(staff_active > 1 )
+        {
+            Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x09%i staff members online\x01]", staff_active);
+        }
+    }
+    else
+    {
+        Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07no staff online\x01]");
+    }
+    //send a nice message to the user
+    PrintToChat(client, ">\x01[\x09STAFF\x01]%s\x09 %N\x01:\x08 %s", cStaffAddon, client, cMessage);
+    //send it to our staff ofc.
+    SendChatToAdmin(client, cMessage);
 }
 
 
@@ -721,11 +694,13 @@ void SendChatToAdmin(int client, const char[] message)
         }
     }
 
-
-    Ranks_GetRankTag(rank, buffer);
-    Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
+    //only when the person has a rank, do include this rank 
+    if(rank > RANK_PLEB)
+    {
+        Ranks_GetRankTag(rank, buffer);
+        Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
+    }
     GetClientName(client, name, sizeof(name));
-
     LoopValidClients(i)
     {
         if(Ranks_GetClientRank(i) > RANK_PLEB)
@@ -734,7 +709,6 @@ void SendChatToAdmin(int client, const char[] message)
             ClientCommand(i, "play \"%s\"", cSoundName);
         }
     }
-
     LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, message);
 }
 
@@ -1357,19 +1331,25 @@ public int GetStaffCountBackup()
     int counted_mods = 0;
     for (int player = 1; player <= MaxClients ; player++)
     {
-        if(IsValidClient(player))
+        if(IsValidClient(player) && CanStaffChat(player))
         {
-            AdminId id = GetUserAdmin(player);
-            if(id != INVALID_ADMIN_ID)
-            {
-                if(GetAdminFlag(id, Admin_Chat))
-                {
-                    counted_mods++;
-                }
-            }
+           counted_mods++;
         }
     }
     return counted_mods;
+}
+
+public bool CanStaffChat(int client)
+{
+    AdminId id = GetUserAdmin(client);
+    if(id != INVALID_ADMIN_ID)
+    {
+        if(GetAdminFlag(id, Admin_Chat))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 void DisplayCenterTextToAll(client, const char[] message)
