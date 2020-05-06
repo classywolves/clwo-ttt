@@ -171,10 +171,12 @@ public Action OnClientSayCommand(client, const char[] command, const char[] sArg
                 if(CanStaffChat(client))
                 {
                     SendChatToAdmin(client, sArgs[startidx]);
+                    return Plugin_Stop;
                 }
                 else
                 {
                     InitateStaffChat(client, sArgs[startidx]);
+                    return Plugin_Stop;
                 }
             }
            
