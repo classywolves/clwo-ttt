@@ -241,6 +241,8 @@ public void InitateStaffChat(int client, const char[] cMessage)
     }
     else
     {
+        //call admin
+        ClientCommand(client, "sm_calladmin");
         Format(cStaffAddon,sizeof(cStaffAddon),"\x01[\x07no staff online\x01]");
     }
     //send a nice message to the user
