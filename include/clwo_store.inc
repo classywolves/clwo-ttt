@@ -4,6 +4,24 @@
 #define _clwo_store_included
 
 /*
+ * Called when an item is purchased in the menu. Return Plugin_Stop
+ * to prevent the purchase and stop any credit deductions.
+ *
+ * @param client        The Client who purchased the item.
+ * @param count         The amount bought.
+ */
+typedef Store_ItemPurchaseCallback = function Action (int client, int count);
+
+/*
+ * Called when a skill is purchased in the menu. Return Plugin_Stop
+ * to prevent the purchase and stop any credit deductions.
+ *
+ * @param client        The Client who purchased the item.
+ * @param count         The Level of the Skill.
+ */
+typedef Store_SkillPurchaseCallback = function Action (int client, int level);
+
+/*
  * Called when the store is ready to register items.
  * Allows for the plugin to be reloaded.
  */
@@ -13,24 +31,6 @@ forward void Store_OnRegister();
  * Called when the store has registered all items.
  */
 forward void Store_OnReady();
-
-/*
- * Called when an item is purchased in the menu. Return Plugin_Stop
- * to prevent the purchase and stop any credit deductions.
- *
- * @param client            The client who purchased the item.
- * @param itemshort         The item index.
- */
-forward void Store_OnItemPurchased(int client, char[] id);
-
-/*
- * Called when an item is purchased in the menu. Return Plugin_Stop
- * to prevent the purchase and stop any credit deductions.
- *
- * @param client            The client who purchased the item.
- * @param itemshort         The item index.
- */
-forward void Store_OnSkillPurchased(int client, char[] id, int level);
 
 /*
  * Checkes for whether the store is ready yet.
@@ -45,12 +45,13 @@ native bool Store_IsReady();
  * @param id                The short-tag identifier of the item (must be unique).
  * @param name              The name of the item.
  * @param price             The price of the item.
+ * @param callback          The function to call when this item is purchased.
  * @param maxCount          The optional max count a client may have of the item. (Default: 0 - No limit)
  * @param sort              The priority in Sorting. Buy menu is sorted from high to low. (Default: 0)
  *
  * @return                  The items unique integer id for this session.
  */
-native void Store_RegisterItem(char[] id, char[] name, char[] description, int price, int maxCount = 0, int sort = 0);
+native void Store_RegisterItem(char[] id, char[] name, char[] description, int price, Store_ItemPurchaseCallback callback, int maxCount = 0, int sort = 0);
 
 /*
  * Registers a skill to the store.
@@ -61,11 +62,12 @@ native void Store_RegisterItem(char[] id, char[] name, char[] description, int p
  * @param price             The price of the skill.
  * @param step              The increase in price per level. (0.0 - No change)
  * @param level             The optional max level of this skill. (Default: 1, 0 - No limit)
+ * @param callback          The function to call when this skill is purchased.
  * @param sort              The priority in Sorting. Buy menu is sorted from high to low. (Default: 0)
  *
  * @return                  The items unique integer id for this session.
  */
-native void Store_RegisterSkill(char[] id, char[] name, char[] description, int price, float step, int level = 1, int sort = 0);
+native void Store_RegisterSkill(char[] id, char[] name, char[] description, int price, float step, int level, Store_SkillPurchaseCallback callback, int sort = 0);
 
 /*
  * Un registers an item from the store.
@@ -143,9 +145,11 @@ public __pl_clwo_store_SetNTVOptional()
     MarkNativeAsOptional("Store_IsReady");
 
     MarkNativeAsOptional("Store_RegisterItem");
-    MarkNativeAsOptional("Store_UpdateItem");
+    MarkNativeAsOptional("Store_RegisterSkill");
     MarkNativeAsOptional("Store_UnRegisterItem");
+    MarkNativeAsOptional("Store_UnRegisterSkill");
     MarkNativeAsOptional("Store_GetItem");
+    MarkNativeAsOptional("Store_GetSkill");
     MarkNativeAsOptional("Store_AddItem");
 }
 #endif

@@ -7,7 +7,6 @@
 
 #include <colorvariables>
 #include <generics>
-#include <ttt_messages>
 #include <ttt_targeting>
 #include <clwo_store_credits>
 #include <clwo_store_messages>
@@ -34,8 +33,6 @@ StringMap g_smSkillIndexMap = null;
 
 GlobalForward g_OnRegisterForward = null;
 GlobalForward g_OnReadyForward = null;
-GlobalForward g_OnItemPurchasedForward = null;
-GlobalForward g_OnSkillPurchasedForward = null;
 
 ConVar g_cSortItems = null;
 
@@ -47,6 +44,8 @@ enum struct Item
     int price;
     int maxCount;
     int sort;
+    Handle plugin;
+    Function callback;
 }
 
 enum struct Skill
@@ -58,6 +57,8 @@ enum struct Skill
     float increase;
     int level;
     int sort;
+    Handle plugin;
+    Function callback;
 }
 
 enum struct PlayerData
@@ -74,8 +75,6 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max
 {
     g_OnRegisterForward = new GlobalForward("Store_OnRegister", ET_Ignore);
     g_OnReadyForward = new GlobalForward("Store_OnReady", ET_Ignore);
-    g_OnItemPurchasedForward = new GlobalForward("Store_OnItemPurchased", ET_Ignore, Param_Cell, Param_String);
-    g_OnSkillPurchasedForward = new GlobalForward("Store_OnItemPurchased", ET_Ignore, Param_Cell, Param_String, Param_Cell);
 
     CreateNative("Store_IsReady", Native_IsReady);
 
@@ -660,20 +659,24 @@ public void Purchase_Skill(int client, int skill)
     int price = RoundToNearest(float(skillData.price) * Pow(skillData.increase, float(level)));
     if (cr >= price)
     {
-        level++;
-        cr = Store_SubClientCredits(client, price);
-
-        g_playerData[client].skills.SetValue(skillData.id, level);
-        Db_InsertUpdateSkill(client, skill, level);
-
-        Menu_SkillInfo(client, skill);
-
-        Call_StartForward(g_OnSkillPurchasedForward);
+        Action res = Plugin_Continue;
+        Call_StartFunction(skillData.plugin, skillData.callback);
         Call_PushCell(client);
         Call_PushString(skillData.id);
         Call_PushCell(level);
-        Call_Finish();
+        Call_Finish(res);
 
-        CPrintToChat(client, STORE_MESSAGE ... "You just purchased {yellow}%s {default}for {orange}%dcR {default}(remaining credits {orange}%dcR{default}).", skillData.name, price, cr);
+        if (res < Plugin_Stop)
+        {
+            cr = Store_SubClientCredits(client, price);
+
+            ++level;
+            g_playerData[client].skills.SetValue(skillData.id, level);
+            Db_InsertUpdateSkill(client, skill, level);
+
+            Menu_SkillInfo(client, skill);
+
+            CPrintToChat(client, STORE_MESSAGE ... "You just purchased {yellow}%s {default}for {orange}%dcR {default}(remaining credits {orange}%dcR{default}).", skillData.name, price, cr);
+        }
     }
 }
