@@ -71,7 +71,7 @@ public void OnClientDisconnect(int client)
 
 public Action Command_Credits(int client, int args)
 {
-    if (!CanRunClientCommand(client))
+    if (!CanClientUseCredits(client))
     {
         return Plugin_Handled;
     }
@@ -89,7 +89,7 @@ public Action Command_GiveCredits(int client, int args)
         return Plugin_Handled;
     }
 
-    if (!CanRunClientCommand(client))
+    if (!CanClientUseCredits(client))
     {
         return Plugin_Handled;
     }
@@ -105,7 +105,7 @@ public Action Command_GiveCredits(int client, int args)
         return Plugin_Handled;
     }
 
-    if (!CanRunClientCommand(target))
+    if (!CanClientUseCredits(target))
     {
         return Plugin_Handled;
     }
@@ -150,7 +150,7 @@ public Action Command_SetCredits(int client, int args)
         return Plugin_Handled;
     }
 
-    if (!CanRunClientCommand(target))
+    if (!CanClientUseCredits(target))
     {
         return Plugin_Handled;
     }
@@ -364,7 +364,7 @@ void SubClientCredits(int client, int credits)
  * Checks if a clients credits are loaded and if not prints a user message
  * saying that it is currently unavailible.
  */
-bool CanRunClientCommand(int client)
+bool CanClientUseCredits(int client)
 {
     if (!IsClientCreditsValid(client))
     {
