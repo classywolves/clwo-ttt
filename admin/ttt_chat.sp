@@ -273,7 +273,7 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
 
     if (message[0] != CHAT_SYMBOL) // Not staff / all say or pm.
     {   
-        if (rank > RANK_PLEB)
+        if (rank > RANK_PLEB && IsCarryingClantag(author))
         {
             if(AreClientCookiesCached(author))
             {
@@ -654,8 +654,12 @@ void SendChatToAll(int client, const char[] unsafe_message)
             rank = StringToInt(cCookie);
         }
     }
-    Ranks_GetRankTag(rank, buffer);
-    Format(sPreTag, 64, "\x01[\x05%s\x01]", buffer);
+    if(IsCarryingClantag(client))
+    {
+        Ranks_GetRankTag(rank, buffer);
+        Format(sPreTag, 64, "\x01[\x05%s\x01]", buffer);
+    }
+
 
     //fill them.
     ProcessChannel("Cstrike_Chat_All", sChannel, sizeof(sChannel));
@@ -699,7 +703,7 @@ void SendChatToAdmin(int client, const char[] message)
     }
 
     //only when the person has a rank, do include this rank 
-    if(rank > RANK_PLEB)
+    if(rank > RANK_PLEB && IsCarryingClantag(client))//5157979 == clwo.eu)
     {
         Ranks_GetRankTag(rank, buffer);
         Format(staffTag, 64, "\x01[\x05%s\x01]", buffer);
@@ -709,7 +713,7 @@ void SendChatToAdmin(int client, const char[] message)
     {
         if(Ranks_GetClientRank(i) > RANK_PLEB)
         {
-            CPrintToChat(i, "\x09[STAFF]%s\x09 %s: \x0A%s", staffTag, name, message);
+            PrintToChat(i, "\x09[STAFF]%s\x09 %s: \x0A%s", staffTag, name, message);
             ClientCommand(i, "play \"%s\"", cSoundName);
         }
     }
@@ -1380,4 +1384,24 @@ stock bool FilterColorsFromMessage(char[] safe_message, int iLength, const char[
         ReplaceString(safe_message,iLength,sCodes[i],"");
     }
     return false;
+}
+
+
+stock bool IsCarryingClantag(int client)
+{
+    if(client == 0) //console fix
+        return true;
+    char cCl_clanid[64];
+    if(IsValidClient(client))
+    {
+        GetClientInfo(client, "cl_clanid",cCl_clanid, sizeof(cCl_clanid));
+    }
+    if(StrEqual(cCl_clanid,"5157979"))//5157979 == clwo.eu
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
