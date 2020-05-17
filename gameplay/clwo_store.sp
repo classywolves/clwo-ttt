@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #include <sourcemod>
 #include <sdktools>
@@ -8,7 +9,8 @@
 #include <generics>
 #include <ttt_messages>
 #include <ttt_targeting>
-#include <clwo-store-messages>
+#include <clwo_store_credits>
+#include <clwo_store_messages>
 
 public Plugin myinfo =
 {
@@ -20,6 +22,7 @@ public Plugin myinfo =
 };
 
 bool g_bStoreReady = false;
+bool g_bCreditsLoaded = false;
 
 Database g_database = null;
 
@@ -35,7 +38,6 @@ GlobalForward g_OnItemPurchasedForward = null;
 GlobalForward g_OnSkillPurchasedForward = null;
 
 ConVar g_cSortItems = null;
-ConVar g_cCredits = null;
 
 enum struct Item
 {
@@ -60,7 +62,6 @@ enum struct Skill
 
 enum struct PlayerData
 {
-    int credits;
     StringMap items;
     StringMap skills;
     int selectedItem;
@@ -86,19 +87,16 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max
     CreateNative("Store_GetSkill", Native_GetSkill);
     CreateNative("Store_AddItem", Native_AddItem);
 
-    CreateNative("Store_GetCredits", Native_GetCredits);
-    CreateNative("Store_SetCredits", Native_SetCredits);
-    CreateNative("Store_AddCredits", Native_AddCredits);
-
     RegPluginLibrary("clwo-store");
 
     return APLRes_Success;
 }
 
-public OnPluginStart()
+public void OnPluginStart()
 {
     g_cSortItems = CreateConVar("clwo_store_sort", "1", "Sort shop items? 0 = Disabled. 1 = Enabled (default).", _, true, 0.0, true, 1.0);
-    g_cCredits = CreateConVar("clwo_store_credits", "0", "The amount of credits a player should start with.");
+
+    AutoExecConfig(true, "store", "clwo");
 
     g_aStoreItems = new ArrayList(sizeof(Item), 0);
     g_aStoreSkills = new ArrayList(sizeof(Skill), 0);
@@ -106,38 +104,48 @@ public OnPluginStart()
     g_smItemIndexMap = new StringMap();
     g_smSkillIndexMap = new StringMap();
 
-    HookEvent("round_end", Event_OnRoundEnd, EventHookMode_Post);
-
-    RegConsoleCmd("sm_cr", Command_Credits, "Displays the clients credits (cR).");
-    RegConsoleCmd("sm_givecr", Command_GiveCredits, "Give a set amount of credits to a client (cR).");
-    RegAdminCmd("sm_setcr", Command_SetCredits, ADMFLAG_CHEATS, "Set a clients credits (cR).");
-
     RegConsoleCmd("sm_skills", Command_Skills, "Displays the skills menu to the client.");
     RegConsoleCmd("sm_store", Command_Store, "Displays the store to the client.");
-
-    AutoExecConfig(true, "store", "clwo");
 
     Database.Connect(DbCallback_Connect, "store");
 
     PrintToServer("[STR] Loaded succcessfully");
 }
 
+public void OnAllPluginsLoaded()
+{
+    g_bCreditsLoaded = Store_CheckCreditsLibraryExists();
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+    if (Store_CheckCreditsLibraryName(name))
+    {
+        g_bCreditsLoaded = true;
+    }
+}
+
+public void OnLibraryRemoved(const char[] name)
+{
+    if (Store_CheckCreditsLibraryName(name))
+    {
+        g_bCreditsLoaded = false;
+    }
+}
+
 public void OnClientPutInServer(int client)
 {
-    g_playerData[client].credits = -1;
     g_playerData[client].items = new StringMap();
     g_playerData[client].skills = new StringMap();
     g_playerData[client].selectedItem = -1;
     g_playerData[client].selectedSkill = -1;
 
-    Db_SelectClientCredits(client);
     Db_SelectClientItems(client);
     Db_SelectClientSkills(client);
 }
 
 public void OnClientDisconnect(int client)
 {
-    g_playerData[client].credits = -1;
     g_playerData[client].items.Clear();
     g_playerData[client].skills.Clear();
     g_playerData[client].selectedItem = -1;
@@ -145,75 +153,6 @@ public void OnClientDisconnect(int client)
 
     delete g_playerData[client].items;
     delete g_playerData[client].skills;
-}
-
-public Action Command_Credits(int client, int args)
-{
-    CPrintToChat(client, STORE_MESSAGE ... "{yellow}%N {default}has {orange}%dcR.", client, g_playerData[client].credits);
-
-    return Plugin_Handled;
-}
-
-public Action Command_GiveCredits(int client, int args)
-{
-    if (args < 2)
-    {
-        CPrintToChat(client, TTT_USAGE ... "sm_givecr <#userid|name> <amount>");
-        return Plugin_Handled;
-    }
-
-    char buffer[32];
-    int target;
-    int amount;
-
-    GetCmdArg(1, buffer, sizeof(buffer));
-    target = TTT_Target(buffer, client, true, false, false);
-    if (target < 1)
-    {
-        return Plugin_Handled;
-    }
-
-    GetCmdArg(2, buffer, sizeof(buffer));
-    amount = StringToInt(buffer);
-
-    if (amount > g_playerData[client].credits)
-    {
-        CPrintToChat(client, STORE_MESSAGE ... "you do not have enough cR to give {orange}%d {default}to {yellow}%N.", amount, target);
-        return Plugin_Handled;
-    }
-
-    CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}has given {yellow}%N {orange}%dcR.", client, target, amount);
-    g_playerData[target].credits += amount;
-
-    return Plugin_Handled;
-}
-
-public Action Command_SetCredits(int client, int args)
-{
-    if (args < 2)
-    {
-        CPrintToChat(client, TTT_USAGE ... "sm_setcr <#userid|name> <amount>");
-        return Plugin_Handled;
-    }
-
-    char buffer[32];
-    int target;
-    int amount;
-
-    GetCmdArg(1, buffer, sizeof(buffer));
-    target = TTT_Target(buffer, client, true, false, false);
-    if (target < 1)
-    {
-        return Plugin_Handled;
-    }
-
-    GetCmdArg(2, buffer, sizeof(buffer));
-    amount = StringToInt(buffer);
-
-    CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}has set {yellow}%N {orange}%dcR.", client, target, amount);
-    g_playerData[target].credits = amount;
-
-    return Plugin_Handled;
 }
 
 public Action Command_Skills(int client, int args)
@@ -230,15 +169,6 @@ public Action Command_Store(int client, int args)
     return Plugin_Handled;
 }
 
-public void Db_InsertClientCredits(int client)
-{
-    int accountId = GetSteamAccountID(client, true);
-
-    char query[89];
-    Format(query, sizeof(query), "INSERT INTO `store_players` (`account_id`, `credits`) VALUES ('%d', '%d');", accountId, g_playerData[client].credits);
-    g_database.Query(DbCallback_InsertClientCredits, query, GetClientUserId(client));
-}
-
 public void Db_InsertUpdateSkill(int client, int skill, int level)
 {
     int accountId = GetSteamAccountID(client, true);
@@ -249,15 +179,6 @@ public void Db_InsertUpdateSkill(int client, int skill, int level)
     char query[256];
     Format(query, sizeof(query), "INSERT INTO `store_skills` (`account_id`, `skill_id`, `level`) VALUES ('%d', '%s', '%d') ON DUPLICATE KEY UPDATE `level` = '%d';", accountId, skillData.id, level, level);
     g_database.Query(DbCallback_InsertUpdateSkill, query, GetClientUserId(client));
-}
-
-public void Db_SelectClientCredits(int client)
-{
-    int accountId = GetSteamAccountID(client, true);
-
-    char query[128];
-    Format(query, sizeof(query), "SELECT `credits` FROM `store_players` WHERE `account_id` = '%d';", accountId);
-    g_database.Query(DbCallback_SelectClientCredits, query, GetClientUserId(client));
 }
 
 public void Db_SelectClientItems(int client)
@@ -278,20 +199,6 @@ public void Db_SelectClientSkills(int client)
     g_database.Query(DbCallback_SelectClientSkills, query, GetClientUserId(client));
 }
 
-public void Db_UpdateClientCredits(int client)
-{
-    if (g_playerData[client].credits < 0)
-    {
-        return;
-    }
-
-    int accountId = GetSteamAccountID(client, true);
-
-    char query[89];
-    Format(query, sizeof(query), "UPDATE `store_players` SET `credits` = '%d' WHERE `account_id` = '%d';", g_playerData[client].credits, accountId);
-    g_database.Query(DbCallback_UpdateClientCredits, query, GetClientUserId(client));
-}
-
 public void DbCallback_Connect(Database db, const char[] error, any data)
 {
     if (db == null)
@@ -301,7 +208,6 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
     }
 
     g_database = db;
-    SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_players` (`account_id` INT UNSIGNED NOT NULL, `credits` INT UNSIGNED NOT NULL, PRIMARY KEY (`account_id`)) ENGINE = InnoDB;");
     SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_items` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `account_id` INT UNSIGNED NOT NULL, `item_id` VARCHAR(16) NOT NULL, `quantity` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`), UNIQUE `unique_item_entry` (`account_id`, `item_id`)) ENGINE = InnoDB;");
     SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_skills` ( `id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `account_id` INT UNSIGNED NOT NULL, `skill_id` VARCHAR(16) NOT NULL, `level` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`), UNIQUE `unique_skill_entry` (`account_id`, `skill_id`) ) ENGINE = InnoDB;");
 
@@ -320,44 +226,12 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
     PrintToServer(STORE_MESSAGE ... "%d Items have been registered.", g_aStoreItems.Length + g_aStoreSkills.Length);
 }
 
-public void DbCallback_InsertClientCredits(Database db, DBResultSet results, const char[] error, int userid)
-{
-    if (results == null)
-    {
-        PrintToServer("DbCallback_InsertClientCredits: %s", error);
-        return;
-    }
-}
-
 public void DbCallback_InsertUpdateSkill(Database db, DBResultSet results, const char[] error, int userid)
 {
     if (results == null)
     {
         PrintToServer("DbCallback_InsertUpdateSkill: %s", error);
         return;
-    }
-}
-
-public void DbCallback_SelectClientCredits(Database db, DBResultSet results, const char[] error, int userid)
-{
-    if (results == null)
-    {
-        PrintToServer("DbCallback_SelectClientCredits: %s", error);
-        return;
-    }
-
-    int client = GetClientOfUserId(userid);
-    if (IsValidClient(client))
-    {
-        if (results.FetchRow())
-        {
-            g_playerData[client].credits = results.FetchInt(0);
-        }
-        else
-        {
-            g_playerData[client].credits = g_cCredits.IntValue;
-            Db_InsertClientCredits(client);
-        }
     }
 }
 
@@ -404,22 +278,6 @@ public void DbCallback_SelectClientSkills(Database db, DBResultSet results, cons
 
             g_playerData[client].skills.SetValue(id, level);
         }
-    }
-}
-
-public void DbCallback_UpdateClientCredits(Database db, DBResultSet results, const char[] error, int userid)
-{
-    if (results == null)
-    {
-        PrintToServer("DbCallback_UpdateClientCredits: %s", error);
-    }
-}
-
-public Action Event_OnRoundEnd(Event event, const char[] name, bool dontBroadcast)
-{
-    LoopValidClients(i)
-    {
-        Db_UpdateClientCredits(i);
     }
 }
 
@@ -746,33 +604,6 @@ public int Native_AddItem(Handle plugin, int numParams)
     return -1;
 }
 
-public int Native_GetCredits(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-
-    return g_playerData[client].credits;
-}
-
-public int Native_SetCredits(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-    int amount = GetNativeCell(2);
-
-    g_playerData[client].credits = amount;
-
-    return g_playerData[client].credits;
-}
-
-public int Native_AddCredits(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-    int amount = GetNativeCell(2);
-
-    g_playerData[client].credits += amount;
-
-    return g_playerData[client].credits;
-}
-
 public int Sort_Items(int i, int j, Handle array, Handle hndl)
 {
     Item item1;
@@ -825,11 +656,12 @@ public void Purchase_Skill(int client, int skill)
     int level = 0;
     g_playerData[client].skills.GetValue(skillData.id, level);
 
+    int cr = Store_GetClientCredits(client);
     int price = RoundToNearest(float(skillData.price) * Pow(skillData.increase, float(level)));
-    if (g_playerData[client].credits >= price)
+    if (cr >= price)
     {
         level++;
-        g_playerData[client].credits -= price;
+        cr = Store_SubClientCredits(client, price);
 
         g_playerData[client].skills.SetValue(skillData.id, level);
         Db_InsertUpdateSkill(client, skill, level);
@@ -842,6 +674,6 @@ public void Purchase_Skill(int client, int skill)
         Call_PushCell(level);
         Call_Finish();
 
-        CPrintToChat(client, STORE_MESSAGE ... "You just purchased {yellow}%s {default}for {orange}%d.", skillData.name, price);
+        CPrintToChat(client, STORE_MESSAGE ... "You just purchased {yellow}%s {default}for {orange}%dcR {default}(remaining credits {orange}%dcR{default}).", skillData.name, price, cr);
     }
 }

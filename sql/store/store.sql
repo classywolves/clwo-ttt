@@ -1,11 +1,3 @@
-CREATE TABLE IF NOT EXISTS `ttt_store`.`store_players`
-(
-	`account_id` INT UNSIGNED NOT NULL,
-	`credits` INT UNSIGNED NOT NULL,  
-	PRIMARY KEY (`account_id`)
-)
-ENGINE = InnoDB;
-
 CREATE TABLE IF NOT EXISTS `ttt_store`.`store_items` 
 (
 	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -28,14 +20,8 @@ CREATE TABLE IF NOT EXISTS `ttt_store`.`store_skills`
 )
 ENGINE = InnoDB;
 
-SELECT `credits` FROM `store_players` WHERE `account_id` = '%d';
-
 SELECT `item_id`, `quantity` FROM `store_items` WHERE `account_id` = '%d';
 
 SELECT `skill_id`, `level` FROM `store_skills` WHERE `account_id` = '%d';
-
-INSERT INTO `store_players` (`account_id`, `credits`) VALUES ('%d', '%d');
-
-UPDATE `store_players` SET `credits` = '%d' WHERE `account_id` = '%d';
 
 INSERT INTO `store_skills` (`account_id`, `skill_id`, `level`) VALUES ('%d', '%s', '%d') ON DUPLICATE KEY UPDATE `level` = '%d';

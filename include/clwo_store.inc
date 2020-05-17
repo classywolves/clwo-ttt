@@ -1,35 +1,7 @@
 #if defined _clwo_store_included
-	#endinput
+    #endinput
 #endif
 #define _clwo_store_included
-
-public SharedPlugin __pl_clwo_store =
-{
-	name = "clwo-store",
-	file = "clwo-store.smx",
-#if defined REQUIRE_PLUGIN
-	required = 1,
-#else
-	required = 0,
-#endif
-};
-
-#if !defined REQUIRE_PLUGIN
-public __pl_clwo_store_SetNTVOptional()
-{
-    MarkNativeAsOptional("Store_IsReady");
-
-	MarkNativeAsOptional("Store_RegisterItem");
-    MarkNativeAsOptional("Store_UpdateItem");
-    MarkNativeAsOptional("Store_UnRegisterItem");
-    MarkNativeAsOptional("Store_GetItem");
-    MarkNativeAsOptional("Store_AddItem");
-
-    MarkNativeAsOptional("Store_GetCredits");
-    MarkNativeAsOptional("Store_SetCredits");
-    MarkNativeAsOptional("Store_AddCredits");
-}
-#endif
 
 /*
  * Called when the store is ready to register items.
@@ -144,31 +116,36 @@ native int Store_GetSkill(int client, char[] id);
  */
 native int Store_AddItem(int client, char[] id, int amount);
 
-/*
- * Gets the clients total credits.
- *
- * @param client            The client to be checked.
- *
- * @return                  The clients credit count.
- */
-native int Store_GetCredits(int client);
+stock bool Store_CheckLibraryExists()
+{
+    return LibraryExists("clwo-store");
+}
 
-/*
- * Gets the clients total credits.
- *
- * @param client            The client to be checked.
- * @param credits           The amount the clients credits should be set too.
- *
- * @return                  The clients credit count.
- */
-native int Store_SetCredits(int client, int credits);
+stock bool Store_CheckLibraryName(const char[] name)
+{
+    return strcmp(name, "clwo-store", true) == 0;
+}
 
-/*
- * Gets the clients total credits.
- *
- * @param client            The client to be checked.
- * @param credits           The amount of credits to be added to the clients total credits.
- *
- * @return                  The clients credit count.
- */
-native int Store_AddCredits(int client, int credits);
+public SharedPlugin __pl_clwo_store =
+{
+    name = "clwo-store",
+    file = "clwo_store.smx",
+#if defined REQUIRE_PLUGIN
+    required = 1,
+#else
+    required = 0,
+#endif
+};
+
+#if !defined REQUIRE_PLUGIN
+public __pl_clwo_store_SetNTVOptional()
+{
+    MarkNativeAsOptional("Store_IsReady");
+
+    MarkNativeAsOptional("Store_RegisterItem");
+    MarkNativeAsOptional("Store_UpdateItem");
+    MarkNativeAsOptional("Store_UnRegisterItem");
+    MarkNativeAsOptional("Store_GetItem");
+    MarkNativeAsOptional("Store_AddItem");
+}
+#endif
