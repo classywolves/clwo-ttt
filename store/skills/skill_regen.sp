@@ -30,8 +30,10 @@ public Plugin myinfo =
 enum struct PlayerData
 {
     int level;
+    int pendingAmount;
     int regenAmount;
     float regenFactor;
+    Handle pendingTimer;
     Handle regenTimer;
 }
 
@@ -44,11 +46,18 @@ public OnPluginStart()
     PrintToServer("[RGN] Loaded successfully");
 }
 
+public void OnClientPutInServer(int client)
+{
+    g_playerData[client].pendingTimer = INVALID_HANDLE;
+    g_playerData[client].regenTimer = INVALID_HANDLE;
+}
+
 public void OnClientDisconnect(int client)
 {
     g_playerData[client].level = -1;
     g_playerData[client].regenAmount = 0;
     g_playerData[client].regenFactor = 0.0;
+    ClearTimer(g_playerData[client].pendingTimer);
     ClearTimer(g_playerData[client].regenTimer);
 }
 
@@ -83,6 +92,9 @@ public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
     LoopClients(i)
     {
+        g_playerData[i].pendingAmount = 0;
+        g_playerData[i].regenAmount = 0;
+        ClearTimer(g_playerData[i].pendingTimer);
         ClearTimer(g_playerData[i].regenTimer);
     }
 }
@@ -90,14 +102,33 @@ public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 public void Hook_OnTakeDamageAlive(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
     int amount = RoundToFloor(damage * g_playerData[victim].regenFactor);
-    // @TODO message and delayed healing, should wait 5 seconds and then heal
-    //       shall do this later :)
-
-    g_playerData[victim].regenAmount += amount;
-    if (g_playerData[victim].regenTimer == INVALID_HANDLE)
+    g_playerData[victim].pendingAmount += amount;
+    if (g_playerData[victim].pendingTimer == INVALID_HANDLE)
     {
-        g_playerData[victim].regenTimer = CreateTimer(1.0, Timer_HealthRegen, GetClientUserId(victim), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+        g_playerData[victim].pendingTimer = CreateTimer(5.0, Timer_HealthPending, GetClientUserId(victim), TIMER_FLAG_NO_MAPCHANGE);
     }
+}
+
+public Action Timer_HealthPending(Handle timer, int userid)
+{
+    int client = GetClientOfUserId(userid);
+    if (client && IsPlayerAlive(client))
+    {
+        int amount = g_playerData[client].pendingAmount;
+        g_playerData[client].regenAmount += amount;
+        g_playerData[client].pendingAmount = 0;
+
+        CPrintToChat(client, "[RGN] Larraman's Organ activated, dispensing cells.");
+
+        if (g_playerData[client].regenTimer == INVALID_HANDLE)
+        {
+            g_playerData[client].regenTimer = CreateTimer(1.0, Timer_HealthRegen, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+        }
+
+        return Plugin_Continue;
+    }
+
+    return Plugin_Stop;
 }
 
 public Action Timer_HealthRegen(Handle timer, int userid)
@@ -110,9 +141,6 @@ public Action Timer_HealthRegen(Handle timer, int userid)
 
         return Plugin_Continue;
     }
-    else
-    {
-        g_playerData[client].regenTimer = INVALID_HANDLE;
-        return Plugin_Stop;
-    }
+
+    return Plugin_Stop;
 }
