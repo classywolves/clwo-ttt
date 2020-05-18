@@ -103,10 +103,10 @@ public void Hook_OnTakeDamageAlive(int victim, int attacker, int inflictor, floa
 public Action Timer_HealthRegen(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
-    if (client && IsPlayerAlive(client) && g_playerData[client].regenAmount > 0)
+    if (client && IsPlayerAlive(client) && (g_playerData[client].regenAmount > 0))
     {
         SetEntityHealth(client, GetClientHealth(client) + 1);
-        g_playerData[client].regenAmount -= 1;
+        --g_playerData[client].regenAmount;
 
         return Plugin_Continue;
     }
