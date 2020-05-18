@@ -8,7 +8,10 @@
 #include <colorvariables>
 #include <generics>
 #include <ttt_targeting>
+
+#undef REQUIRE_PLUGIN
 #include <clwo_store_credits>
+#define REQUIRE_PLUGIN
 #include <clwo_store_messages>
 
 public Plugin myinfo =
@@ -33,6 +36,7 @@ StringMap g_smSkillIndexMap = null;
 
 GlobalForward g_OnRegisterForward = null;
 GlobalForward g_OnReadyForward = null;
+GlobalForward g_fOnClientSkillsLoaded = null;
 
 ConVar g_cSortItems = null;
 
@@ -75,6 +79,7 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max
 {
     g_OnRegisterForward = new GlobalForward("Store_OnRegister", ET_Ignore);
     g_OnReadyForward = new GlobalForward("Store_OnReady", ET_Ignore);
+    g_fOnClientSkillsLoaded = new GlobalForward("Store_OnClientSkillsLoaded", ET_Ignore, Param_Cell);
 
     CreateNative("Store_IsReady", Native_IsReady);
 
@@ -138,7 +143,10 @@ public void OnClientPutInServer(int client)
     g_playerData[client].skills = new StringMap();
     g_playerData[client].selectedItem = -1;
     g_playerData[client].selectedSkill = -1;
+}
 
+public void OnClientPostAdminCheck(int client)
+{
     Db_SelectClientItems(client);
     Db_SelectClientSkills(client);
 }
@@ -213,12 +221,14 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
     LoopValidClients(i)
     {
         OnClientPutInServer(i);
+        OnClientPostAdminCheck(i);
     }
 
     Call_StartForward(g_OnRegisterForward);
     Call_Finish();
 
     g_bStoreReady = true;
+
     Call_StartForward(g_OnReadyForward);
     Call_Finish();
 
@@ -266,7 +276,7 @@ public void DbCallback_SelectClientSkills(Database db, DBResultSet results, cons
     }
 
     int client = GetClientOfUserId(userid);
-    if (IsValidClient(client))
+    if (client)
     {
         while (results.FetchRow())
         {
@@ -277,6 +287,10 @@ public void DbCallback_SelectClientSkills(Database db, DBResultSet results, cons
 
             g_playerData[client].skills.SetValue(id, level);
         }
+
+        Call_StartForward(g_fOnClientSkillsLoaded);
+        Call_PushCell(client);
+        Call_Finish();
     }
 }
 
@@ -588,12 +602,8 @@ public int Native_GetSkill(Handle plugin, int numParams)
     char id[16];
     GetNativeString(2, id, sizeof(id));
 
-    int level = -1;
-    if (g_playerData[client].skills.GetValue(id, level))
-    {
-        PrintToServer(STORE_ERROR ... "Skill %s is not currently registered.", id);
-        return 0;
-    }
+    int level = 0;
+    g_playerData[client].skills.GetValue(id, level);
 
     return level;
 }
@@ -649,6 +659,11 @@ public int Sort_Skills(int i, int j, Handle array, Handle hndl)
 
 public void Purchase_Skill(int client, int skill)
 {
+    if (!g_bCreditsLoaded)
+    {
+        return;
+    }
+
     Skill skillData;
     g_aStoreSkills.GetArray(skill, skillData);
 
@@ -659,24 +674,19 @@ public void Purchase_Skill(int client, int skill)
     int price = RoundToNearest(float(skillData.price) * Pow(skillData.increase, float(level)));
     if (cr >= price)
     {
-        Action res = Plugin_Continue;
+        ++level;
+
         Call_StartFunction(skillData.plugin, skillData.callback);
         Call_PushCell(client);
-        Call_PushString(skillData.id);
         Call_PushCell(level);
-        Call_Finish(res);
+        Call_Finish();
 
-        if (res < Plugin_Stop)
-        {
-            cr = Store_SubClientCredits(client, price);
+        cr = Store_SubClientCredits(client, price);
+        g_playerData[client].skills.SetValue(skillData.id, level);
+        Db_InsertUpdateSkill(client, skill, level);
 
-            ++level;
-            g_playerData[client].skills.SetValue(skillData.id, level);
-            Db_InsertUpdateSkill(client, skill, level);
+        Menu_SkillInfo(client, skill);
 
-            Menu_SkillInfo(client, skill);
-
-            CPrintToChat(client, STORE_MESSAGE ... "You just purchased {yellow}%s {default}for {orange}%dcR {default}(remaining credits {orange}%dcR{default}).", skillData.name, price, cr);
-        }
+        CPrintToChat(client, STORE_MESSAGE ... "You just purchased {yellow}%s {default}for {orange}%dcR {default}(remaining credits {orange}%dcR{default}).", skillData.name, price, cr);
     }
 }

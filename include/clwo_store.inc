@@ -10,7 +10,7 @@
  * @param client        The Client who purchased the item.
  * @param count         The amount bought.
  */
-typedef Store_ItemPurchaseCallback = function Action (int client, int count);
+typedef Store_ItemPurchaseCallback = function void (int client, int count);
 
 /*
  * Called when a skill is purchased in the menu. Return Plugin_Stop
@@ -19,7 +19,7 @@ typedef Store_ItemPurchaseCallback = function Action (int client, int count);
  * @param client        The Client who purchased the item.
  * @param count         The Level of the Skill.
  */
-typedef Store_SkillPurchaseCallback = function Action (int client, int level);
+typedef Store_SkillPurchaseCallback = function void (int client, int level);
 
 /*
  * Called when the store is ready to register items.
@@ -31,6 +31,8 @@ forward void Store_OnRegister();
  * Called when the store has registered all items.
  */
 forward void Store_OnReady();
+
+forward void Store_OnClientSkillsLoaded(int client);
 
 /*
  * Checkes for whether the store is ready yet.
@@ -140,7 +142,7 @@ public SharedPlugin __pl_clwo_store =
 };
 
 #if !defined REQUIRE_PLUGIN
-public __pl_clwo_store_SetNTVOptional()
+public void __pl_clwo_store_SetNTVOptional()
 {
     MarkNativeAsOptional("Store_IsReady");
 
