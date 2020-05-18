@@ -1,13 +1,11 @@
 #pragma semicolon 1
 
 #include <sourcemod>
-#include <sdktools>
-#include <cstrike>
+#include <colorlib>
 
-#include <colorvariables>
 #include <generics>
-#include <clwo-store>
-#include <clwo-store-messages>
+#include <clwo_store_credits>
+#include <clwo_store_messages>
 #include <donators>
 
 public Plugin myinfo =
@@ -24,14 +22,14 @@ Database g_database = null;
 ConVar g_cDailyRewardMin = null;
 ConVar g_cDailyRewardMax = null;
 
-public OnPluginStart()
+public void OnPluginStart()
 {
     g_cDailyRewardMin = CreateConVar("clwo_store_daily_reward_min", "2", "‬The minimum reward for cR with sm_daily.", _, true, 1.0, false);
     g_cDailyRewardMax = CreateConVar("clwo_store_daily_reward_min", "10", "‬The maximum reward for cR with sm_daily.", _, true, 1.0, false);
 
-    RegConsoleCmd("sm_daily", Command_Daily, "Claims your daily reward.");
+    AutoExecConfig(true, "store_daily", "clwo");
 
-    AutoExecConfig(true, "store-daily", "clwo");
+    RegConsoleCmd("sm_daily", Command_Daily, "Claims your daily reward.");
 
     Database.Connect(DbCallback_Connect, "store");
 
@@ -73,7 +71,7 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
     }
 
     g_database = db;
-    SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_daily` ( `account_id` INT UNSIGNED NOT NULL, `last_time` INT UNSIGNED NOT NULL, PRIMARY KEY (`account_id`), INDEX (`last_time`) ) ENGINE = InnoDB;");
+    SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_daily` ( `account_id` INT UNSIGNED NOT NULL, `last_time` INT UNSIGNED NOT NULL, PRIMARY KEY (`account_id`), INDEX (`last_time`)) ENGINE = InnoDB;");
 }
 
 public void DbCallback_InsertLastTime(Database db, DBResultSet results, const char[] error, any data)
@@ -105,7 +103,7 @@ public void DbCallback_SelectLastTime(Database db, DBResultSet results, const ch
     }
 
     int reward = GetRandomInt(g_cDailyRewardMin.IntValue, g_cDailyRewardMax.IntValue);
-    Store_AddCredits(client, reward);
+    Store_AddClientCredits(client, reward);
     Db_InsertLastTime(client);
     CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}just claimed {orange}%dcR {default}with /daily.", client, reward);
 }
