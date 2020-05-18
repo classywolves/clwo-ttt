@@ -59,7 +59,7 @@ stock bool Store_IsCreditAmountValid(int cr)
 
 public SharedPlugin __pl_clwo_store =
 {
-    name = "clwo-store",
+    name = "clwo-store-credits",
     file = "clwo_store_credits.smx",
 #if defined REQUIRE_PLUGIN
     required = 1,
@@ -69,7 +69,7 @@ public SharedPlugin __pl_clwo_store =
 };
 
 #if !defined REQUIRE_PLUGIN
-public __pl_clwo_store_SetNTVOptional()
+public void __pl_clwo_store_SetNTVOptional()
 {
     MarkNativeAsOptional("Store_GetCredits");
     MarkNativeAsOptional("Store_SetCredits");
