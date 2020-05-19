@@ -162,6 +162,10 @@ public void OnClientDisconnect(int client)
     delete g_playerData[client].skills;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Commands
+////////////////////////////////////////////////////////////////////////////////
+
 public Action Command_Skills(int client, int args)
 {
     Menu_Skills(client);
@@ -176,35 +180,9 @@ public Action Command_Store(int client, int args)
     return Plugin_Handled;
 }
 
-public void Db_InsertUpdateSkill(int client, int skill, int level)
-{
-    int accountId = GetSteamAccountID(client, true);
-
-    Skill skillData;
-    g_aStoreSkills.GetArray(skill, skillData);
-
-    char query[256];
-    Format(query, sizeof(query), "INSERT INTO `store_skills` (`account_id`, `skill_id`, `level`) VALUES ('%d', '%s', '%d') ON DUPLICATE KEY UPDATE `level` = '%d';", accountId, skillData.id, level, level);
-    g_database.Query(DbCallback_InsertUpdateSkill, query, GetClientUserId(client));
-}
-
-public void Db_SelectClientItems(int client)
-{
-    int accountId = GetSteamAccountID(client, true);
-
-    char query[128];
-    Format(query, sizeof(query), "SELECT `item_id`, `quantity` FROM `store_items` WHERE `account_id` = '%d';", accountId);
-    g_database.Query(DbCallback_SelectClientItems, query, GetClientUserId(client));
-}
-
-public void Db_SelectClientSkills(int client)
-{
-    int accountId = GetSteamAccountID(client, true);
-
-    char query[128];
-    Format(query, sizeof(query), "SELECT `skill_id`, `level` FROM `store_skills` WHERE `account_id` = '%d';", accountId);
-    g_database.Query(DbCallback_SelectClientSkills, query, GetClientUserId(client));
-}
+////////////////////////////////////////////////////////////////////////////////
+// Database
+////////////////////////////////////////////////////////////////////////////////
 
 public void DbCallback_Connect(Database db, const char[] error, any data)
 {
@@ -235,6 +213,18 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
     PrintToServer(STORE_MESSAGE ... "%d Items have been registered.", g_aStoreItems.Length + g_aStoreSkills.Length);
 }
 
+void Db_InsertUpdateSkill(int client, int skill, int level)
+{
+    int accountId = GetSteamAccountID(client, true);
+
+    Skill skillData;
+    g_aStoreSkills.GetArray(skill, skillData);
+
+    char query[256];
+    Format(query, sizeof(query), "INSERT INTO `store_skills` (`account_id`, `skill_id`, `level`) VALUES ('%d', '%s', '%d') ON DUPLICATE KEY UPDATE `level` = '%d';", accountId, skillData.id, level, level);
+    g_database.Query(DbCallback_InsertUpdateSkill, query, GetClientUserId(client));
+}
+
 public void DbCallback_InsertUpdateSkill(Database db, DBResultSet results, const char[] error, int userid)
 {
     if (results == null)
@@ -242,6 +232,15 @@ public void DbCallback_InsertUpdateSkill(Database db, DBResultSet results, const
         PrintToServer("DbCallback_InsertUpdateSkill: %s", error);
         return;
     }
+}
+
+void Db_SelectClientItems(int client)
+{
+    int accountId = GetSteamAccountID(client, true);
+
+    char query[128];
+    Format(query, sizeof(query), "SELECT `item_id`, `quantity` FROM `store_items` WHERE `account_id` = '%d';", accountId);
+    g_database.Query(DbCallback_SelectClientItems, query, GetClientUserId(client));
 }
 
 public void DbCallback_SelectClientItems(Database db, DBResultSet results, const char[] error, int userid)
@@ -265,6 +264,15 @@ public void DbCallback_SelectClientItems(Database db, DBResultSet results, const
             g_playerData[client].items.SetValue(id, amount);
         }
     }
+}
+
+void Db_SelectClientSkills(int client)
+{
+    int accountId = GetSteamAccountID(client, true);
+
+    char query[128];
+    Format(query, sizeof(query), "SELECT `skill_id`, `level` FROM `store_skills` WHERE `account_id` = '%d';", accountId);
+    g_database.Query(DbCallback_SelectClientSkills, query, GetClientUserId(client));
 }
 
 public void DbCallback_SelectClientSkills(Database db, DBResultSet results, const char[] error, int userid)
@@ -294,7 +302,11 @@ public void DbCallback_SelectClientSkills(Database db, DBResultSet results, cons
     }
 }
 
-public void Menu_Store(int client)
+////////////////////////////////////////////////////////////////////////////////
+// Menus
+////////////////////////////////////////////////////////////////////////////////
+
+void Menu_Store(int client)
 {
     Menu mStore = new Menu(MenuHandler_Store);
     mStore.SetTitle("c0rp3n's shady merchant \"friend\"");
@@ -306,7 +318,7 @@ public void Menu_Store(int client)
     mStore.Display(client, 240);
 }
 
-public void Menu_Skills(int client)
+void Menu_Skills(int client)
 {
     Menu mSkills = new Menu(MenuHandler_Skills);
     mSkills.SetTitle("Skills");
@@ -337,7 +349,7 @@ public void Menu_Skills(int client)
     mSkills.Display(client, 240);
 }
 
-public void Menu_SkillInfo(int client, int skill)
+void Menu_SkillInfo(int client, int skill)
 {
     Panel pSkill = new Panel();
 
@@ -469,6 +481,10 @@ public int MenuHandler_Skills(Menu menu, MenuAction action, int client, int data
         }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Natives
+////////////////////////////////////////////////////////////////////////////////
 
 public int Native_IsReady(Handle plugin, int numParams)
 {
@@ -613,6 +629,10 @@ public int Native_AddItem(Handle plugin, int numParams)
     return -1;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Stocks
+////////////////////////////////////////////////////////////////////////////////
+
 public int Sort_Items(int i, int j, Handle array, Handle hndl)
 {
     Item item1;
@@ -657,7 +677,7 @@ public int Sort_Skills(int i, int j, Handle array, Handle hndl)
     return 0;
 }
 
-public void Purchase_Skill(int client, int skill)
+void Purchase_Skill(int client, int skill)
 {
     if (!g_bCreditsLoaded)
     {
