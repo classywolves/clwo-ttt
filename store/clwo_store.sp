@@ -296,7 +296,7 @@ public void DbCallback_SelectClientSkills(Database db, DBResultSet results, cons
             g_playerData[client].skills.SetValue(id, level);
 
             int skill = SkillIDToIndex(id);
-            if (skill)
+            if (skill >= 0)
             {
                 Skill sd;
                 g_aStoreSkills.GetArray(skill, sd);
@@ -374,7 +374,7 @@ void Menu_SkillInfo(int client, int skill)
     char levelText[32] = "";
     if (g_playerData[client].skills.GetValue(skillData.id, level))
     {
-        Format(levelText, sizeof(levelText), "Current Level: %d\n", level);
+        Format(levelText, sizeof(levelText), "Current Level: %d", level);
         pSkill.DrawText(levelText);
     }
     else
@@ -398,7 +398,10 @@ void Menu_SkillInfo(int client, int skill)
     Format(text, sizeof(text), "%s%s\n%s", levelText, skillData.description, priceText);
     pSkill.DrawText(text);
 
-    pSkill.DrawItem("Purchase", ITEMDRAW_CONTROL);
+    if (level < skillData.level)
+    {
+        pSkill.DrawItem("Purchase", ITEMDRAW_CONTROL);
+    }
 
     pSkill.DrawItem("", ITEMDRAW_SPACER);
 
@@ -544,6 +547,7 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
     skill.price = GetNativeCell(4);
     skill.increase = GetNativeCell(5);
     skill.level = GetNativeCell(6);
+    skill.plugin = plugin;
     skill.callback = GetNativeCell(7);
     skill.sort = GetNativeCell(8);
 
@@ -705,11 +709,11 @@ void SkillIndexToID(int skill, char[] id, int length)
     strcopy(id, length, sd.id);
 }
 
-void Purchase_Skill(int client, int skill)
+bool Purchase_Skill(int client, int skill)
 {
     if (!g_bCreditsLoaded)
     {
-        return;
+        return false;
     }
 
     Skill skillData;
@@ -724,6 +728,11 @@ void Purchase_Skill(int client, int skill)
     {
         ++level;
 
+        if (level >= skillData.level)
+        {
+            return false;
+        }
+
         Call_StartFunction(skillData.plugin, skillData.callback);
         Call_PushCell(client);
         Call_PushCell(level);
@@ -736,7 +745,11 @@ void Purchase_Skill(int client, int skill)
         Menu_SkillInfo(client, skill);
 
         CPrintToChat(client, STORE_MESSAGE ... "You just purchased {yellow}%s {default}for {orange}%dcR {default}(remaining credits {orange}%dcR{default}).", skillData.name, price, cr);
+
+        return true;
     }
+
+    return false;
 }
 
 void UpdateSkillMap()
