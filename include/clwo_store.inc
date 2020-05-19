@@ -13,13 +13,12 @@
 typedef Store_ItemPurchaseCallback = function void (int client, int count);
 
 /*
- * Called when a skill is purchased in the menu. Return Plugin_Stop
- * to prevent the purchase and stop any credit deductions.
+ * Called when a clients skill is loaded or updated.
  *
  * @param client        The Client who purchased the item.
  * @param count         The Level of the Skill.
  */
-typedef Store_SkillPurchaseCallback = function void (int client, int level);
+typedef Store_SkillUpdateCallback = function void (int client, int level);
 
 /*
  * Called when the store is ready to register items.
@@ -64,12 +63,12 @@ native void Store_RegisterItem(char[] id, char[] name, char[] description, int p
  * @param price             The price of the skill.
  * @param step              The increase in price per level. (0.0 - No change)
  * @param level             The optional max level of this skill. (Default: 1, 0 - No limit)
- * @param callback          The function to call when this skill is purchased.
+ * @param callback          The function to call when this skill is loaded / updated.
  * @param sort              The priority in Sorting. Buy menu is sorted from high to low. (Default: 0)
  *
  * @return                  The items unique integer id for this session.
  */
-native void Store_RegisterSkill(char[] id, char[] name, char[] description, int price, float step, int level, Store_SkillPurchaseCallback callback, int sort = 0);
+native void Store_RegisterSkill(char[] id, char[] name, char[] description, int price, float step, int level, Store_SkillUpdateCallback callback, int sort = 0);
 
 /*
  * Un registers an item from the store.
