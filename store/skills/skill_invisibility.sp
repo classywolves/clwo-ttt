@@ -57,10 +57,12 @@ public void OnClientDisconnect(int client)
     ClearClientData(client);
 }
 
+/*
 public void Store_OnClientSkillsLoaded(int client)
 {
     Store_OnSkillUpdate(client, Store_GetSkill(client, INVS_ID));
 }
+*/
 
 public void Store_OnSkillUpdate(int client, int level)
 {

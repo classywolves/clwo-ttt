@@ -54,10 +54,12 @@ public void Store_OnRegister()
     Store_RegisterSkill(FF_ID, FF_NAME, FF_DESCRIPTION, FF_PRICE, FF_STEP, FF_LEVEL, Store_OnSkillUpdate, FF_SORT);
 }
 
+/*
 public void Store_OnClientSkillsLoaded(int client)
 {
     Store_OnSkillUpdate(client, Store_GetSkill(client, FF_ID));
 }
+*/
 
 public void Store_OnSkillUpdate(int client, int level)
 {

@@ -60,10 +60,12 @@ public void Store_OnRegister()
     Store_RegisterSkill(RGN_ID, RGN_NAME, RGN_DESCRIPTION, RGN_PRICE, RGN_STEP, RGN_LEVEL, Store_OnSkillUpdate, RGN_SORT);
 }
 
+/*
 public void Store_OnClientSkillsLoaded(int client)
 {
     Store_OnSkillUpdate(client, Store_GetSkill(client, RGN_ID));
 }
+*/
 
 public void Store_OnSkillUpdate(int client, int level)
 {
