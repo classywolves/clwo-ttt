@@ -19,7 +19,7 @@
 
 public Plugin myinfo =
 {
-    name = "Skill Reduced Fall Damage",
+    name = "Skill: Feather Falling",
     author = "Popey & c0rp3n",
     description = "A skill that reduces the fall damage a player receives.",
     version = "1.0.0",
@@ -41,14 +41,12 @@ public void OnPluginStart()
 
 public void OnClientPutInServer(int client)
 {
-    g_playerData[client].level = -1;
-    g_playerData[client].ratio = 0.0;
+    ClearClientData(client);
 }
 
 public void OnClientDisconnect(int client)
 {
-    g_playerData[client].level = -1;
-    g_playerData[client].ratio = 0.0;
+    ClearClientData(client);
 }
 
 public void Store_OnRegister()
@@ -85,4 +83,10 @@ public Action Hook_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, 
     CPrintToChat(victim, "{default}[TTT] > Feather falling reduced your damage from {orange}%.0f {default}to {orange}%.0f.", oldDamage, damage);
 
     return Plugin_Changed;
+}
+
+void ClearClientData(int client)
+{
+    g_playerData[client].level = -1;
+    g_playerData[client].ratio = 0.0;
 }

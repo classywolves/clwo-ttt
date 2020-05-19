@@ -19,7 +19,7 @@
 
 public Plugin myinfo =
 {
-    name = "Skill Larraman's Organ (Health Regen)",
+    name = "Skill: Larraman's Organ (Health Regen)",
     author = "Popey & c0rp3n",
     description = "A skill that allows for the player to regenrate some health.",
     version = "1.0.0",
@@ -47,17 +47,12 @@ public OnPluginStart()
 
 public void OnClientPutInServer(int client)
 {
-    g_playerData[client].pendingTimer = INVALID_HANDLE;
-    g_playerData[client].regenTimer = INVALID_HANDLE;
+    ClearClientData(client);
 }
 
 public void OnClientDisconnect(int client)
 {
-    g_playerData[client].level = -1;
-    g_playerData[client].regenAmount = 0;
-    g_playerData[client].regenFactor = 0.0;
-    ClearTimer(g_playerData[client].pendingTimer);
-    ClearTimer(g_playerData[client].regenTimer);
+    ClearClientData(client);
 }
 
 public void Store_OnRegister()
@@ -136,4 +131,13 @@ public Action Timer_HealthRegen(Handle timer, int userid)
     }
 
     return Plugin_Stop;
+}
+
+void ClearClientData(int client)
+{
+    g_playerData[client].level = -1;
+    g_playerData[client].regenAmount = 0;
+    g_playerData[client].regenFactor = 0.0;
+    ClearTimer(g_playerData[client].pendingTimer);
+    ClearTimer(g_playerData[client].regenTimer);
 }
