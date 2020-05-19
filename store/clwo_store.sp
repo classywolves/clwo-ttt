@@ -544,7 +544,8 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
     skill.price = GetNativeCell(4);
     skill.increase = GetNativeCell(5);
     skill.level = GetNativeCell(6);
-    skill.sort = GetNativeCell(7);
+    skill.callback = GetNativeCell(7);
+    skill.sort = GetNativeCell(8);
 
     for (int i = 0; i < g_aStoreSkills.Length; i++)
     {
