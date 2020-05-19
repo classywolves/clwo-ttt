@@ -4,11 +4,16 @@
 #include <sdktools>
 #include <colorlib>
 
+#undef REQUIRE_PLUGIN
 #include <ttt>
+#include <ttt_taser>
+#define REQUIRE_PLUGIN
 #include <generics>
-#include <ttt_messages>
-#include <clwo_store>
 #include <progress_bars>
+#include <ttt_messages>
+#undef REQUIRE_PLUGIN
+#include <clwo_store>
+#define REQUIRE_PLUGIN
 
 #define INVS_ID "invs"
 #define INVS_NAME "Reactive Camoflage"
@@ -81,7 +86,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
     }
 }
 
-public Action TTT_OnTased(int attacker, int victim)
+public void TTT_OnTased_Post(int attacker, int victim)
 {
     if (g_playerData[victim].level > 0)
     {
