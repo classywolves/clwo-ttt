@@ -374,25 +374,28 @@ void Menu_SkillInfo(int client, int skill)
     char levelText[32] = "";
     if (g_playerData[client].skills.GetValue(skillData.id, level))
     {
-        Format(levelText, sizeof(levelText), "Current Level: %d", level);
-        pSkill.DrawText(levelText);
+        Format(levelText, sizeof(levelText), "Current Level: %d\n", level);
     }
     else
     {
         level = 0;
     }
 
-    int price = -1;
+    int price = 0;
     char priceText[32] = "";
-    if (level)
+    if (level > 0 && level < skillData.level)
     {
         price = RoundToNearest(float(skillData.price) * Pow(skillData.increase, float(level)));
     }
-    else
+    else if (level == 0)
     {
         price = skillData.price;
     }
-    Format(priceText, sizeof(priceText), "Price: %dcR\n", price);
+
+    if (price)
+    {
+        Format(priceText, sizeof(priceText), "Price: %dcR\n", price);
+    }
 
     char text[192];
     Format(text, sizeof(text), "%s%s\n%s", levelText, skillData.description, priceText);
