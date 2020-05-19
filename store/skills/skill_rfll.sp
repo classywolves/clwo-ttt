@@ -2,12 +2,9 @@
 
 #include <sourcemod>
 #include <sdkhooks>
-#include <sdktools>
-#include <cstrike>
+#include <colorlib>
 
-#include <colorvariables>
 #include <generics>
-
 #undef REQUIRE_PLUGIN
 #include <clwo_store>
 #define REQUIRE_PLUGIN
@@ -32,6 +29,7 @@ public Plugin myinfo =
 enum struct PlayerData
 {
     int level;
+    float ratio;
 }
 
 PlayerData g_playerData[MAXPLAYERS + 1];
@@ -44,11 +42,13 @@ public void OnPluginStart()
 public void OnClientPutInServer(int client)
 {
     g_playerData[client].level = -1;
+    g_playerData[client].ratio = 0.0;
 }
 
 public void OnClientDisconnect(int client)
 {
     g_playerData[client].level = -1;
+    g_playerData[client].ratio = 0.0;
 }
 
 public void Store_OnRegister()
@@ -58,11 +58,7 @@ public void Store_OnRegister()
 
 public void Store_OnClientSkillsLoaded(int client)
 {
-    g_playerData[client].level = Store_GetSkill(client, FF_ID);
-    if (g_playerData[client].level > 0)
-    {
-        SDKHook(client, SDKHook_OnTakeDamageAlive, Hook_OnTakeDamageAlive);
-    }
+    Store_OnSkillUpdate(client, Store_GetSkill(client, FF_ID));
 }
 
 public void Store_OnSkillUpdate(int client, int level)
@@ -71,6 +67,7 @@ public void Store_OnSkillUpdate(int client, int level)
     if (g_playerData[client].level > 0)
     {
         SDKHook(client, SDKHook_OnTakeDamageAlive, Hook_OnTakeDamageAlive);
+        g_playerData[client].ratio = 1.0 - (0.2 * float(g_playerData[client].level));
     }
 }
 
@@ -83,8 +80,7 @@ public Action Hook_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, 
     }
 
     float oldDamage = damage;
-    float ratio = 1.0 - (0.2 * float(g_playerData[victim].level));
-    damage = damage * ratio;
+    damage = damage * g_playerData[victim].ratio;
 
     CPrintToChat(victim, "{default}[TTT] > Feather falling reduced your damage from {orange}%.0f {default}to {orange}%.0f.", oldDamage, damage);
 

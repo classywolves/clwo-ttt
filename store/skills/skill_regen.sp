@@ -5,7 +5,6 @@
 #include <colorlib>
 
 #include <generics>
-
 #undef REQUIRE_PLUGIN
 #include <clwo_store>
 #define REQUIRE_PLUGIN
@@ -68,13 +67,7 @@ public void Store_OnRegister()
 
 public void Store_OnClientSkillsLoaded(int client)
 {
-    g_playerData[client].level = Store_GetSkill(client, RGN_ID);
-    g_playerData[client].regenAmount = 0;
-    if (g_playerData[client].level > 0)
-    {
-        g_playerData[client].regenFactor = 0.4 * g_playerData[client].level;
-        SDKHook(client, SDKHook_OnTakeDamageAlivePost, Hook_OnTakeDamageAlive);
-    }
+    Store_OnSkillUpdate(client, Store_GetSkill(client, RGN_ID));
 }
 
 public void Store_OnSkillUpdate(int client, int level)
