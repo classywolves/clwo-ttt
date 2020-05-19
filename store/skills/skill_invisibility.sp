@@ -2,14 +2,13 @@
 
 #include <sourcemod>
 #include <sdktools>
-#include <cstrike>
+#include <colorlib>
 
-#include <colorvariables>
 #include <ttt>
 #include <generics>
 #include <ttt_messages>
-#include <clwo-store>
-#include <progress-bars>
+#include <clwo_store>
+#include <progress_bars>
 
 #define INVS_ID "invs"
 #define INVS_NAME "Reactive Camoflage"
@@ -22,7 +21,7 @@
 
 public Plugin myinfo =
 {
-    name = "CLWO Skill Reactive Camoflage",
+    name = "Skill: Reactive Camoflage",
     author = "c0rp3n",
     description = "Skill that grants invisibility upon being tasered.",
     version = "0.1.0",
@@ -45,45 +44,30 @@ public OnPluginStart()
 
 public void Store_OnRegister()
 {
-    Store_RegisterSkill(INVS_ID, INVS_NAME, INVS_DESCRIPTION, INVS_PRICE, INVS_STEP, INVS_LEVEL, INVS_SORT);
-}
-
-public void Store_OnReady()
-{
-    LoopValidClients(i)
-    {
-        OnClientPutInServer(i);
-    }
+    Store_RegisterSkill(INVS_ID, INVS_NAME, INVS_DESCRIPTION, INVS_PRICE, INVS_STEP, INVS_LEVEL, Store_OnSkillUpdate, INVS_SORT);
 }
 
 public void OnClientPutInServer(int client)
 {
-    if (Store_IsReady())
-    {
-        g_playerData[client].level = Store_GetSkill(client, INVS_ID);
-        if (g_playerData[client].level > 0)
-        {
-            g_playerData[client].length = INVS_LENGTH * g_playerData[client].level;
-        }
-    }
+    ClearClientData(client);
 }
 
 public void OnClientDisconnect(int client)
 {
-    g_playerData[client].level = -1;
-    g_playerData[client].invisible = false;
-    g_playerData[client].length = 0.0;
+    ClearClientData(client);
 }
 
-public void Store_OnSkillPurchased(int client, char[] id, int level)
+public void Store_OnClientSkillsLoaded(int client)
 {
-    if (StrEqual(id, INVS_ID, true))
+    Store_OnSkillUpdate(client, Store_GetSkill(client, INVS_ID));
+}
+
+public void Store_OnSkillUpdate(int client, int level)
+{
+    g_playerData[client].level = level;
+    if (g_playerData[client].level > 0)
     {
-        g_playerData[client].level = level;
-        if (g_playerData[client].level > 0)
-        {
-            g_playerData[client].length = INVS_LENGTH * g_playerData[client].level;
-        }
+        g_playerData[client].length = INVS_LENGTH * g_playerData[client].level;
     }
 }
 
@@ -105,7 +89,7 @@ public Action TTT_OnTased(int attacker, int victim)
             CPrintToChat(victim, TTT_MESSAGE ... "Reactive camoflage {green}activated!");
             ProgressBar_Create(victim, "Charge", g_playerData[victim].length, ProgressBar_Decrement);
 
-            CreateTimer(g_playerData[victim].length, Timer_RemoveInvisibility, GetClientUserId(victim));
+            CreateTimer(g_playerData[victim].length, Timer_RemoveInvisibility, GetClientUserId(victim), TIMER_FLAG_NO_MAPCHANGE);
         }
     }
 }
@@ -113,11 +97,18 @@ public Action TTT_OnTased(int attacker, int victim)
 public Action Timer_RemoveInvisibility(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
-    if (IsValidClient(client))
+    if (client && IsPlayerAlive(client))
     {
         SetEntityRenderMode(client, RENDER_NORMAL);
         CPrintToChat(client, TTT_MESSAGE ... "Reactive camoflage {red}deactivated!");
     }
 
     return Plugin_Stop;
+}
+
+void ClearClientData(int client)
+{
+    g_playerData[client].level = -1;
+    g_playerData[client].invisible = false;
+    g_playerData[client].length = 0.0;
 }
