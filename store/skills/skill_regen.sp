@@ -19,7 +19,7 @@
 
 public Plugin myinfo =
 {
-    name = "Skill: Larraman's Organ (Health Regen)",
+    name = "CLWO Store - Skill: Larraman's Organ (Health Regen)",
     author = "Popey & c0rp3n",
     description = "A skill that allows for the player to regenrate some health.",
     version = "1.0.0",

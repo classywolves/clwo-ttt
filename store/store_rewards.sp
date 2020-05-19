@@ -9,7 +9,7 @@
 
 public Plugin myinfo =
 {
-    name = "CLWO Store Rewards",
+    name = "CLWO Store - Rewards",
     author = "c0rp3n",
     description = "Example plugin for the clwo store plugin.",
     version = "1.0.0",

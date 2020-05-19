@@ -19,7 +19,7 @@
 
 public Plugin myinfo =
 {
-    name = "Skill: Feather Falling",
+    name = "CLWO Store - Skill: Feather Falling",
     author = "Popey & c0rp3n",
     description = "A skill that reduces the fall damage a player receives.",
     version = "1.0.0",

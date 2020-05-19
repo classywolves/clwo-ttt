@@ -10,7 +10,7 @@
 
 public Plugin myinfo =
 {
-    name = "CLWO Store Daily",
+    name = "CLWO Store - Daily",
     author = "c0rp3n",
     description = "Allows player to gain a daily reward of cR.",
     version = "1.0.0",

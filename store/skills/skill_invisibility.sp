@@ -26,7 +26,7 @@
 
 public Plugin myinfo =
 {
-    name = "Skill: Reactive Camoflage",
+    name = "CLWO Store - Skill: Reactive Camoflage",
     author = "c0rp3n",
     description = "Skill that grants invisibility upon being tasered.",
     version = "0.1.0",
