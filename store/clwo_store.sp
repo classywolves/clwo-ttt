@@ -215,13 +215,13 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
 
 void Db_InsertUpdateSkill(int client, int skill, int level)
 {
-    int accountId = GetSteamAccountID(client, true);
+    int accountID = GetSteamAccountID(client, true);
 
-    Skill skillData;
-    g_aStoreSkills.GetArray(skill, skillData);
+    char skillID[16];
+    SkillIndexToID(skill, skillID, sizeof(skillID));
 
     char query[256];
-    Format(query, sizeof(query), "INSERT INTO `store_skills` (`account_id`, `skill_id`, `level`) VALUES ('%d', '%s', '%d') ON DUPLICATE KEY UPDATE `level` = '%d';", accountId, skillData.id, level, level);
+    Format(query, sizeof(query), "INSERT INTO `store_skills` (`account_id`, `skill_id`, `level`) VALUES ('%d', '%s', '%d') ON DUPLICATE KEY UPDATE `level` = '%d';", accountID, skillID, level, level);
     g_database.Query(DbCallback_InsertUpdateSkill, query, GetClientUserId(client));
 }
 
@@ -236,10 +236,10 @@ public void DbCallback_InsertUpdateSkill(Database db, DBResultSet results, const
 
 void Db_SelectClientItems(int client)
 {
-    int accountId = GetSteamAccountID(client, true);
+    int accountID = GetSteamAccountID(client, true);
 
     char query[128];
-    Format(query, sizeof(query), "SELECT `item_id`, `quantity` FROM `store_items` WHERE `account_id` = '%d';", accountId);
+    Format(query, sizeof(query), "SELECT `item_id`, `quantity` FROM `store_items` WHERE `account_id` = '%d';", accountID);
     g_database.Query(DbCallback_SelectClientItems, query, GetClientUserId(client));
 }
 
@@ -268,10 +268,10 @@ public void DbCallback_SelectClientItems(Database db, DBResultSet results, const
 
 void Db_SelectClientSkills(int client)
 {
-    int accountId = GetSteamAccountID(client, true);
+    int accountID = GetSteamAccountID(client, true);
 
     char query[128];
-    Format(query, sizeof(query), "SELECT `skill_id`, `level` FROM `store_skills` WHERE `account_id` = '%d';", accountId);
+    Format(query, sizeof(query), "SELECT `skill_id`, `level` FROM `store_skills` WHERE `account_id` = '%d';", accountID);
     g_database.Query(DbCallback_SelectClientSkills, query, GetClientUserId(client));
 }
 
@@ -294,6 +294,18 @@ public void DbCallback_SelectClientSkills(Database db, DBResultSet results, cons
             int level = results.FetchInt(1);
 
             g_playerData[client].skills.SetValue(id, level);
+
+            int skill = SkillIDToIndex(id);
+            if (skill)
+            {
+                Skill sd;
+                g_aStoreSkills.GetArray(skill, sd);
+
+                Call_StartFunction(sd.plugin, sd.callback);
+                Call_PushCell(client);
+                Call_PushCell(level);
+                Call_Finish();
+            }
         }
 
         Call_StartForward(g_fOnClientSkillsLoaded);
@@ -551,6 +563,7 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
     if (g_cSortItems.BoolValue)
     {
         SortADTArrayCustom(g_aStoreSkills, Sort_Skills);
+        UpdateSkillMap();
     }
 
     LogMessage(STORE_MESSAGE ... "Registered skill %s (%s), price: %d, level: %d - %s", skill.name, skill.id, skill.price, skill.level, skill.description);
@@ -581,8 +594,8 @@ public int Native_UnRegisterSkill(Handle plugin, int numParams)
     char id[16];
     GetNativeString(1, id, sizeof(id));
 
-    int index = -1;
-    if (g_smSkillIndexMap.GetValue(id, index))
+    int index = SkillIDToIndex(id);
+    if (index)
     {
         PrintToServer(STORE_ERROR ... "Skill %s is not currently registered.", id);
         return false;
@@ -669,12 +682,26 @@ public int Sort_Skills(int i, int j, Handle array, Handle hndl)
     }
     else if (skill1.sort > skill2.sort)
     {
-        g_smSkillIndexMap.SetValue(skill1.id, j);
-        g_smSkillIndexMap.SetValue(skill2.id, i);
         return 1;
     }
 
     return 0;
+}
+
+int SkillIDToIndex(char[] id)
+{
+    int index = -1;
+    g_smSkillIndexMap.GetValue(id, index);
+
+    return index;
+}
+
+void SkillIndexToID(int skill, char[] id, int length)
+{
+    Skill sd;
+    g_aStoreSkills.GetArray(skill, sd);
+
+    strcopy(id, length, sd.id);
 }
 
 void Purchase_Skill(int client, int skill)
@@ -708,5 +735,15 @@ void Purchase_Skill(int client, int skill)
         Menu_SkillInfo(client, skill);
 
         CPrintToChat(client, STORE_MESSAGE ... "You just purchased {yellow}%s {default}for {orange}%dcR {default}(remaining credits {orange}%dcR{default}).", skillData.name, price, cr);
+    }
+}
+
+void UpdateSkillMap()
+{
+    Skill sd;
+    for (int i = 0; i < g_aStoreSkills.Length; ++i)
+    {
+        g_aStoreSkills.GetArray(i, sd);
+        g_smSkillIndexMap.SetValue(sd.id, i);
     }
 }
