@@ -19,39 +19,30 @@ public Plugin myinfo =
 ConVar g_cCrReward = null;
 ConVar g_cRewardTime = null;
 
-Handle g_hRewardTimers[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
+Handle g_hRewardTimer = INVALID_HANDLE;
 
 public void OnPluginStart()
 {
     g_cCrReward = CreateConVar("clwo_store_reward", "1", "The maximum reward a player can get.");
-    g_cRewardTime = CreateConVar("clwo_store_reward_time", "15", "The delta in time between rewards in minutes 0 = Disabled.");
+    g_cRewardTime = CreateConVar("clwo_store_reward_time", "1", "The delta in time between rewards in minutes 0 = Disabled.");
 
-    AutoExecConfig(true, "store-rewards", "clwo");
+    AutoExecConfig(true, "store_rewards", "clwo");
 
     PrintToServer("[RWD] Loaded succcessfully");
 }
 
-public void OnClientPostAdminCheck(int client)
+public void OnConfigsExecuted()
 {
-    g_hRewardTimers[client] = CreateTimer(g_cRewardTime.FloatValue * 60.0, Timer_ActiveReward, GetClientUserId(client), TIMER_REPEAT);
+    g_hRewardTimer = CreateTimer(g_cRewardTime.FloatValue * 60.0, Timer_Reward, _, TIMER_REPEAT);
 }
 
-public void OnClientDisconnect(int client)
+public Action Timer_Reward(Handle timer)
 {
-    ClearTimer(g_hRewardTimers[client]);
-}
-
-public Action Timer_ActiveReward(Handle timer, int userid)
-{
-    int client = GetClientOfUserId(userid);
-    if (!client)
-    {
-        return Plugin_Stop;
-    }
-
     int credits = g_cCrReward.IntValue;
-    Store_AddClientCredits(client, credits);
-    CPrintToChat(client, STORE_MESSAGE ... "You have gained {orange}%dcR.", credits);
+    LoopValidClients(i)
+    {
+        Store_AddClientCredits(i, credits);
+    }
 
     return Plugin_Continue;
 }
