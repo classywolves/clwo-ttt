@@ -13,24 +13,24 @@ enum ProgressBar_Type
     ProgressBar_Decrement
 }
 
-enum struct PlayerBarData
+enum struct __PB_PlayerBarData
 {
     char message[192];
     int start;
     int offset;
 }
 
-PlayerBarData g_playerBarData[MAXPLAYERS + 1];
+__PB_PlayerBarData __PB_playerBarData[MAXPLAYERS + 1];
 
 stock void ProgressBar_Create(int client, char[] name, float time, ProgressBar_Type type)
 {
     char bar[80];
     ProgressBar_Init(bar, sizeof(bar), 20, 20);
 
-    g_playerBarData[client].start = strlen(name) + 1;
-    g_playerBarData[client].offset = g_playerBarData[client].start + (20 * PROGRESS_BAR_U8_SIZE);
-    Format(g_playerBarData[client].message, 192, "%s: %s", name, bar);
-    PrintCenterText(client, g_playerBarData[client].message);
+    __PB_playerBarData[client].start = strlen(name) + 1;
+    __PB_playerBarData[client].offset = __PB_playerBarData[client].start + (20 * PROGRESS_BAR_U8_SIZE);
+    Format(__PB_playerBarData[client].message, 192, "%s: %s", name, bar);
+    PrintCenterText(client, __PB_playerBarData[client].message);
     CreateTimer(time / 20.0, Timer_ProgressBarDecrement, GetClientUserId(client));
 }
 
@@ -52,12 +52,12 @@ stock Action Timer_ProgressBarDecrement(Handle timer, int userid)
     int client = GetClientOfUserId(userid);
     if (IsValidClient(client))
     {
-        if (g_playerBarData[client].offset > g_playerBarData[client].start + PROGRESS_BAR_U8_SIZE)
+        if (__PB_playerBarData[client].offset > __PB_playerBarData[client].start + PROGRESS_BAR_U8_SIZE)
         {
-            g_playerBarData[client].message[g_playerBarData[client].offset] -= 1;
-            PrintCenterText(client, g_playerBarData[client].message);
+            __PB_playerBarData[client].message[__PB_playerBarData[client].offset] -= 1;
+            PrintCenterText(client, __PB_playerBarData[client].message);
 
-            g_playerBarData[client].offset -= PROGRESS_BAR_U8_SIZE;
+            __PB_playerBarData[client].offset -= PROGRESS_BAR_U8_SIZE;
 
             return Plugin_Continue;
         }
