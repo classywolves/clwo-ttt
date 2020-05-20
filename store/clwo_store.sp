@@ -19,7 +19,7 @@ public Plugin myinfo =
     name = "CLWO Store",
     author = "c0rp3n",
     description = "Custom store and credits system for CLWO TTT.",
-    version = "0.1.0",
+    version = "0.2.0",
     url = ""
 };
 
@@ -109,7 +109,7 @@ public void OnPluginStart()
     g_smSkillIndexMap = new StringMap();
 
     RegConsoleCmd("sm_skills", Command_Skills, "Displays the skills menu to the client.");
-    RegConsoleCmd("sm_store", Command_Store, "Displays the store to the client.");
+    //RegConsoleCmd("sm_store", Command_Store, "Displays the store to the client.");
 
     Database.Connect(DbCallback_Connect, "store");
 
@@ -173,12 +173,14 @@ public Action Command_Skills(int client, int args)
     return Plugin_Handled;
 }
 
+/*
 public Action Command_Store(int client, int args)
 {
     Menu_Store(client);
 
     return Plugin_Handled;
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // Database
@@ -318,6 +320,7 @@ public void DbCallback_SelectClientSkills(Database db, DBResultSet results, cons
 // Menus
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
 void Menu_Store(int client)
 {
     Menu mStore = new Menu(MenuHandler_Store);
@@ -329,6 +332,7 @@ void Menu_Store(int client)
 
     mStore.Display(client, 240);
 }
+*/
 
 void Menu_Skills(int client)
 {
@@ -418,6 +422,7 @@ void Menu_SkillInfo(int client, int skill)
     delete pSkill;
 }
 
+/*
 public int MenuHandler_Store(Menu menu, MenuAction action, int client, int data)
 {
     switch (action) 
@@ -448,6 +453,7 @@ public int MenuHandler_Store(Menu menu, MenuAction action, int client, int data)
         }
     }
 }
+*/
 
 public int PanelHandler_SkillInfo(Menu menu, MenuAction action, int client, int choice)
 {
