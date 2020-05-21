@@ -71,9 +71,9 @@ public SharedPlugin __pl_clwo_store =
 #if !defined REQUIRE_PLUGIN
 public void __pl_clwo_store_SetNTVOptional()
 {
-    MarkNativeAsOptional("Store_GetCredits");
-    MarkNativeAsOptional("Store_SetCredits");
-    MarkNativeAsOptional("Store_AddCredits");
-    MarkNativeAsOptional("Store_SubCredits");
+    MarkNativeAsOptional("Store_GetClientCredits");
+    MarkNativeAsOptional("Store_SetClientCredits");
+    MarkNativeAsOptional("Store_AddClientCredits");
+    MarkNativeAsOptional("Store_SubClientCredits");
 }
 #endif
