@@ -42,8 +42,7 @@ public void OnPluginStart()
     AutoExecConfig(true, "store_credits", "clwo");
 
     RegConsoleCmd("sm_cr", Command_Credits, "Displays the clients credits (cR).");
-    RegConsoleCmd("sm_givecr", Command_GiveCredits, "Give a set amount of credits to a client (cR).");
-    RegAdminCmd("sm_setcr", Command_SetCredits, ADMFLAG_CHEATS, "Set a clients credits (cR).");
+    //RegConsoleCmd("sm_givecr", Command_GiveCredits, "Give a set amount of credits to a client (cR).");
 
     Database.Connect(DbCallback_Connect, "store");
 
@@ -81,6 +80,7 @@ public Action Command_Credits(int client, int args)
     return Plugin_Handled;
 }
 
+/*
 public Action Command_GiveCredits(int client, int args)
 {
     if (args < 2)
@@ -130,39 +130,7 @@ public Action Command_GiveCredits(int client, int args)
 
     return Plugin_Handled;
 }
-
-public Action Command_SetCredits(int client, int args)
-{
-    if (args < 2)
-    {
-        CPrintToChat(client, "[SM] Usage: sm_setcr <#userid|name> <amount>");
-        return Plugin_Handled;
-    }
-
-    char buffer[32];
-    int target;
-    int amount;
-
-    GetCmdArg(1, buffer, sizeof(buffer));
-    target = TTT_Target(buffer, client, true, false, false);
-    if (target < 1)
-    {
-        return Plugin_Handled;
-    }
-
-    if (!CanClientUseCredits(target))
-    {
-        return Plugin_Handled;
-    }
-
-    GetCmdArg(2, buffer, sizeof(buffer));
-    amount = StringToInt(buffer);
-
-    CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}has set {yellow}%N {orange}%dcR.", client, target, amount);
-    SetClientCredits(target, amount);
-
-    return Plugin_Handled;
-}
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // Database
