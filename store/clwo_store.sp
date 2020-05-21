@@ -731,13 +731,15 @@ bool Purchase_Skill(int client, int skill)
     int level = 0;
     g_playerData[client].skills.GetValue(skillData.id, level);
 
+    LogMessage("purchase skill: %s (level: %d) - skill_index: %d, plugin: %d", skillData.name, level + 1, skill, skillData.plugin);
+
     int cr = Store_GetClientCredits(client);
     int price = RoundToNearest(float(skillData.price) * Pow(skillData.increase, float(level)));
     if (cr >= price)
     {
         ++level;
 
-        if (level >= skillData.level)
+        if (level > skillData.level)
         {
             return false;
         }
