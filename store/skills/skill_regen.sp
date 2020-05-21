@@ -4,6 +4,9 @@
 #include <sdkhooks>
 #include <colorlib>
 
+#undef REQUIRE_PLUGIN
+#include <ttt>
+#define REQUIRE_PLUGIN
 #include <generics>
 #undef REQUIRE_PLUGIN
 #include <clwo_store>
@@ -26,6 +29,8 @@ public Plugin myinfo =
     url = ""
 };
 
+bool g_bTTTLoaded = false;
+
 enum struct PlayerData
 {
     int level;
@@ -38,21 +43,48 @@ enum struct PlayerData
 
 PlayerData g_playerData[MAXPLAYERS + 1];
 
-public OnPluginStart()
+public void OnPluginStart()
 {
     HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);
 
     PrintToServer("[RGN] Loaded successfully");
 }
 
+public void OnAllPluginLoaded()
+{
+    g_bTTTLoaded = LibraryExists("ttt");
+}
+
+public void OnLibraryAdded(const char[] name)
+{
+    if (strcmp(name, "ttt", true) == 0)
+    {
+        g_bTTTLoaded = true;
+    }
+}
+
+public void OnLibraryRemoved(const char[] name)
+{
+    if (strcmp(name, "ttt", true) == 0)
+    {
+        g_bTTTLoaded = false;
+    }
+}
+
 public void OnClientPutInServer(int client)
 {
     ClearClientData(client);
+
+    g_playerData[client].pendingTimer = INVALID_HANDLE;
+    g_playerData[client].regenTimer = INVALID_HANDLE;
 }
 
 public void OnClientDisconnect(int client)
 {
     ClearClientData(client);
+
+    ClearTimer(g_playerData[client].pendingTimer);
+    ClearTimer(g_playerData[client].regenTimer);
 }
 
 public void Store_OnRegister()
@@ -91,6 +123,11 @@ public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 
 public void Hook_OnTakeDamageAlive(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
+    if (!g_bTTTLoaded && TTT_GetRoundStatus() != Round_Active)
+    {
+        return;
+    }
+
     int amount = RoundToFloor(damage * g_playerData[victim].regenFactor);
     g_playerData[victim].pendingAmount += amount;
     if (g_playerData[victim].pendingTimer == INVALID_HANDLE)
@@ -102,7 +139,7 @@ public void Hook_OnTakeDamageAlive(int victim, int attacker, int inflictor, floa
 public Action Timer_HealthPending(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
-    if (client && IsPlayerAlive(client))
+    if (client > 0 && IsPlayerAlive(client))
     {
         int amount = g_playerData[client].pendingAmount;
         g_playerData[client].regenAmount += amount;
@@ -124,9 +161,9 @@ public Action Timer_HealthPending(Handle timer, int userid)
 public Action Timer_HealthRegen(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
-    if (client && IsPlayerAlive(client) && (g_playerData[client].regenAmount > 0))
+    if (client > 0 && IsPlayerAlive(client) && (g_playerData[client].regenAmount > 0))
     {
-        SetEntityHealth(client, GetClientHealth(client) + 1);
+        SetEntityHealth(client, Min(GetClientHealth(client) + 1, 100));
         --g_playerData[client].regenAmount;
 
         return Plugin_Continue;
@@ -140,6 +177,9 @@ void ClearClientData(int client)
     g_playerData[client].level = -1;
     g_playerData[client].regenAmount = 0;
     g_playerData[client].regenFactor = 0.0;
-    ClearTimer(g_playerData[client].pendingTimer);
-    ClearTimer(g_playerData[client].regenTimer);
+}
+
+int Min(int a, int b)
+{
+    return a < b ? a : b;
 }
