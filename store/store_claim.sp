@@ -5,7 +5,9 @@
 #include <mostactive>
 
 #include <generics>
+#undef REQUIRE_PLUGIN
 #include <clwo_store_credits>
+#define REQUIRE_PLUGIN
 #include <clwo_store_messages>
 
 public Plugin myinfo =
@@ -20,15 +22,13 @@ public Plugin myinfo =
 Database g_database = null;
 
 int g_iBands[3][2] = {
-    { 100,  250 },
+    { 50,   250 },
     { 150,  500 },
     { 300, 1000 }
 };
 
 public void OnPluginStart()
 {
-    RegAdminCmd("sm_adeleteclaim", Command_DeleteClaim, ADMFLAG_CHEATS);
-
     Database.Connect(DbCallback_Connect, "store");
 
     PrintToServer("[CLM] Loaded succcessfully");
@@ -41,13 +41,6 @@ public void OnClientPostAdminCheck(int client)
         // Added a delay to hopefully make sure people notice that they get it.
         CreateTimer(10.0, Timer_ProcessClaim, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
     }
-}
-
-public Action Command_DeleteClaim(int client, int argc)
-{
-    Db_DeleteClientClaim(client);
-
-    return Plugin_Handled;
 }
 
 public Action Timer_ProcessClaim(Handle timer, int userID)
@@ -117,7 +110,7 @@ public void DbCallback_SelectClientHasClaimed(Database db, DBResultSet results, 
         if (amount > 0)
         {
             CPrintToChat(client, "[Store] You have gained {oragne}%dcR {default}for your previous playtime, wellcome back.", amount);
-            CPrintToChat(client, "[Store] Use /skills to spend your newly earned cR.", amount);Store_AddClientCredits(client, amount);
+            CPrintToChat(client, "[Store] Use /skills to spend your newly earned cR.", amount);
             Store_AddClientCredits(client, amount);
         }
 
@@ -139,24 +132,6 @@ public void DbCallback_InsertClientClaim(Database db, DBResultSet results, const
     if (results == null)
     {
         PrintToServer("DbCallback_InsertClientClaim: %s", error);
-        return;
-    }
-}
-
-void Db_DeleteClientClaim(int client)
-{
-    int accountID = GetSteamAccountID(client);
-
-    char query[128];
-    Format(query, sizeof(query), "DELETE FROM `store_claim` WHERE `account_id` = '%d';", accountID);
-    g_database.Query(DbCallback_DeleteClientClaim, query);
-}
-
-public void DbCallback_DeleteClientClaim(Database db, DBResultSet results, const char[] error, any data)
-{
-    if (results == null)
-    {
-        PrintToServer("DbCallback_DeleteClientClaim: %s", error);
         return;
     }
 }
