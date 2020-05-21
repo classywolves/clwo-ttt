@@ -210,6 +210,12 @@ public void DbCallback_InsertClientCredits(Database db, DBResultSet results, con
         LogError("DbCallback_InsertClientCredits: %s", error);
         return;
     }
+
+    int client = GetClientOfUserId(userid);
+    if (client)
+    {
+        g_iCredits[client] = g_cCredits.IntValue;
+    }
 }
 
 public void Db_UpdateClientCredits(int client)
