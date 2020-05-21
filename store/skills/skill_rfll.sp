@@ -12,7 +12,7 @@
 #define FF_ID "rfll"
 #define FF_NAME "Feather Falling"
 #define FF_DESCRIPTION "Reduces the amount of damage taken from falling."
-#define FF_PRICE 600
+#define FF_PRICE 1000
 #define FF_STEP 1.2
 #define FF_LEVEL 4
 #define FF_SORT 0

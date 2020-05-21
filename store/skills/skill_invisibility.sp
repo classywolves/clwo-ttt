@@ -18,7 +18,7 @@
 #define INVS_ID "invs"
 #define INVS_NAME "Reactive Camoflage"
 #define INVS_DESCRIPTION "Grants the user invisibility for short periods of time when hit with a electric charge."
-#define INVS_PRICE 400
+#define INVS_PRICE 600
 #define INVS_STEP 1.5
 #define INVS_LEVEL 3
 #define INVS_SORT 0
