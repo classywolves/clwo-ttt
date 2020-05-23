@@ -31,12 +31,16 @@ public Plugin myinfo =
 
 bool g_bTTTLoaded = false;
 
+int g_iBands[] = { 35, 48, 61, 74, 87, 100 };
+
+// look-up table for the health bands, eleminates the need for a loop in the
+// damage hook.
+int g_iBandLut[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5 };
+
 enum struct PlayerData
 {
     int level;
-    int pendingAmount;
-    int regenAmount;
-    float regenFactor;
+    int band;
     Handle pendingTimer;
     Handle regenTimer;
 }
@@ -45,6 +49,12 @@ PlayerData g_playerData[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
+    LoopClients(i)
+    {
+        g_playerData[i].pendingTimer = INVALID_HANDLE;
+        g_playerData[i].regenTimer = INVALID_HANDLE;
+    }
+
     HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);
 
     PrintToServer("[RGN] Loaded successfully");
@@ -102,10 +112,9 @@ public void Store_OnClientSkillsLoaded(int client)
 public void Store_OnSkillUpdate(int client, int level)
 {
     g_playerData[client].level = level;
-    g_playerData[client].regenAmount = 0;
+    g_playerData[client].band = 0;
     if (g_playerData[client].level > 0)
     {
-        g_playerData[client].regenFactor = 0.4 * g_playerData[client].level;
         SDKHook(client, SDKHook_OnTakeDamageAlivePost, Hook_OnTakeDamageAlive);
     }
 }
@@ -114,8 +123,7 @@ public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
     LoopClients(i)
     {
-        g_playerData[i].pendingAmount = 0;
-        g_playerData[i].regenAmount = 0;
+        g_playerData[i].band = 0;
         ClearTimer(g_playerData[i].pendingTimer);
         ClearTimer(g_playerData[i].regenTimer);
     }
@@ -127,9 +135,47 @@ public void Hook_OnTakeDamageAlive(int victim, int attacker, int inflictor, floa
     {
         return;
     }
+    
+    int health = GetClientHealth(victim) - RoundToNearest(damage);
+    if (health <= 0 || health >= 100)
+    {
+        return;
+    }
 
-    int amount = RoundToFloor(damage * g_playerData[victim].regenFactor);
-    g_playerData[victim].pendingAmount += amount;
+    // select band to heal up to if the client has level 2
+    int band = 0;
+    if (g_playerData[victim].level > 1)
+    {
+        // replaced the loop with the lut, use py/bands_gen.py to regnerate the
+        // the lut if needed.
+        /*
+        for (int i = 0; i < sizeof(g_iBands); ++i)
+        {
+            if (health < g_iBands[i])
+            {
+                g_playerData[victim].band = i;
+                break;
+            }
+            else if (health == g_iBands[i])
+            {
+                // already hit this band so they can not heal past this
+                return;
+            }
+        }
+        */
+        band = g_iBandLut[health];
+    }
+
+    // check to see if the players health is less than the band
+    if (health < g_iBands[band])
+    {
+        g_playerData[victim].band = band;
+    }
+    else // dont bother healing 
+    {
+        return;
+    }
+
     if (g_playerData[victim].pendingTimer == INVALID_HANDLE)
     {
         g_playerData[victim].pendingTimer = CreateTimer(5.0, Timer_HealthPending, GetClientUserId(victim), TIMER_FLAG_NO_MAPCHANGE);
@@ -141,18 +187,19 @@ public Action Timer_HealthPending(Handle timer, int userid)
     int client = GetClientOfUserId(userid);
     if (client > 0 && IsPlayerAlive(client))
     {
-        int amount = g_playerData[client].pendingAmount;
-        g_playerData[client].regenAmount += amount;
-        g_playerData[client].pendingAmount = 0;
-
         CPrintToChat(client, "[RGN] Larraman's Organ activated, dispensing cells.");
 
         if (g_playerData[client].regenTimer == INVALID_HANDLE)
         {
-            g_playerData[client].regenTimer = CreateTimer(1.0, Timer_HealthRegen, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+            if (g_playerData[client].level == 1)
+            {
+                g_playerData[client].regenTimer = CreateTimer(1.0, Timer_HealthRegen, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+            }
+            else // if (g_playerData[client].level == 2)
+            {
+                g_playerData[client].regenTimer = CreateTimer(1.0, Timer_HealthRegen, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+            }
         }
-
-        return Plugin_Continue;
     }
 
     return Plugin_Stop;
@@ -161,10 +208,11 @@ public Action Timer_HealthPending(Handle timer, int userid)
 public Action Timer_HealthRegen(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
-    if (client > 0 && IsPlayerAlive(client) && (g_playerData[client].regenAmount > 0))
+    int health = GetClientHealth(client);
+    if (client > 0 && IsPlayerAlive(client) && (health < g_iBands[g_playerData[client].band]))
     {
-        SetEntityHealth(client, Min(GetClientHealth(client) + 1, 100));
-        --g_playerData[client].regenAmount;
+        ++health;
+        SetEntityHealth(client, health);
 
         return Plugin_Continue;
     }
@@ -175,11 +223,5 @@ public Action Timer_HealthRegen(Handle timer, int userid)
 void ClearClientData(int client)
 {
     g_playerData[client].level = -1;
-    g_playerData[client].regenAmount = 0;
-    g_playerData[client].regenFactor = 0.0;
-}
-
-int Min(int a, int b)
-{
-    return a < b ? a : b;
+    g_playerData[client].band = 0;
 }
