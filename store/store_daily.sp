@@ -19,13 +19,22 @@ public Plugin myinfo =
 
 Database g_database = null;
 
-ConVar g_cDailyRewardMin = null;
-ConVar g_cDailyRewardMax = null;
+ConVar g_cDailyRewardBase = null;
+ConVar g_cDailyRewardStep = null;
+
+int g_iRewards[] = {
+    1,
+    5,
+    10,
+    15,
+    30,
+    60
+};
 
 public void OnPluginStart()
 {
-    g_cDailyRewardMin = CreateConVar("clwo_store_daily_reward_min", "2", "‬The minimum reward for cR with sm_daily.", _, true, 1.0, false);
-    g_cDailyRewardMax = CreateConVar("clwo_store_daily_reward_min", "10", "‬The maximum reward for cR with sm_daily.", _, true, 1.0, false);
+    g_cDailyRewardBase = CreateConVar("clwo_store_daily_reward_base", "50", "‬The minimum reward for cR with sm_daily.", _, true, 1.0, false);
+    g_cDailyRewardStep = CreateConVar("clwo_store_daily_reward_step", "10", "‬The maximum reward for cR with sm_daily.", _, true, 1.0, false);
 
     AutoExecConfig(true, "store_daily", "clwo");
 
@@ -38,28 +47,9 @@ public void OnPluginStart()
 
 public Action Command_Daily(int client, int args)
 {
-    Db_SelectLastTime(client);
+    Db_SelectDaily(client);
 
     return Plugin_Handled;
-}
-
-public void Db_InsertLastTime(int client)
-{
-    int accountID = GetSteamAccountID(client);
-    int time = GetTime();
-
-    char query[192];
-    Format(query, sizeof(query), "INSERT INTO `store_daily` (`account_id`, `last_time`) VALUES ('%d', '%d') ON DUPLICATE KEY UPDATE `last_time` = '%d';", accountID, time, time);
-    g_database.Query(DbCallback_InsertLastTime, query);
-}
-
-public void Db_SelectLastTime(int client)
-{
-    int accountID = GetSteamAccountID(client);
-
-    char query[128];
-    Format(query, sizeof(query), "SELECT `last_time` FROM `store_daily` WHERE `account_id` = '%d' ORDER BY `last_time` DESC LIMIT 1;", accountID);
-    g_database.Query(DbCallback_SelectLastTime, query, GetClientUserId(client));
 }
 
 public void DbCallback_Connect(Database db, const char[] error, any data)
@@ -71,39 +61,122 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
     }
 
     g_database = db;
-    SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_daily` ( `account_id` INT UNSIGNED NOT NULL, `last_time` INT UNSIGNED NOT NULL, PRIMARY KEY (`account_id`), INDEX (`last_time`)) ENGINE = InnoDB;");
+    SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_daily` ( `account_id` INT UNSIGNED NOT NULL, `last_time` INT UNSIGNED NOT NULL, `cons_days` INT UNSIGNED NOT NULL, PRIMARY KEY (`account_id`), INDEX (`last_time`)) ENGINE = InnoDB;");
 }
 
-public void DbCallback_InsertLastTime(Database db, DBResultSet results, const char[] error, any data)
+public void Db_SelectDaily(int client)
+{
+    int accountID = GetSteamAccountID(client);
+
+    char query[128];
+    Format(query, sizeof(query), "SELECT `last_time`, `cons_days` FROM `store_daily` WHERE `account_id` = '%d' LIMIT 1;", accountID);
+    g_database.Query(DbCallback_SelectDaily, query, GetClientUserId(client));
+}
+
+public void DbCallback_SelectDaily(Database db, DBResultSet results, const char[] error, int userid)
 {
     if (results == null)
     {
-        PrintToServer("DbCallback_InsertLastTime: %s", error);
-        return;
-    }
-}
-
-public void DbCallback_SelectLastTime(Database db, DBResultSet results, const char[] error, int userid)
-{
-    if (results == null)
-    {
-        PrintToServer("DbCallback_SelectLastTime: %s", error);
+        PrintToServer("DbCallback_SelectDaily: %s", error);
         return;
     }
 
     int client = GetClientOfUserId(userid);
+    int consDays = 0;
     if (results.FetchRow())
     {
         int lastTime = results.FetchInt(0);
-        if (lastTime + 86400 >= GetTime())
+        int delta = (lastTime + 86400) - GetTime();
+        if (delta >= 0)
         {
-            CPrintToChat(client, STORE_MESSAGE ... "You have claimed your daily reward.");
+            CPrintToChat(client, STORE_MESSAGE ... "You have already claimed your daily reward.");
             return;
         }
+
+        if (delta <= 86400)
+        {
+            consDays = results.FetchInt(1) + 1;
+        }
+
+        Db_UpdateDaily(client, consDays);
+    }
+    else
+    {
+        Db_InsertDaily(client);
     }
 
-    int reward = GetRandomInt(g_cDailyRewardMin.IntValue, g_cDailyRewardMax.IntValue);
+    int reward = g_iRewards[Min(consDays, 5)];
     Store_AddClientCredits(client, reward);
-    Db_InsertLastTime(client);
-    CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}just claimed {orange}%dcR {default}with /daily.", client, reward);
+
+    if (consDays == 0)
+    {
+        CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}just claimed {orange}%dcR {default}with /daily.", client, reward);
+    }
+    else
+    {
+        ++consDays;
+
+        char buffer[3];
+        GetDayOfMonthSuffix(consDays, buffer, sizeof(buffer));
+        CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}just claimed for the %d%s {orange}%dcR {default}with /daily.", client, consDays, buffer, reward);
+    }
+}
+
+public void Db_InsertDaily(int client)
+{
+    int accountID = GetSteamAccountID(client);
+    int time = GetTime();
+
+    char query[192];
+    Format(query, sizeof(query), "INSERT INTO `store_daily` (`account_id`, `last_time`, `cons_days`) VALUES ('%d', '%d', '0');", accountID, time, time);
+    g_database.Query(DbCallback_InsertDaily, query);
+}
+
+public void DbCallback_InsertDaily(Database db, DBResultSet results, const char[] error, any data)
+{
+    if (results == null)
+    {
+        PrintToServer("DbCallback_InsertDaily: %s", error);
+        return;
+    }
+}
+
+public void Db_UpdateDaily(int client, int consDays)
+{
+    int accountID = GetSteamAccountID(client);
+
+    char query[128];
+    Format(query, sizeof(query), "UPDATE `store_daily` SET `last_time` = '%d', `cons_days` = '%d'  WHERE `account_id` = '%d' LIMIT 1;", GetTime(), consDays, accountID);
+    g_database.Query(DbCallback_UpdateDaily, query, GetClientUserId(client));
+}
+
+public void DbCallback_UpdateDaily(Database db, DBResultSet results, const char[] error, any data)
+{
+    if (results == null)
+    {
+        PrintToServer("DbCallback_UpdateDaily: %s", error);
+        return;
+    }
+}
+
+
+int Min(int a, int b)
+{
+    return a < b ? a : b;
+}
+
+void GetDayOfMonthSuffix(int n, char[] buffer, int length)
+{
+    if (n >= 11 && n <= 13)
+    {
+        strcopy(buffer, length, "th");
+        return;
+    }
+    switch (n % 10)
+    {
+        case 1:  { strcopy(buffer, length, "st"); return; }
+        case 2:  { strcopy(buffer, length, "nd"); return; }
+        case 3:  { strcopy(buffer, length, "rd"); return; }
+        default: { strcopy(buffer, length, "th"); return; }
+    }
 }
