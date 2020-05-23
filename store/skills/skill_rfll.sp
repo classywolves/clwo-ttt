@@ -26,6 +26,8 @@ public Plugin myinfo =
     url = ""
 };
 
+g_bHasReducedDamage[MAXPLAYERS + 1] = { false, ... };
+
 enum struct PlayerData
 {
     int level;
@@ -47,6 +49,14 @@ public void OnClientPutInServer(int client)
 public void OnClientDisconnect(int client)
 {
     ClearClientData(client);
+}
+
+public void OnGameFrame()
+{
+    LoopClients(i)
+    {
+        g_bHasReducedDamage[i] = false;
+    }
 }
 
 public void Store_OnRegister()
@@ -74,7 +84,7 @@ public void Store_OnSkillUpdate(int client, int level)
 public Action Hook_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
 {
     // We only care for fall damage here.
-    if (!(damagetype & DMG_FALL))
+    if (!(damagetype & DMG_FALL) || g_bHasReducedDamage[victim])
     {
         return Plugin_Continue;
     }
@@ -83,6 +93,8 @@ public Action Hook_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, 
     damage = damage * g_playerData[victim].ratio;
 
     CPrintToChat(victim, "{default}[TTT] > Feather falling reduced your damage from {orange}%.0f {default}to {orange}%.0f.", oldDamage, damage);
+
+    g_bHasReducedDamage[victim] = true;
 
     return Plugin_Changed;
 }
