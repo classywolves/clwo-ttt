@@ -4,8 +4,6 @@ import argparse
 import re
 import sys
 
-import yaml
-
 DEFAULT_BANDS = [
     35,
     48,
@@ -37,6 +35,12 @@ FOOTER = (
 
 ARRAY_DEF = "int {}[] = {{ {} }};\n"
 
+STRING_DEF = 'char {}[] = "{}";\n'
+
+def get_hex(i : int, n : int = 2) -> str:
+    """Returns a hex representation of a char."""
+    return '\\x' + '{:0{}x}'.format(i, n).upper()
+
 def create_array(name : str, values : list) -> str:
     """Creates the definition for the enum for the mapping function."""
     av = ""
@@ -47,6 +51,14 @@ def create_array(name : str, values : list) -> str:
         av = av + str(value)
 
     return ARRAY_DEF.format(name, av)
+
+def create_string(name : str, values : list) -> str:
+    """Creates the definition for the enum for the mapping function."""
+    sv = ""
+    for value in values:
+        sv = sv + get_hex(value)
+
+    return STRING_DEF.format(name, sv)
 
 def get_lut(bands : list) -> list:
     lut = []
@@ -72,7 +84,7 @@ def main():
     args.out.write(HEADER)
     args.out.write(create_array('g_iBands', DEFAULT_BANDS))
     args.out.write('\n')
-    args.out.write(create_array('g_iBandLut', get_lut(DEFAULT_BANDS)))
+    args.out.write(create_string('g_iBandLut', get_lut(DEFAULT_BANDS)))
     args.out.write(FOOTER)
     
     args.out.close()
