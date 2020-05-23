@@ -191,14 +191,7 @@ public Action Timer_HealthPending(Handle timer, int userid)
 
         if (g_playerData[client].regenTimer == INVALID_HANDLE)
         {
-            if (g_playerData[client].level == 1)
-            {
-                g_playerData[client].regenTimer = CreateTimer(1.0, Timer_HealthRegen, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-            }
-            else // if (g_playerData[client].level == 2)
-            {
-                g_playerData[client].regenTimer = CreateTimer(1.0, Timer_HealthRegen, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-            }
+            g_playerData[client].regenTimer = CreateTimer(1.0, Timer_HealthRegen, GetClientUserId(client), TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
         }
     }
 
@@ -209,7 +202,8 @@ public Action Timer_HealthRegen(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
     int health = GetClientHealth(client);
-    if (client > 0 && IsPlayerAlive(client) && (health < g_iBands[g_playerData[client].band]))
+    int maxHealth = g_iBands[g_playerData[client].band];
+    if (client > 0 && IsPlayerAlive(client) && health < maxHealth)
     {
         ++health;
         SetEntityHealth(client, health);
