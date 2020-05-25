@@ -50,15 +50,6 @@ public void Store_OnRegister()
     Store_RegisterSkill(SPD_ID, SPD_NAME, SPD_DESCRIPTION, SPD_PRICE, SPD_STEP, SPD_LEVEL, Store_OnSkillUpdate, SPD_SORT);
 }
 
-public void Store_OnReady()
-{
-    LoopValidClients(i)
-    {
-        g_playerData[i].level = Store_GetSkill(i, SPD_ID);
-        g_playerData[i].cooldown = SPD_COOLDOWN_TIME / g_playerData[i].level;
-    }
-}
-
 public void OnClientPutInServer(int client)
 {
     ClearClientData(client);
@@ -73,7 +64,12 @@ public void OnClientDisconnect(int client)
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon)
 {
-    if (g_playerData[client].level <= 0 || g_playerData[client].isUsingSpeed) return Plugin_Continue;
+    if (g_playerData[client].level <= 0 ||
+        g_playerData[client].isUsingSpeed ||
+        !IsPlayerAlive(client)) 
+    {
+        return Plugin_Continue;
+    }
 
     if (!(buttons & IN_USE))
     {
@@ -113,11 +109,12 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
     for (float i = 0.0; i < 0.5; i += 0.01)
     {
         DataPack pack;
+        CreateDataTimer(i, Timer_SpeedIncrease, pack);
+
         pack.WriteCell(userid);
         pack.WriteFloat(i);
         pack.Reset();
 
-        CreateDataTimer(i, Timer_SpeedIncrease, pack);
     }
 
     g_playerData[client].isUsingSpeed = true;
@@ -130,6 +127,10 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 public void Store_OnSkillUpdate(int client, int level)
 {
     g_playerData[client].level = level;
+    if (g_playerData[client].level > 0)
+    {
+        g_playerData[client].cooldown = SPD_COOLDOWN_TIME / g_playerData[client].level;
+    }
 }
 
 public Action Timer_SpeedIncrease(Handle timer, DataPack pack)
@@ -142,8 +143,6 @@ public Action Timer_SpeedIncrease(Handle timer, DataPack pack)
         SetEntityGravity(client, 1.0 / speed);
     }
 
-    delete pack;
-
     return Plugin_Stop;
 }
 
@@ -152,6 +151,8 @@ public Action Timer_SpeedRevoke(Handle timer, int userid)
     int client = GetClientOfUserId(userid);
     if (client)
     {
+        CPrintToChat(client, "{default}[TTT] > Adrenal Injector deactivated.");
+
         g_playerData[client].revokeTimer = INVALID_HANDLE;
         g_playerData[client].isUsingSpeed = false;
         SetClientSpeed(client, 1.0);
