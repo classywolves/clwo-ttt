@@ -118,7 +118,7 @@ public void DbCallback_SelectDaily(Database db, DBResultSet results, const char[
 
         char buffer[3];
         GetDayOfMonthSuffix(consDays, buffer, sizeof(buffer));
-        CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}just claimed for the %d%s {orange}%dcR {default}with /daily.", client, consDays, buffer, reward);
+        CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}used /daily for the %d%s day running, gaining {orange}%dcR.", client, consDays, buffer, reward);
     }
 }
 
