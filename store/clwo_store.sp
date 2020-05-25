@@ -560,6 +560,7 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
     skill.callback = GetNativeCell(7);
     skill.sort = GetNativeCell(8);
 
+    int index = -1;
     for (int i = 0; i < g_aStoreSkills.Length; i++)
     {
         Skill temp;
@@ -567,12 +568,22 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
         if (StrEqual(temp.id, skill.id, true))
         {
             PrintToServer(STORE_ERROR ... "Skill %s already registered.", temp.id);
-            return -1;
+            index = i;
+            break;
         }
     }
 
-    g_smSkillIndexMap.SetValue(skill.id, g_aStoreSkills.Length);
-    g_aStoreSkills.PushArray(skill);
+    if (index > 0) // should allow skills to reload without invalidating
+    {
+        g_smSkillIndexMap.SetValue(skill.id, g_aStoreSkills.Length);
+        g_aStoreSkills.PushArray(skill);
+    }
+    else
+    {
+        g_smSkillIndexMap.SetValue(skill.id, g_aStoreSkills.Length);
+        g_aStoreSkills.PushArray(skill);
+    }
+    
 
     if (g_cSortItems.BoolValue)
     {
