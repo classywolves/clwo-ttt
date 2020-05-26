@@ -42,6 +42,11 @@ PlayerData g_playerData[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
+    if (Store_IsReady())
+    {
+        Store_OnRegister();
+    }
+
     PrintToServer("[SPD] Loaded successfully");
 }
 

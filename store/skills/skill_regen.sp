@@ -57,6 +57,12 @@ public void OnPluginStart()
 
     HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);
 
+    if (Store_IsReady())
+    {
+        Store_OnRegister();
+    }
+
+
     PrintToServer("[RGN] Loaded successfully");
 }
 

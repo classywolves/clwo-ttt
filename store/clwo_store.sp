@@ -300,13 +300,7 @@ public void DbCallback_SelectClientSkills(Database db, DBResultSet results, cons
             int skill = SkillIDToIndex(id);
             if (skill >= 0)
             {
-                Skill sd;
-                g_aStoreSkills.GetArray(skill, sd);
-
-                Call_StartFunction(sd.plugin, sd.callback);
-                Call_PushCell(client);
-                Call_PushCell(level);
-                Call_Finish();
+                Function_OnSkillUpdate(skill, client, level);
             }
         }
 
@@ -576,7 +570,7 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
     if (index > 0) // should allow skills to reload without invalidating
     {
         g_smSkillIndexMap.SetValue(skill.id, g_aStoreSkills.Length);
-        g_aStoreSkills.PushArray(skill);
+        g_aStoreSkills.SetArray(index, skill);
     }
     else
     {
@@ -592,6 +586,12 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
     }
 
     LogMessage(STORE_MESSAGE ... "Registered skill %s (%s), price: %d, level: %d - %s", skill.name, skill.id, skill.price, skill.level, skill.description);
+
+    if (g_bStoreReady)
+    {
+        LateLoadSkill(skill.id);
+        LogMessage(STORE_MESSAGE ... "Late loaded skill %s (%s)", skill.name, skill.id);
+    }
 
     return 0;
 }
@@ -665,6 +665,26 @@ public int Native_GetSkill(Handle plugin, int numParams)
 public int Native_AddItem(Handle plugin, int numParams)
 {
     return -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Forwards
+////////////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Functions
+////////////////////////////////////////////////////////////////////////////////
+
+void Function_OnSkillUpdate(int client, int skill, int level)
+{
+    Skill sd;
+    g_aStoreSkills.GetArray(skill, sd);
+
+    Call_StartFunction(sd.plugin, sd.callback);
+    Call_PushCell(client);
+    Call_PushCell(level);
+    Call_Finish();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -755,10 +775,7 @@ bool Purchase_Skill(int client, int skill)
             return false;
         }
 
-        Call_StartFunction(skillData.plugin, skillData.callback);
-        Call_PushCell(client);
-        Call_PushCell(level);
-        Call_Finish();
+        Function_OnSkillUpdate(client, skill, level);
 
         cr = Store_SubClientCredits(client, price);
         g_playerData[client].skills.SetValue(skillData.id, level);
@@ -781,5 +798,23 @@ void UpdateSkillMap()
     {
         g_aStoreSkills.GetArray(i, sd);
         g_smSkillIndexMap.SetValue(sd.id, i);
+    }
+}
+
+void LateLoadSkill(char[] skillID)
+{
+    int skill = SkillIDToIndex(skillID);
+    if (skill < 0)
+    {
+        return;
+    }
+
+    int level;
+    LoopValidClients(i)
+    {
+        if (g_playerData[i].skills.GetValue(skillID, level))
+        {
+            Function_OnSkillUpdate(skill, i, level);
+        }
     }
 }

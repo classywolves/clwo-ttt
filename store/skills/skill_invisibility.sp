@@ -42,8 +42,13 @@ enum struct PlayerData
 
 PlayerData g_playerData[MAXPLAYERS + 1];
 
-public OnPluginStart()
+public void OnPluginStart()
 {
+    if (Store_IsReady())
+    {
+        Store_OnRegister();
+    }
+
     PrintToServer("[RCM] Loaded succcessfully");
 }
 
@@ -104,10 +109,13 @@ public void TTT_OnTased_Post(int attacker, int victim)
 public Action Timer_RemoveInvisibility(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
-    if (client && IsPlayerAlive(client))
+    if (client)
     {
         SetEntityRenderMode(client, RENDER_NORMAL);
-        CPrintToChat(client, TTT_MESSAGE ... "Reactive camoflage {red}deactivated!");
+        if (IsPlayerAlive(client))
+        {
+            CPrintToChat(client, TTT_MESSAGE ... "Reactive camoflage {red}deactivated!");
+        }
     }
 
     return Plugin_Stop;
