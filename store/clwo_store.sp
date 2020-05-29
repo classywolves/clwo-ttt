@@ -569,7 +569,7 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
 
     if (index > 0) // should allow skills to reload without invalidating
     {
-        g_smSkillIndexMap.SetValue(skill.id, g_aStoreSkills.Length);
+        g_smSkillIndexMap.SetValue(skill.id, index);
         g_aStoreSkills.SetArray(index, skill);
     }
     else
