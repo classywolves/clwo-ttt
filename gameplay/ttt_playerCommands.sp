@@ -228,7 +228,7 @@ public Action Command_Give(int client, int args)
 
     char buffer[MAX_NAME_LENGTH];
     GetCmdArg(1, buffer, MAX_NAME_LENGTH);
-    int target = TTT_Target(buffer, client, true, true, false);
+    int target = TTT_Target(buffer, client, true, false, false);
     if (!IsValidClient(target))
     {
         return Plugin_Handled;
@@ -243,9 +243,9 @@ public Action Command_Give(int client, int args)
         return Plugin_Handled;
     }
 
-    if (!IsPlayerAlive(client) || !IsPlayerAlive(target))
+    if (!IsPlayerAlive(client))
     {
-        CPrintToChat(client, TTT_ERROR ... "Cannot give credits while you or the target is dead");
+        CPrintToChat(client, TTT_ERROR ... "Cannot give credits while you are dead");
         return Plugin_Handled;
     }
 
