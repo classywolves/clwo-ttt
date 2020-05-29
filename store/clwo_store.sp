@@ -300,7 +300,7 @@ public void DbCallback_SelectClientSkills(Database db, DBResultSet results, cons
             int skill = SkillIDToIndex(id);
             if (skill >= 0)
             {
-                Function_OnSkillUpdate(skill, client, level);
+                Function_OnSkillUpdate(client, skill, level);
             }
         }
 
