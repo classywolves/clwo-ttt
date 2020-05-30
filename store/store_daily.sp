@@ -6,7 +6,6 @@
 #include <generics>
 #include <clwo_store_credits>
 #include <clwo_store_messages>
-#include <donators>
 
 public Plugin myinfo =
 {
@@ -61,7 +60,7 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
     }
 
     g_database = db;
-    SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_daily` ( `account_id` INT UNSIGNED NOT NULL, `last_time` INT UNSIGNED NOT NULL, `cons_days` INT UNSIGNED NOT NULL, PRIMARY KEY (`account_id`), INDEX (`last_time`)) ENGINE = InnoDB;");
+    SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_daily` ( `account_id` INT UNSIGNED NOT NULL, `last_day` INT UNSIGNED NOT NULL, `cons_days` INT UNSIGNED NOT NULL, PRIMARY KEY (`account_id`), INDEX (`last_day`)) ENGINE = InnoDB;");
 }
 
 public void Db_SelectDaily(int client)
@@ -69,7 +68,7 @@ public void Db_SelectDaily(int client)
     int accountID = GetSteamAccountID(client);
 
     char query[128];
-    Format(query, sizeof(query), "SELECT `last_time`, `cons_days` FROM `store_daily` WHERE `account_id` = '%d' LIMIT 1;", accountID);
+    Format(query, sizeof(query), "SELECT `last_day`, `cons_days` FROM `store_daily` WHERE `account_id` = '%d' LIMIT 1;", accountID);
     g_database.Query(DbCallback_SelectDaily, query, GetClientUserId(client));
 }
 
@@ -82,27 +81,28 @@ public void DbCallback_SelectDaily(Database db, DBResultSet results, const char[
     }
 
     int client = GetClientOfUserId(userid);
+    int currDay = GetTime() / 86400;
     int consDays = 0;
     if (results.FetchRow())
     {
-        int lastTime = results.FetchInt(0);
-        int delta = (lastTime + 86400) - GetTime();
-        if (delta >= 0)
+        int lastDay = results.FetchInt(0);
+        int delta = currDay - lastDay;
+        if (delta <= 0)
         {
             CPrintToChat(client, STORE_MESSAGE ... "You have already claimed your daily reward.");
             return;
         }
 
-        if (delta <= 86400)
+        if (delta == 1)
         {
             consDays = results.FetchInt(1) + 1;
         }
 
-        Db_UpdateDaily(client, consDays);
+        Db_UpdateDaily(client, currDay, consDays);
     }
     else
     {
-        Db_InsertDaily(client);
+        Db_InsertDaily(client, currDay);
     }
 
     int reward = g_iRewards[Min(consDays, 5)];
@@ -122,13 +122,12 @@ public void DbCallback_SelectDaily(Database db, DBResultSet results, const char[
     }
 }
 
-public void Db_InsertDaily(int client)
+public void Db_InsertDaily(int client, int currDay)
 {
     int accountID = GetSteamAccountID(client);
-    int time = GetTime();
 
     char query[192];
-    Format(query, sizeof(query), "INSERT INTO `store_daily` (`account_id`, `last_time`, `cons_days`) VALUES ('%d', '%d', '0');", accountID, time, time);
+    Format(query, sizeof(query), "INSERT INTO `store_daily` (`account_id`, `last_day`, `cons_days`) VALUES ('%d', '%d', '0');", accountID, currDay);
     g_database.Query(DbCallback_InsertDaily, query);
 }
 
@@ -141,12 +140,12 @@ public void DbCallback_InsertDaily(Database db, DBResultSet results, const char[
     }
 }
 
-public void Db_UpdateDaily(int client, int consDays)
+public void Db_UpdateDaily(int client, int currDay, int consDays)
 {
     int accountID = GetSteamAccountID(client);
 
     char query[128];
-    Format(query, sizeof(query), "UPDATE `store_daily` SET `last_time` = '%d', `cons_days` = '%d'  WHERE `account_id` = '%d' LIMIT 1;", GetTime(), consDays, accountID);
+    Format(query, sizeof(query), "UPDATE `store_daily` SET `last_day` = '%d', `cons_days` = '%d'  WHERE `account_id` = '%d' LIMIT 1;", currDay, consDays, accountID);
     g_database.Query(DbCallback_UpdateDaily, query, GetClientUserId(client));
 }
 
