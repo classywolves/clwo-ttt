@@ -18,9 +18,6 @@ public Plugin myinfo =
 
 Database g_database = null;
 
-ConVar g_cDailyRewardBase = null;
-ConVar g_cDailyRewardStep = null;
-
 int g_iRewards[] = {
     1,
     5,
@@ -34,11 +31,6 @@ bool g_bIsClaiming[MAXPLAYERS + 1] = { false, ... };
 
 public void OnPluginStart()
 {
-    g_cDailyRewardBase = CreateConVar("clwo_store_daily_reward_base", "50", "‬The minimum reward for cR with sm_daily.", _, true, 1.0, false);
-    g_cDailyRewardStep = CreateConVar("clwo_store_daily_reward_step", "10", "‬The maximum reward for cR with sm_daily.", _, true, 1.0, false);
-
-    AutoExecConfig(true, "store_daily", "clwo");
-
     RegConsoleCmd("sm_daily", Command_Daily, "Claims your daily reward.");
 
     Database.Connect(DbCallback_Connect, "store");
