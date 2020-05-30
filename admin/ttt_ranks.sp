@@ -57,7 +57,7 @@ bool rankStaff[rankCount] =
 {
     false,
     false,
-    true,
+    false,
     true,
     true,
     true,
