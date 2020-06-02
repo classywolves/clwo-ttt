@@ -87,7 +87,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
 {
     if (g_playerData[client].invisible)
     {
-        buttons = buttons & (IN_ATTACK | IN_ATTACK2);
+        buttons = buttons & ~(IN_ATTACK | IN_ATTACK2);
     }
 }
 
@@ -97,6 +97,7 @@ public void TTT_OnTased_Post(int attacker, int victim)
     {
         if (TTT_GetClientRole(victim) == TTT_TEAM_TRAITOR)
         {
+            g_playerData[victim].invisible = true;
             SetEntityRenderMode(victim, RENDER_NONE);
             CPrintToChat(victim, TTT_MESSAGE ... "Reactive camoflage {green}activated!");
             ProgressBar_Create(victim, "Charge", g_playerData[victim].length, ProgressBar_Decrement);
@@ -109,8 +110,9 @@ public void TTT_OnTased_Post(int attacker, int victim)
 public Action Timer_RemoveInvisibility(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
-    if (client)
+    if (client > 0)
     {
+        g_playerData[client].invisible = false;
         SetEntityRenderMode(client, RENDER_NORMAL);
         if (IsPlayerAlive(client))
         {
