@@ -11,7 +11,9 @@
 #include <ttt>
 #define REQUIRE_PLUGIN
 #include <generics>
+#undef REQUIRE_PLUGIN
 #include <clwo_store>
+#define REQUIRE_PLUGIN
 
 #define SCAV_ID "scav"
 #define SCAV_NAME "Scavenger"

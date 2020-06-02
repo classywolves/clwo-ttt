@@ -4,7 +4,9 @@
 #include <colorlib>
 
 #include <generics>
+#undef REQUIRE_PLUGIN
 #include <clwo_store>
+#define REQUIRE_PLUGIN
 #include <error_timeout>
 
 #define SPD_ID "sped"
