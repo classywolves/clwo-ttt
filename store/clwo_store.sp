@@ -338,10 +338,7 @@ void Menu_Skills(int client)
         Skill skill;
         g_aStoreSkills.GetArray(i, skill);
 
-        char info[4];
         char message[192];
-
-        IntToString(i, info, sizeof(info));
 
         int level = -1;
         if (g_playerData[client].skills.GetValue(skill.id, level))
@@ -352,8 +349,8 @@ void Menu_Skills(int client)
         {
             Format(message, sizeof(message), "%s (Not Owned)", skill.name);
         }
-        
-        mSkills.AddItem(info, message);
+
+        mSkills.AddItem(skill.id, message);
     }
 
     mSkills.Display(client, 240);
@@ -488,9 +485,9 @@ public int MenuHandler_Skills(Menu menu, MenuAction action, int client, int data
     {
         case MenuAction_Select:
         {
-            char info[4];
+            char info[16];
             menu.GetItem(data, info, sizeof(info));
-            int skill = StringToInt(info, sizeof(info));
+            int skill = SkillIDToIndex(info);
             Menu_SkillInfo(client, skill);
         }
         case MenuAction_End:
@@ -567,13 +564,15 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
         }
     }
 
-    if (index > 0) // should allow skills to reload without invalidating
+    if (index >= 0) // should allow skills to reload without invalidating
     {
+        LogMessage("Updated skill %s with a index of %d.", skill.id, index);
         g_smSkillIndexMap.SetValue(skill.id, index);
         g_aStoreSkills.SetArray(index, skill);
     }
     else
     {
+        LogMessage("Pushed skill %s with a index of %d.", skill.id, g_aStoreSkills.Length);
         g_smSkillIndexMap.SetValue(skill.id, g_aStoreSkills.Length);
         g_aStoreSkills.PushArray(skill);
     }
@@ -793,6 +792,8 @@ bool Purchase_Skill(int client, int skill)
 
 void UpdateSkillMap()
 {
+    g_smSkillIndexMap.Clear();
+
     Skill sd;
     for (int i = 0; i < g_aStoreSkills.Length; ++i)
     {
