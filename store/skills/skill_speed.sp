@@ -49,6 +49,8 @@ public void OnPluginStart()
         Store_OnRegister();
     }
 
+    HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
+
     PrintToServer("[SPD] Loaded successfully");
 }
 
@@ -140,6 +142,15 @@ public void Store_OnSkillUpdate(int client, int level)
     }
 }
 
+public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
+{
+    int client = GetClientOfUserId(event.GetInt("userid"));
+    if (client > 0)
+    {
+        CallTimer(g_playerData[client].revokeTimer);
+    }
+}
+
 public Action Timer_SpeedIncrease(Handle timer, DataPack pack)
 {
     int client = GetClientOfUserId(pack.ReadCell());
@@ -158,7 +169,10 @@ public Action Timer_SpeedRevoke(Handle timer, int userid)
     int client = GetClientOfUserId(userid);
     if (client)
     {
-        CPrintToChat(client, "{default}[TTT] > Adrenal Injector deactivated.");
+        if (IsPlayerAlive(client))
+        {
+            CPrintToChat(client, "{default}[TTT] > Adrenal Injector deactivated.");
+        }
 
         g_playerData[client].revokeTimer = INVALID_HANDLE;
         g_playerData[client].isUsingSpeed = false;
