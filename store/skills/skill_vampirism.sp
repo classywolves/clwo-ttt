@@ -5,23 +5,25 @@
 #include <sdktools>
 #include <cstrike>
 
-#include <colorvariables>
+#include <colorlib>
 #include <generics>
-#include <clwo-store>
 #include <ttt_messages>
+#undef REQUIRE_PLUGIN
+#include <clwo_store>
+#define REQUIRE_PLUGIN
 
 #define VAMP_ID "vamp"
 #define VAMP_NAME "Vampirism"
 #define VAMP_DESCRIPTION "You regain health from any damage you do unto another player."
-#define VAMP_PRICE 400
-#define VAMP_STEP 1.2
-#define VAMP_LEVEL 4
+#define VAMP_PRICE 1200
+#define VAMP_STEP 2.0
+#define VAMP_LEVEL 2
 #define VAMP_SORT 100
 
 public Plugin myinfo =
 {
-    name = "Skill Vampirism",
-    author = "c0rp3n & Popey & MarsTwix",
+    name = "CLWO Store - Skill: Vampirism",
+    author = "c0rp3n & Popey",
     description = "A skill that allows the player to regain health from the damage that they do unto others.",
     version = "0.1.0",
     url = ""
@@ -42,32 +44,27 @@ public void OnPluginStart()
     g_iSpriteBeam = PrecacheModel("materials/sprites/laserbeam.vmt");
     g_iSpriteHalo = PrecacheModel("materials/sprites/glow.vmt");
 
+    LoopValidClients(i)
+    {
+        OnClientPutInServer(i);
+    }
+
+    if (Store_IsReady())
+    {
+        Store_OnRegister();
+    }
+
     PrintToServer("[SKL] Loaded succcessfully");
 }
 
 public void Store_OnRegister()
 {
-    Store_RegisterSkill(VAMP_ID, VAMP_NAME, VAMP_DESCRIPTION, VAMP_PRICE, VAMP_STEP, VAMP_LEVEL, VAMP_SORT);
-}
-
-public void Store_OnReady()
-{
-    LoopValidClients(i)
-    {
-        OnClientPutInServer(i);
-    }
+    Store_RegisterSkill(VAMP_ID, VAMP_NAME, VAMP_DESCRIPTION, VAMP_PRICE, VAMP_STEP, VAMP_LEVEL, Store_OnSkillUpdate, VAMP_SORT);
 }
 
 public void OnClientPutInServer(int client)
 {
-    if (Store_IsReady())
-    {
-        g_playerData[client].level = Store_GetSkill(client, VAMP_ID);
-        if (g_playerData[client].level > 0)
-        {
-            SDKHook(client, SDKHook_OnTakeDamagePost, Hook_OnTakeDamagePost);
-        }
-    }
+    g_playerData[client].level = -1;
 }
 
 public void OnClientDisconnect(int client)
@@ -75,15 +72,12 @@ public void OnClientDisconnect(int client)
     g_playerData[client].level = -1;
 }
 
-public void Store_OnSkillPurchased(int client, char[] id, int level)
+public void Store_OnSkillUpdate(int client, int level)
 {
-    if (StrEqual(id, VAMP_ID, true))
+    g_playerData[client].level = level;
+    if (g_playerData[client].level > 0)
     {
-        g_playerData[client].level = level;
-        if (g_playerData[client].level > 0)
-        {
-            SDKHook(client, SDKHook_OnTakeDamagePost, Hook_OnTakeDamagePost);
-        }
+        SDKHook(client, SDKHook_OnTakeDamagePost, Hook_OnTakeDamagePost);
     }
 }
 
@@ -96,6 +90,13 @@ public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float
 
     int health = GetClientHealth(attacker);
     if (health >= 100)
+    {
+        return;
+    }
+
+    char weaponName[32];
+    GetClientWeapon(victim, weaponName, sizeof(weaponName));
+    if (StrContains(weaponName, "knife", true) == -1)
     {
         return;
     }
@@ -117,7 +118,7 @@ public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float
         TE_SendToAll();
     }
 
-    CPrintToChat(attacker, TTT_MESSAGE ... "Vampirism!  Set your health too {orange}%d.", newHealth);
+    CPrintToChat(attacker, TTT_MESSAGE ... "Vampirism! Set your health too {orange}%d.", newHealth);
 }
 
 public int Min(int x, int y)
