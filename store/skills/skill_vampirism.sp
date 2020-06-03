@@ -14,7 +14,7 @@
 
 #define VAMP_ID "vamp"
 #define VAMP_NAME "Vampirism"
-#define VAMP_DESCRIPTION "You regain health from any damage you do unto another player."
+#define VAMP_DESCRIPTION "You regain health from knife damage you do unto another player."
 #define VAMP_PRICE 1200
 #define VAMP_STEP 2.0
 #define VAMP_LEVEL 2
@@ -83,7 +83,7 @@ public void Store_OnSkillUpdate(int client, int level)
 
 public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damageType, int weapon, const float damageForce[3], const float damagePosition[3])
 {
-    if (!(IsValidClient(victim) || IsValidClient(attacker) || IsPlayerAlive(attacker)))
+    if (!IsValidClient(attacker) || !IsPlayerAlive(attacker))
     {
         return;
     }
