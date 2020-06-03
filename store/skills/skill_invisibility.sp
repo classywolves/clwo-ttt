@@ -99,6 +99,7 @@ public void TTT_OnTased_Post(int attacker, int victim)
         {
             g_playerData[victim].invisible = true;
             SetEntityRenderMode(victim, RENDER_NONE);
+            ClientCommand(victim, "play \"%s\"", "*inilo/ttt_v1_452489/cloak_v1_452489/cloak_cloak01_452489.mp3");
             CPrintToChat(victim, TTT_MESSAGE ... "Reactive camoflage {green}activated!");
             ProgressBar_Create(victim, "Charge", g_playerData[victim].length, ProgressBar_Decrement);
 
@@ -116,6 +117,7 @@ public Action Timer_RemoveInvisibility(Handle timer, int userid)
         SetEntityRenderMode(client, RENDER_NORMAL);
         if (IsPlayerAlive(client))
         {
+            ClientCommand(client, "play \"%s\"", "*inilo/ttt_v1_452489/cloak_v1_452489/cloak_uncloak01_452489.mp3");
             CPrintToChat(client, TTT_MESSAGE ... "Reactive camoflage {red}deactivated!");
         }
     }
