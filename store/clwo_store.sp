@@ -815,7 +815,7 @@ void LateLoadSkill(char[] skillID)
     {
         if (g_playerData[i].skills.GetValue(skillID, level))
         {
-            Function_OnSkillUpdate(skill, i, level);
+            Function_OnSkillUpdate(i, skill, level);
         }
     }
 }
