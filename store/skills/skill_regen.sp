@@ -201,6 +201,7 @@ public Action Timer_HealthPending(Handle timer, int userid)
         }
     }
 
+    g_playerData[client].pendingTimer = INVALID_HANDLE;
     return Plugin_Stop;
 }
 
@@ -217,6 +218,7 @@ public Action Timer_HealthRegen(Handle timer, int userid)
         return Plugin_Continue;
     }
 
+    g_playerData[client].regenTimer = INVALID_HANDLE;
     return Plugin_Stop;
 }
 
