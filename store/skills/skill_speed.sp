@@ -1,6 +1,7 @@
 #pragma semicolon 1
 
 #include <sourcemod>
+#include <sdkhooks>
 #include <colorlib>
 
 #include <generics>
@@ -138,6 +139,7 @@ public void Store_OnSkillUpdate(int client, int level)
     g_playerData[client].level = level;
     if (g_playerData[client].level > 0)
     {
+        SDKHook(client, SDKHook_OnTakeDamageAlivePost, Hook_OnTakeDamageAlivePost);
         g_playerData[client].cooldown = SPD_COOLDOWN_TIME / g_playerData[client].level;
     }
 }
@@ -148,6 +150,14 @@ public void Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast
     if (client > 0)
     {
         CallTimer(g_playerData[client].revokeTimer);
+    }
+}
+
+public void Hook_OnTakeDamageAlivePost(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
+{
+    if (g_playerData[victim].isUsingSpeed && IsValidClient(attacker))
+    {
+        CallTimer(g_playerData[victim].revokeTimer);
     }
 }
 
