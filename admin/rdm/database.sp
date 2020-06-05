@@ -42,7 +42,7 @@ public void DbCallback_InsertDeath(Database db, DBResultSet results, const char[
 
 public void Db_InsertHandle(int client, int death)
 {
-    CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "{yellow}%N {default}has taken an RDM case.", client);
+    CPrintToChatAdmins("sm_handle", TTT_MESSAGE ... "{yellow}%N {default}has taken an RDM case.", client);
 
     int accountID = GetSteamAccountID(client);
 
@@ -92,7 +92,7 @@ public void DbCallback_InsertReport(Database db, DBResultSet results, const char
 
     CPrintToChat(client, TTT_MESSAGE ... "Thanks for submitting a case, a staff member shall be in contact shortly.");
 
-    CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "{yellow}%N {default}opened a new RDM case.", client);
+    CPrintToChatAdmins("sm_handle", TTT_MESSAGE ... "{yellow}%N {default}opened a new RDM case.", client);
 
     Db_SelectCaseCount();
 }
@@ -140,15 +140,15 @@ public void DbCallback_SelectCaseCount(Database db, DBResultSet results, const c
         int caseCount = results.FetchInt(0);
         if (caseCount < 1)
         {
-            CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "There are currently no unhandled cases.");
+            CPrintToChatAdmins("sm_handle", TTT_MESSAGE ... "There are currently no unhandled cases.");
         }
         else if (caseCount < 2)
         {
-            CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "There is now {orange}%d {default}unhandled case.", caseCount);
+            CPrintToChatAdmins("sm_handle", TTT_MESSAGE ... "There is now {orange}%d {default}unhandled case.", caseCount);
         }
         else
         {
-            CPrintToChatAdmins(ADMFLAG_GENERIC, TTT_MESSAGE ... "There are now {orange}%d {default}unhandled cases.", caseCount);
+            CPrintToChatAdmins("sm_handle", TTT_MESSAGE ... "There are now {orange}%d {default}unhandled cases.", caseCount);
         }
     }
 }
@@ -160,7 +160,8 @@ public void Db_SelectNextCase(int client)
     g_database.Query(DbCallback_SelectNextCase, query, GetClientUserId(client));
 }
 
-public void DbCallback_SelectNextCase(Database db, DBResultSet results, const char[] error, int userid) {
+public void DbCallback_SelectNextCase(Database db, DBResultSet results, const char[] error, int userid)
+{
     if (results == null)
     {
         LogError("DbCallback_SelectNextCase: %s", error);
@@ -173,7 +174,7 @@ public void DbCallback_SelectNextCase(Database db, DBResultSet results, const ch
         int death = results.FetchInt(0);
         Db_InsertHandle(client, death);
         g_playerData[client].currentCase = death;
-        Db_SelectInfo(client)
+        Db_SelectInfo(client);
     }
     else
     {
