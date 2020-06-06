@@ -39,6 +39,8 @@ public void OnPluginStart()
 
     AutoExecConfig(true, "store_rewards", "clwo");
 
+    RegConsoleCmd("sm_loyalty", Command_Loyalty, "Displays information about loyalty cR rewards on TTT.");
+
     HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
     HookEvent("round_end",   Event_RoundEnd,   EventHookMode_PostNoCopy);
 
@@ -75,6 +77,17 @@ public void Event_RoundStart(Event event, const char[] name, bool dontBroadcast)
 public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 {
     DoRewardPayouts();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Commands
+////////////////////////////////////////////////////////////////////////////////
+
+public Action Command_Loyalty(int client, int argc)
+{
+    ShowRewardPanel(client);
+
+    return Plugin_Handled;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -240,7 +253,7 @@ void DoRewardPayouts()
             if (reward > 0)
             {
                 int cr = Store_AddClientCredits(i, reward);
-                CPrintToChat(i, " [Store] You earned {orange}%dcR {default}(total: {orange}%icR{default}).", reward, cr);
+                CPrintToChat(i, " [Store] You earned {orange}%dcR {default}(total: {orange}%dcR{default}).", reward, cr);
             }
         }
         else
@@ -248,7 +261,7 @@ void DoRewardPayouts()
             int missed = GetClientRewardMissed(i);
             if (missed > 0)
             {
-                CPrintToChat(i, " [Store] Bummer! you missed out on {orange}%dcR.", missed);
+                CPrintToChat(i, " [Store] Bummer! you missed out on {orange}%dcR{default}, make sure to check /loyalty.", missed);
             }
         }
 
