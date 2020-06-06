@@ -62,7 +62,7 @@ public void OnClientPostAdminCheck(int client)
 {
     CheckClientAdvertisingState(client);
 
-    CreateTimer(15.0, Timer_ShowRewardPanel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
+    //CreateTimer(15.0, Timer_ShowRewardPanel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,6 +94,7 @@ public Action Command_Loyalty(int client, int argc)
 // Timers
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
 public Action Timer_ShowRewardPanel(Handle timer, int userid)
 {
     int client = GetClientOfUserId(userid);
@@ -107,6 +108,7 @@ public Action Timer_ShowRewardPanel(Handle timer, int userid)
 
     return Plugin_Handled;
 }
+*/
 
 public Action Timer_RewardActive(Handle timer)
 {
