@@ -26,8 +26,8 @@ int g_lastDeathIndex = -1;
 enum CaseChoice
 {
     CaseChoice_None,
-    CaseChoice_Slay,
-    CaseChoice_Warn
+    CaseChoice_Warn,
+    CaseChoice_Slay
 };
 
 enum CaseVerdict
@@ -94,11 +94,10 @@ public void TTT_OnClientDeath(int victim, int attacker)
     int victimKarma = TTT_GetClientKarma(victim);
     int attackerKarma = TTT_GetClientKarma(attacker);
 
-    if (BadKill(TTT_GetClientRole(attacker), TTT_GetClientRole(victim)) && TTT_GetRoundStatus() == Round_Active)
+    if(BadKill(TTT_GetClientRole(attacker), TTT_GetClientRole(victim)) && TTT_GetRoundStatus() == Round_Active)
     {
         CPrintToChatAdmins("sm_kick", TTT_MESSAGE ... "{default}Bad Action: [{yellow}%N{default}] ({orange}%d{default}) killed [{yellow}%N{default}] ({orange}%d{default})", attacker, attackerKarma, victim, victimKarma);
     }
-    
     if(TTT_GetRoundStatus() == Round_Active)
     {
         Db_InsertDeath(victim, attacker);
