@@ -42,7 +42,7 @@ public void DbCallback_InsertDeath(Database db, DBResultSet results, const char[
 
 public void Db_InsertHandle(int client, int death)
 {
-    CPrintToChatAdmins("sm_handle", TTT_MESSAGE ... "{yellow}%N {default}has taken an RDM case.", client);
+    CPrintToChatAdmins(ADMFLAG_CHAT, TTT_MESSAGE ... "{yellow}%N {default}has taken an RDM case.", client);
 
     int accountID = GetSteamAccountID(client);
 
@@ -92,7 +92,7 @@ public void DbCallback_InsertReport(Database db, DBResultSet results, const char
 
     CPrintToChat(client, TTT_MESSAGE ... "Thanks for submitting a case, a staff member shall be in contact shortly.");
 
-    CPrintToChatAdmins("sm_handle", TTT_MESSAGE ... "{yellow}%N {default}opened a new RDM case.", client);
+    CPrintToChatAdmins(ADMFLAG_CHAT, TTT_MESSAGE ... "{yellow}%N {default}opened a new RDM case.", client);
 
     Db_SelectCaseCount();
 }
@@ -140,15 +140,15 @@ public void DbCallback_SelectCaseCount(Database db, DBResultSet results, const c
         int caseCount = results.FetchInt(0);
         if (caseCount < 1)
         {
-            CPrintToChatAdmins("sm_handle", TTT_MESSAGE ... "There are currently no unhandled cases.");
+            CPrintToChatAdmins(ADMFLAG_CHAT, TTT_MESSAGE ... "There are currently no unhandled cases.");
         }
         else if (caseCount < 2)
         {
-            CPrintToChatAdmins("sm_handle", TTT_MESSAGE ... "There is now {orange}%d {default}unhandled case.", caseCount);
+            CPrintToChatAdmins(ADMFLAG_CHAT, TTT_MESSAGE ... "There is now {orange}%d {default}unhandled case.", caseCount);
         }
         else
         {
-            CPrintToChatAdmins("sm_handle", TTT_MESSAGE ... "There are now {orange}%d {default}unhandled cases.", caseCount);
+            CPrintToChatAdmins(ADMFLAG_CHAT, TTT_MESSAGE ... "There are now {orange}%d {default}unhandled cases.", caseCount);
         }
     }
 }
@@ -316,9 +316,9 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
         CaseChoice punishment = view_as<CaseChoice>(results.FetchInt(5));
         CaseVerdict verdict = view_as<CaseVerdict>(results.FetchInt(6));
 
-        int victim = GetClientOfAccountID(victimID);
-        int attacker = GetClientOfAccountID(attackerID);
-
+        int victim = AccountIDToClient(victimID);
+        int attacker = AccountIDToClient(attackerID);
+       
         if (verdict == CaseVerdict_Innocent)
         {
             if (IsValidClient(victim))
