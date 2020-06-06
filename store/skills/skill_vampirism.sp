@@ -65,25 +65,23 @@ public void Store_OnRegister()
 public void OnClientPutInServer(int client)
 {
     g_playerData[client].level = -1;
+    SDKHook(client, SDKHook_OnTakeDamagePost, Hook_OnTakeDamagePost);
 }
 
 public void OnClientDisconnect(int client)
 {
     g_playerData[client].level = -1;
+    SDKUnhook(client, SDKHook_OnTakeDamagePost, Hook_OnTakeDamagePost);
 }
 
 public void Store_OnSkillUpdate(int client, int level)
 {
     g_playerData[client].level = level;
-    if (g_playerData[client].level > 0)
-    {
-        SDKHook(client, SDKHook_OnTakeDamagePost, Hook_OnTakeDamagePost);
-    }
 }
 
 public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damageType, int weapon, const float damageForce[3], const float damagePosition[3])
 {
-    if (!IsValidClient(attacker) || !IsPlayerAlive(attacker))
+    if (!IsValidClient(attacker) || !IsPlayerAlive(attacker) || g_playerData[attacker].level < 1)
     {
         return;
     }
