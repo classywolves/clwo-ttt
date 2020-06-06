@@ -86,7 +86,10 @@ public Action Timer_ShowRewardPanel(Handle timer, int userid)
     int client = GetClientOfUserId(userid);
     if (client > 0)
     {
-        ShowRewardPanel(client);
+        if (!ClientAllowedToGetReward(client))
+        {
+            ShowRewardPanel(client);
+        }
     }
 
     return Plugin_Handled;
