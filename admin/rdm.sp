@@ -96,7 +96,7 @@ public void TTT_OnClientDeath(int victim, int attacker)
 
     if(BadKill(TTT_GetClientRole(attacker), TTT_GetClientRole(victim)))
     {
-        CPrintToChatAdmins("sm_kick", TTT_MESSAGE ... "{default}Bad Action: [{yellow}%N{default}] ({orange}%d{default}) killed [{yellow}%N{default}] ({orange}%d{default})", attacker, attackerKarma, victim, victimKarma);
+        CPrintToChatAdmins(ADMFLAG_CHAT, TTT_MESSAGE ... "{default}Bad Action: [{yellow}%N{default}] ({orange}%d{default}) killed [{yellow}%N{default}] ({orange}%d{default})", attacker, attackerKarma, victim, victimKarma);
     }
 
     Db_InsertDeath(victim, attacker);
