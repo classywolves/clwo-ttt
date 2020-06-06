@@ -94,14 +94,12 @@ public void TTT_OnClientDeath(int victim, int attacker)
     int victimKarma = TTT_GetClientKarma(victim);
     int attackerKarma = TTT_GetClientKarma(attacker);
 
-    if(BadKill(TTT_GetClientRole(attacker), TTT_GetClientRole(victim)) && TTT_GetRoundStatus() == Round_Active)
+    if(BadKill(TTT_GetClientRole(attacker), TTT_GetClientRole(victim)))
     {
         CPrintToChatAdmins("sm_kick", TTT_MESSAGE ... "{default}Bad Action: [{yellow}%N{default}] ({orange}%d{default}) killed [{yellow}%N{default}] ({orange}%d{default})", attacker, attackerKarma, victim, victimKarma);
     }
-    if(TTT_GetRoundStatus() == Round_Active)
-    {
-        Db_InsertDeath(victim, attacker);
-    }
+
+    Db_InsertDeath(victim, attacker);
 }
 
 public Action Command_CaseCount(int client, int args)
@@ -232,8 +230,15 @@ public void RoleEnum(char[] buffer, int maxlength, int role)
 
 public bool BadKill(int attackerRole, int victimRole)
 {
-    if (attackerRole == victimRole) return true;
+    if (attackerRole == victimRole) {
+        return true;
+    }
     //else if (attackerRole == TTT_TEAM_TRAITOR || victimRole == TTT_TEAM_TRAITOR) return false;
-    else if ((attackerRole | victimRole) & TTT_TEAM_TRAITOR) return false;
-    else return true;
+    else if (attackerRole == TTT_TEAM_TRAITOR) 
+    {
+        return false;
+    }
+    else {
+        return true;
+    }
 }
