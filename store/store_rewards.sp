@@ -1,4 +1,5 @@
 #pragma semicolon 1
+#pragma newdecls required
 
 #include <sourcemod>
 #include <cstrike>
@@ -7,6 +8,8 @@
 #include <generics>
 #include <clwo_store_credits>
 #include <clwo_store_messages>
+
+#define ITEMDRAW_SPACER_NOSLOT ((1<<1)|(1<<3)) //SPACER WITH NO SLOT
 
 public Plugin myinfo =
 {
@@ -56,6 +59,8 @@ public void OnClientPutInServer(int client)
 public void OnClientPostAdminCheck(int client)
 {
     CheckClientAdvertisingState(client);
+
+    CreateTimer(15.0, Timer_ShowRewardPanel, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,6 +80,17 @@ public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 ////////////////////////////////////////////////////////////////////////////////
 // Timers
 ////////////////////////////////////////////////////////////////////////////////
+
+public Action Timer_ShowRewardPanel(Handle timer, int userid)
+{
+    int client = GetClientOfUserId(userid);
+    if (client > 0)
+    {
+        ShowRewardPanel(client);
+    }
+
+    return Plugin_Handled;
+}
 
 public Action Timer_RewardActive(Handle timer)
 {
@@ -120,6 +136,63 @@ public Action Timer_RewardAfk(Handle timer)
     }
 
     return Plugin_Continue;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Panels
+////////////////////////////////////////////////////////////////////////////////
+
+void ShowRewardPanel(int client)
+{
+    Panel panel = BuildRewardPanel(client);
+    panel.Send(client, InfoPanel_Callback, MENU_TIME_FOREVER);
+    delete panel;
+}
+
+Panel BuildRewardPanel(int client)
+{
+    Panel panel = new Panel();
+
+    panel.SetTitle("For every minute you are active on this server you will receive 1cR.\n"); //max 8 per menu
+    panel.DrawItem("", ITEMDRAW_SPACER_NOSLOT);
+    panel.DrawText("Requirements:");
+
+    if(IsCarryingClantag(client))
+    {
+        panel.DrawText("[v] Wear the CLWO clantag ingame [requirement met]");
+    }
+    else
+    {
+        panel.DrawText("[x] Wear the CLWO clantag ingame [requirement not met]");
+    }
+
+    if(GetClientAdvertisingState(client))
+    {
+        panel.DrawText("[v] have 'cl_join_advertise' set to '2' [requirement met]");
+    }
+    else
+    {
+        panel.DrawText("[x] have 'cl_join_advertise' set to '2' [requirement not met]");
+    }
+
+    panel.DrawItem("", ITEMDRAW_SPACER_NOSLOT);
+    panel.DrawText("[tip: just joining the server will reward you with 1cR every 5 minutes.");
+    panel.DrawText("Yes, this means firing up csgo, joining the server, alt tabbing out is a viable way to farm them]");
+
+    panel.DrawItem("Exit", ITEMDRAW_CONTROL);
+
+    return panel;
+}
+
+public int InfoPanel_Callback(Menu menu, MenuAction action, int param1, int param2)
+{
+    switch(action)
+    {
+        case MenuAction_End:
+        {
+            delete menu;
+        }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
