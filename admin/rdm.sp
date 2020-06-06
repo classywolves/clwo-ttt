@@ -233,8 +233,8 @@ public bool BadKill(int attackerRole, int victimRole)
     if (attackerRole == victimRole) {
         return true;
     }
-    //else if (attackerRole == TTT_TEAM_TRAITOR || victimRole == TTT_TEAM_TRAITOR) return false;
-    else if (attackerRole == TTT_TEAM_TRAITOR) 
+
+    else if (attackerRole == TTT_TEAM_TRAITOR || (attackerRole != TTT_TEAM_TRAITOR && victimRole == TTT_TEAM_TRAITOR)) 
     {
         return false;
     }
