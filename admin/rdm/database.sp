@@ -248,6 +248,7 @@ public void DbCallback_SelectCaseBaseInfo(Database db, DBResultSet results, cons
     }
 }
 
+
 public void Db_SelectInfo(int client)
 {
     char query[768];
@@ -287,6 +288,43 @@ public void DbCallback_SelectInfo(Database db, DBResultSet results, const char[]
         CPrintToChat(client, TTT_MESSAGE ... "The victim had shot last {orange}%d {default}seconds before there death.", time - lastshot);
         CPrintToChat(client, TTT_MESSAGE ... "Accuser: {yellow}%s{default}({orange}%d{default}) - %s", victimName, victimKarma, sVictimRole);
         CPrintToChat(client, TTT_MESSAGE ... "Accused: {yellow}%s{default}({orange}%d{default}) - %s", attackerName, attackerKarma, sAttackerRole);
+        Db_SelectPunishment(client);
+    }
+}
+
+public void Db_SelectPunishment(int client)
+{
+    char query[256];
+    Format(query, sizeof(query), "SELECT `punishment`+0 FROM `case_info` WHERE `death_index` = '%d';",  g_playerData[client].currentCase);
+    g_database.Query(DbCallback_SelectPunishment, query, GetClientUserId(client));
+}
+
+public void DbCallback_SelectPunishment(Database db, DBResultSet results, const char[] error, int userid) {
+    if (results == null)
+    {
+        LogError("DbCallback_SelectPunishment: %s", error);
+        return;
+    }
+
+    if(results.FetchRow())
+    {
+        int client = GetClientOfUserId(userid);
+        CaseChoice punishment = view_as<CaseChoice>(results.FetchInt(0));
+        char cPunishment[64];
+        if(punishment == CaseChoice_Slay)
+        {
+            cPunishment = "Slay";
+        }
+        if(punishment == CaseChoice_Warn)
+        {
+            cPunishment = "Warn";
+        }
+        else 
+        {
+            CPrintToChat(client, TTT_ERROR ... "Something went wrong while retrieving the Punishment!");
+            return;
+        }
+        CPrintToChat(client, TTT_MESSAGE ... "Punishment chosen: %s", cPunishment);
     }
 }
 
@@ -316,8 +354,8 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
         CaseChoice punishment = view_as<CaseChoice>(results.FetchInt(5));
         CaseVerdict verdict = view_as<CaseVerdict>(results.FetchInt(6));
 
-        int victim = GetClientOfAccountID(victimID);
-        int attacker = GetClientOfAccountID(attackerID);
+        int victim = AccountIDToClient(victimID);
+        int attacker = AccountIDToClient(attackerID);
 
         if (verdict == CaseVerdict_Innocent)
         {
