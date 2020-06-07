@@ -185,3 +185,18 @@ stock int GetClientOfAccountID(int accountID)
 
     return -1;
 }
+
+stock int AccountIDToClient(int AccountID)
+{
+	for (int client = 1; client <= MaxClients; client++)
+	{
+		if(!IsValidClient(client))
+			continue;
+		int account_id = GetSteamAccountID(client,true);
+		if(account_id == 0)
+			continue;
+		if(AccountID == account_id)
+			return client;
+	}
+	return 0;
+}
