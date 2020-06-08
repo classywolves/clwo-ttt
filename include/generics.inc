@@ -186,6 +186,35 @@ stock int GetClientOfAccountID(int accountID)
     return -1;
 }
 
+stock bool fc(int client)
+{
+	if(!IsCarryingClantag(client))
+	{
+		ReplyToCommand(client, " [SM] You are not representing CLWO, so you cannot use this command");
+		return true;
+	}
+	return false;
+}
+
+stock bool IsCarryingClantag(int client)
+{
+	if(client == 0) //console fix
+		return true;
+	char cCl_clanid[64];
+	if(IsValidClient(client))
+	{
+		GetClientInfo(client, "cl_clanid",cCl_clanid, sizeof(cCl_clanid));
+	}
+	if(StrEqual(cCl_clanid,"5157979"))//5157979 == clwo.eu
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 stock int AccountIDToClient(int AccountID)
 {
 	for (int client = 1; client <= MaxClients; client++)

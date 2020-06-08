@@ -353,6 +353,25 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
         char attackerName[64]; results.FetchString(4, attackerName, sizeof(attackerName));
         CaseChoice punishment = view_as<CaseChoice>(results.FetchInt(5));
         CaseVerdict verdict = view_as<CaseVerdict>(results.FetchInt(6));
+        char cPunishment[12], cVerdict[24];
+        if(punishment == CaseChoice_Slay)
+        {   
+            cPunishment = "Slay";
+        }
+        if(punishment == CaseChoice_Warn)
+        {   
+            cPunishment = "Warn";
+        }
+
+        if(verdict == CaseVerdict_Guilty)
+        {
+            cVerdict = "Guilty";
+        }
+        if(verdict == CaseVerdict_Innocent)
+        {
+            cVerdict = "Innocent";
+        }
+
 
         int victim = AccountIDToClient(victimID);
         int attacker = AccountIDToClient(attackerID);
@@ -389,6 +408,8 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
             }
             CPrintToChat(client, TTT_MESSAGE ... "You have concluded the defendant {red}guilty {default}for case {orange}%d.", death);
         }
+
+        LogAction(client, attackerID, "\"%L\" concluded \"%L\"'s case against \"%L\" (Verdict: %s | Punishment %s)", client, victimID, attackerID, cVerdict, cPunishment);
     }
 }
 
