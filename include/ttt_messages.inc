@@ -3,7 +3,6 @@
 #endif
 #define _ttt_messages_included
 
-#define MAX_MESSAGE_LENGTH 1024
 #define MAX_MSAY_LENGTH 255
 
 #define TTT_MESSAGE "{default}[TTT] > "
