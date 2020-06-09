@@ -194,7 +194,7 @@ public void TTT_OnRoundEnd(int winner, Handle array)
     Db_SelectCaseCount();
 }
 
-public void RoleString(char[] buffer, int maxlength, Role role)
+void RoleString(char[] buffer, int maxlength, Role role)
 {
     switch (role)
     {
@@ -213,7 +213,7 @@ public void RoleString(char[] buffer, int maxlength, Role role)
     }
 }
 
-public void RoleEnum(char[] buffer, int maxlength, int role)
+void RoleEnum(char[] buffer, int maxlength, int role)
 {
     if (role == TTT_TEAM_INNOCENT)
     {
@@ -233,7 +233,7 @@ public void RoleEnum(char[] buffer, int maxlength, int role)
     }
 }
 
-public bool BadKill(int attackerRole, int victimRole)
+bool BadKill(int attackerRole, int victimRole)
 {
     if (attackerRole == victimRole) {
         return true;
