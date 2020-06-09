@@ -340,7 +340,7 @@ public void DbCallback_SelectPunishment(Database db, DBResultSet results, const 
         {
             cPunishment = "Slay";
         }
-        if(punishment == CaseChoice_Warn)
+        else if(punishment == CaseChoice_Warn)
         {
             cPunishment = "Warn";
         }
