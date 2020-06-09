@@ -84,6 +84,11 @@ public void OnClientPutInServer(int client)
     g_playerData[client].lastGunFired = 0;
 }
 
+public void OnClientPostAdminCheck(int client)
+{
+    Db_SelectLastCase(client);
+}
+
 public void TTT_OnRoundStart(int roundid, int innocents, int traitors, int detective)
 {
     g_currentRound = roundid;

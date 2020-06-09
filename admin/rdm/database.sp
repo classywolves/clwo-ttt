@@ -12,7 +12,7 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
     g_currentRound = TTT_GetRoundID();
 }
 
-public void Db_InsertDeath(int victim, int attacker)
+void Db_InsertDeath(int victim, int attacker)
 {
     int victimId = GetSteamAccountID(victim);
     int victimRole = TTT_GetClientRole(victim);
@@ -40,7 +40,7 @@ public void DbCallback_InsertDeath(Database db, DBResultSet results, const char[
     }
 }
 
-public void Db_InsertHandle(int client, int death)
+void Db_InsertHandle(int client, int death)
 {
     CPrintToChatAdmins(ADMFLAG_CHAT, TTT_MESSAGE ... "{yellow}%N {default}has taken an RDM case.", client);
 
@@ -63,7 +63,7 @@ public void DbCallback_InsertHandle(Database db, DBResultSet results, const char
     Db_SelectCaseBaseInfo(client);
 }
 
-public void Db_InsertReport(int client, int death, CaseChoice punishment)
+void Db_InsertReport(int client, int death, CaseChoice punishment)
 {
     char sPunishment[5] = "none";
     if (punishment == CaseChoice_Slay)
@@ -76,7 +76,7 @@ public void Db_InsertReport(int client, int death, CaseChoice punishment)
     }
 
     char query[768];
-    Format(query, sizeof(query), "INSERT INTO `reports` (`death_index`, `punishment`) VALUES ('%d', '%s');", g_playerData[client].currentDeath, sPunishment);
+    Format(query, sizeof(query), "INSERT INTO `reports` (`death_index`, `punishment`) VALUES ('%d', '%s');", death, sPunishment);
     g_database.Query(DbCallback_InsertReport, query, GetClientUserId(client));
 }
 
@@ -97,7 +97,7 @@ public void DbCallback_InsertReport(Database db, DBResultSet results, const char
     Db_SelectCaseCount();
 }
 
-public void Db_SelectLastDeathIndex()
+void Db_SelectLastDeathIndex()
 {
     g_database.Query(DbCallback_SelectLastDeathIndex, "SELECT MAX(`death_index`) FROM `deaths`;");
 }
@@ -120,7 +120,7 @@ public void DbCallback_SelectLastDeathIndex(Database db, DBResultSet results, co
     }
 }
 
-public void Db_SelectCaseCount()
+void Db_SelectCaseCount()
 {
     char query[768];
     Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `open_cases`;");
@@ -153,7 +153,7 @@ public void DbCallback_SelectCaseCount(Database db, DBResultSet results, const c
     }
 }
 
-public void Db_SelectNextCase(int client)
+void Db_SelectNextCase(int client)
 {
     char query[128];
     Format(query, sizeof(query), "SELECT `death_index` FROM `open_cases` ORDER BY `death_index` ASC LIMIT 1;");
@@ -182,7 +182,32 @@ public void DbCallback_SelectNextCase(Database db, DBResultSet results, const ch
     }
 }
 
-public void Db_SelectClientDeaths(int client)
+void Db_SelectLastCase(int client)
+{
+    int accountID = GetSteamAccountID(client);
+
+    char query[128];
+    Format(query, sizeof(query), "SELECT `death_index` FROM `ongoing_cases` WHERE `admin_id` = '%d' LIMIT 1;", accountID);
+    g_database.Query(DbCallback_SelectLastCase, query, GetClientUserId(client));
+}
+
+public void DbCallback_SelectLastCase(Database db, DBResultSet results, const char[] error, int userid) {
+    if (results == null)
+    {
+        LogError("DbCallback_SelectLastCase: %s", error);
+        return;
+    }
+
+    int client = GetClientOfUserId(userid);
+    if (results.FetchRow())
+    {
+        int death = results.FetchInt(0);
+        g_playerData[client].currentCase = death;
+        CPrintToChat(client, "Loaded historic case %d. Use /info to get the case info.");
+    }
+}
+
+void Db_SelectClientDeaths(int client)
 {
     int accountID = GetSteamAccountID(client);
 
@@ -223,7 +248,7 @@ public void DbCallback_SelectClientDeaths(Database db, DBResultSet results, cons
     rdmMenu.Display(client, 240);
 }
 
-public void Db_SelectCaseBaseInfo(int client)
+void Db_SelectCaseBaseInfo(int client)
 {
     char query[768];
     Format(query, sizeof(query), "SELECT `death_index`, `victim_name`, `attacker_name` FROM `case_info` WHERE `death_index` = '%d';", g_playerData[client].currentCase);
@@ -249,7 +274,7 @@ public void DbCallback_SelectCaseBaseInfo(Database db, DBResultSet results, cons
 }
 
 
-public void Db_SelectInfo(int client)
+void Db_SelectInfo(int client)
 {
     char query[768];
     Format(query, sizeof(query), "SELECT `death_index`, `death_time`, `victim_name`, `victim_role`+0, `victim_karma`, `attacker_name`, `attacker_role`+0, `attacker_karma`, `last_gun_fire`, `round` FROM `case_info` WHERE `death_index` = '%d';", g_playerData[client].currentCase);
@@ -292,7 +317,7 @@ public void DbCallback_SelectInfo(Database db, DBResultSet results, const char[]
     }
 }
 
-public void Db_SelectPunishment(int client)
+void Db_SelectPunishment(int client)
 {
     char query[256];
     Format(query, sizeof(query), "SELECT `punishment`+0 FROM `case_info` WHERE `death_index` = '%d';",  g_playerData[client].currentCase);
@@ -328,7 +353,7 @@ public void DbCallback_SelectPunishment(Database db, DBResultSet results, const 
     }
 }
 
-public void Db_SelectVerdictInfo(int client, int death)
+void Db_SelectVerdictInfo(int client, int death)
 {
     char query[256];
     Format(query, sizeof(query), "SELECT `death_index`, `victim_id`, `victim_name`, `attacker_id`, `attacker_name`, `punishment`+0, `verdict`+0 FROM `case_info` WHERE `death_index` = '%d';", death);
@@ -413,7 +438,7 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
     }
 }
 
-public void Db_UpdateVerdict(int client, int death, CaseVerdict verdict)
+void Db_UpdateVerdict(int client, int death, CaseVerdict verdict)
 {
     char sVerdict[9] = "none";
     if (verdict == CaseVerdict_Innocent)
