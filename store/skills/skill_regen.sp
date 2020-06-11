@@ -14,7 +14,7 @@
 
 #define RGN_ID "hrgn"
 #define RGN_NAME "Larraman's Organ"
-#define RGN_DESCRIPTION "Pumps healing cells towards any sustained injuries. These clot blood and form scar tissu allowing you too fight on."
+#define RGN_DESCRIPTION "Pumps healing cells towards any sustained injuries. These clot blood and form scar tissue allowing you to fight on."
 #define RGN_PRICE 2000
 #define RGN_STEP 2.5
 #define RGN_LEVEL 2

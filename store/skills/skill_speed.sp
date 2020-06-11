@@ -9,9 +9,10 @@
 #include <clwo_store>
 #define REQUIRE_PLUGIN
 #include <error_timeout>
+#include <ttt>
 
 #define SPD_ID "sped"
-#define SPD_NAME "Adrenal Injector"
+#define SPD_NAME "Adrenaline Injector"
 #define SPD_DESCRIPTION "Gives the player a surge of adrenaline to get them out of a tricky situation."
 #define SPD_PRICE 1000
 #define SPD_STEP 1.1
@@ -55,6 +56,14 @@ public void OnPluginStart()
     PrintToServer("[SPD] Loaded successfully");
 }
 
+public void TTT_OnRoundStart(int roundid, int innocents, int traitors, int detective)
+{
+    LoopValidClients(i) // There is probably a neater and faster way of resetting cooldowns at round start,
+    {                   // however, it is unknown to me. - Dog    
+        g_playerData[i].cooldownEnd = GetGameTime();
+    }
+}
+
 public void Store_OnRegister()
 {
     Store_RegisterSkill(SPD_ID, SPD_NAME, SPD_DESCRIPTION, SPD_PRICE, SPD_STEP, SPD_LEVEL, Store_OnSkillUpdate, SPD_SORT);
@@ -76,7 +85,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 {
     if (g_playerData[client].level <= 0 ||
         g_playerData[client].isUsingSpeed ||
-        !IsPlayerAlive(client)) 
+        !IsPlayerAlive(client) || TTT_GetRoundStatus() != Round_Active) 
     {
         return Plugin_Continue;
     }
@@ -113,7 +122,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 
     g_playerData[client].cooldownEnd = GetTime() + g_playerData[client].cooldown;
 
-    CPrintToChat(client, "{default}[TTT] > Adrenal Injector activated.");
+    CPrintToChat(client, "{default}[TTT] > %s activated.", SPD_NAME);
 
     int userid = GetClientUserId(client);
     for (float i = 0.0; i < 0.5; i += 0.01)
@@ -181,7 +190,7 @@ public Action Timer_SpeedRevoke(Handle timer, int userid)
     {
         if (IsPlayerAlive(client))
         {
-            CPrintToChat(client, "{default}[TTT] > Adrenal Injector deactivated.");
+            CPrintToChat(client, "{default}[TTT] > %s deactivated.", SPD_NAME);
         }
 
         g_playerData[client].revokeTimer = INVALID_HANDLE;

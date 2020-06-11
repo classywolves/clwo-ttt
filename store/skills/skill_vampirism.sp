@@ -14,7 +14,7 @@
 
 #define VAMP_ID "vamp"
 #define VAMP_NAME "Vampirism"
-#define VAMP_DESCRIPTION "You regain health from knife damage you do unto another player."
+#define VAMP_DESCRIPTION "You regain health from knife damage you do to another player."
 #define VAMP_PRICE 1200
 #define VAMP_STEP 2.0
 #define VAMP_LEVEL 2
@@ -116,7 +116,7 @@ public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float
         TE_SendToAll();
     }
 
-    CPrintToChat(attacker, TTT_MESSAGE ... "Vampirism! Set your health too {orange}%d.", newHealth);
+    CPrintToChat(attacker, TTT_MESSAGE ... "Vampirism! Set your health to {orange}%d.", newHealth);
 }
 
 public int Min(int x, int y)
