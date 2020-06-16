@@ -9,7 +9,6 @@
 #include <clwo_store>
 #define REQUIRE_PLUGIN
 #include <error_timeout>
-#include <ttt>
 
 #define SPD_ID "sped"
 #define SPD_NAME "Adrenaline Injector"
@@ -97,7 +96,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
 {
     if (g_playerData[client].level <= 0 ||
         g_playerData[client].isUsingSpeed ||
-        !IsPlayerAlive(client) || TTT_GetRoundStatus() != Round_Active) 
+        !IsPlayerAlive(client)) 
     {
         return Plugin_Continue;
     }
