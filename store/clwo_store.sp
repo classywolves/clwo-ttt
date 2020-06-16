@@ -626,7 +626,7 @@ public int Native_UnRegisterSkill(Handle plugin, int numParams)
     }
 
     g_aStoreSkills.Erase(index);
-    g_smSkillIndexMap.Remove(id);
+    UpdateSkillMap();
 
     return true;
 }

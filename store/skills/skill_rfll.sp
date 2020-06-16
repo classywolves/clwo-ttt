@@ -46,6 +46,11 @@ public void OnPluginStart()
     PrintToServer("[FLL] Loaded successfully");
 }
 
+public void OnPluginEnd()
+{
+    Store_UnRegisterSkill(FF_ID);
+}
+
 public void OnClientPutInServer(int client)
 {
     ClearClientData(client);

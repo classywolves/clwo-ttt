@@ -54,6 +54,11 @@ public OnPluginStart()
     PrintToServer("[SCV] Loaded successfully");
 }
 
+public void OnPluginEnd()
+{
+    Store_UnRegisterSkill(SCAV_ID);
+}
+
 public void OnClientPutInServer(int client)
 {
     g_playerData[client].level = -1;

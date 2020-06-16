@@ -11,7 +11,7 @@
 #include <error_timeout>
 
 #define SPD_ID "sped"
-#define SPD_NAME "Adrenaline Injector"
+#define SPD_NAME "Adrenal Enhancements"
 #define SPD_DESCRIPTION "Gives the player a surge of adrenaline to get them out of a tricky situation."
 #define SPD_PRICE 1000
 #define SPD_STEP 1.1
@@ -23,7 +23,7 @@
 
 public Plugin myinfo =
 {
-    name = "CLWO Store - Skill: Adrenal Injector (Speed Increase)",
+    name = "CLWO Store - Skill: Adrenal Enhancements (Speed Increase)",
     author = "Popey & c0rp3n",
     description = "A skill that that grants the user a gust of speed.",
     version = "1.0.0",
@@ -55,12 +55,9 @@ public void OnPluginStart()
     PrintToServer("[SPD] Loaded successfully");
 }
 
-public void TTT_OnRoundStart(int roundid, int innocents, int traitors, int detective)
+public void OnPluginEnd()
 {
-    LoopValidClients(i) // There is probably a neater and faster way of resetting cooldowns at round start,
-    {                   // however, it is unknown to me. - Dog    
-        g_playerData[i].cooldownEnd = GetGameTime();
-    }
+    Store_UnRegisterSkill(SPD_ID);
 }
 
 public void Store_OnRegister()

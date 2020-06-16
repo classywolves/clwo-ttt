@@ -52,6 +52,11 @@ public void OnPluginStart()
     PrintToServer("[RCM] Loaded succcessfully");
 }
 
+public void OnPluginEnd()
+{
+    Store_UnRegisterSkill(INVS_ID);
+}
+
 public void Store_OnRegister()
 {
     Store_RegisterSkill(INVS_ID, INVS_NAME, INVS_DESCRIPTION, INVS_PRICE, INVS_STEP, INVS_LEVEL, Store_OnSkillUpdate, INVS_SORT);

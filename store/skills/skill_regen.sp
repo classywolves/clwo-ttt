@@ -66,6 +66,11 @@ public void OnPluginStart()
     PrintToServer("[RGN] Loaded successfully");
 }
 
+public void OnPluginEnd()
+{
+    Store_UnRegisterSkill(RGN_ID);
+}
+
 public void OnAllPluginLoaded()
 {
     g_bTTTLoaded = LibraryExists("ttt");

@@ -48,6 +48,11 @@ public void OnPluginStart()
     PrintToServer("[SKL] Loaded succcessfully");
 }
 
+public void OnPluginEnd()
+{
+    Store_UnRegisterSkill(EXAMPLE_ID);
+}
+
 public void OnAllPluginsLoaded()
 {
     g_bStoreLoaded = Store_CheckLibraryExists();

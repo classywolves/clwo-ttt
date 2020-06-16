@@ -57,6 +57,11 @@ public void OnPluginStart()
     PrintToServer("[SKL] Loaded succcessfully");
 }
 
+public void OnPluginEnd()
+{
+    Store_UnRegisterSkill(VAMP_ID);
+}
+
 public void Store_OnRegister()
 {
     Store_RegisterSkill(VAMP_ID, VAMP_NAME, VAMP_DESCRIPTION, VAMP_PRICE, VAMP_STEP, VAMP_LEVEL, Store_OnSkillUpdate, VAMP_SORT);
