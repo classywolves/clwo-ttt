@@ -19,6 +19,7 @@
 #define VAMP_STEP 2.0
 #define VAMP_LEVEL 2
 #define VAMP_SORT 100
+#define VAMP_DISTANCE 65536
 
 public Plugin myinfo =
 {
@@ -97,9 +98,11 @@ public void Hook_OnTakeDamagePost(int victim, int attacker, int inflictor, float
         return;
     }
 
-    char weaponName[32];
-    GetClientWeapon(victim, weaponName, sizeof(weaponName));
-    if (StrContains(weaponName, "knife", true) == -1)
+    float vpos[3];
+    GetClientEyePosition(victim, vpos);
+    float apos[3];
+    GetClientEyePosition(attacker, apos);
+    if (GetVectorDistance(vpos, apos, true) > VAMP_DISTANCE)
     {
         return;
     }
