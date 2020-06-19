@@ -14,7 +14,7 @@
 
 #define VAMP_ID "vamp"
 #define VAMP_NAME "Vampirism"
-#define VAMP_DESCRIPTION "You regain health from knife damage you do to another player."
+#define VAMP_DESCRIPTION "You regain health from damage you do to another player, when they are in close proximity to you."
 #define VAMP_PRICE 1200
 #define VAMP_STEP 2.0
 #define VAMP_LEVEL 2
