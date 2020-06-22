@@ -26,6 +26,7 @@ ConVar g_cRewardAfkTime = null;
 
 Handle g_hRewardActiveTimer = INVALID_HANDLE;
 Handle g_hRewardAfkTimer = INVALID_HANDLE;
+Handle g_hRewardHandoutTimer = INVALID_HANDLE;
 
 int g_iClientRewards[MAXPLAYERS + 1];
 int g_iClientRewardMissed[MAXPLAYERS + 1];
@@ -51,6 +52,12 @@ public void OnConfigsExecuted()
 {
     g_hRewardActiveTimer = CreateTimer(g_cRewardActiveTime.FloatValue * 60.0, Timer_RewardActive, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
     g_hRewardAfkTimer = CreateTimer(g_cRewardAfkTime.FloatValue * 60.0, Timer_RewardAfk, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+    g_hRewardHandoutTimer = CreateTimer(15.0 * 60.0, Timer_DoInactiveRewards, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+}
+
+public void OnMapEnd()
+{
+    DoRewardPayouts();
 }
 
 public void OnClientPutInServer(int client)
@@ -152,6 +159,26 @@ public Action Timer_RewardAfk(Handle timer)
             }
         }
     }
+
+    return Plugin_Continue;
+}
+
+public Action Timer_DoInactiveRewards(Handle timer)
+{
+    int team;
+    LoopClients(i)
+    {
+        if (IsClientInGame(i))
+        {
+            team = GetClientTeam(i);
+            if (team != CS_TEAM_SPECTATOR || team != CS_TEAM_NONE)
+            {
+                return Plugin_Continue;
+            }
+        }
+    }
+
+    DoRewardPayouts();
 
     return Plugin_Continue;
 }
