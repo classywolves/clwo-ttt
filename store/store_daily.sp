@@ -48,6 +48,7 @@ public Action Command_Daily(int client, int args)
     if (g_bIsClaiming[client])
     {
         CPrintToChat(client, STORE_MESSAGE ... "Sorry currently fetching your daily reward.");
+
         return Plugin_Handled;
     }
 
@@ -90,7 +91,8 @@ public void DbCallback_SelectDaily(Database db, DBResultSet results, const char[
     int client = GetClientOfUserId(userid);
     g_bIsClaiming[client] = false;
 
-    int currDay = GetTime() / 86400;
+    int currTime = GetTime();
+    int currDay = currTime / 86400;
     int consDays = 0;
     if (results.FetchRow())
     {
@@ -98,7 +100,30 @@ public void DbCallback_SelectDaily(Database db, DBResultSet results, const char[
         int delta = currDay - lastDay;
         if (delta <= 0)
         {
-            CPrintToChat(client, STORE_MESSAGE ... "You have already claimed your daily reward.");
+            int lastTime = lastDay * 86400;
+            delta = currTime - lastTime;
+            int hours = delta / 3600;
+            if (hours > 1)
+            {
+                CPrintToChat(client, STORE_MESSAGE ... "You have {orange}%d {default}hours until you may claim your daily reward.", hours);
+            }
+            else if (hours == 1)
+            {
+                CPrintToChat(client, STORE_MESSAGE ... "You have {orange}1 {default}hour until you may claim your daily reward.");
+            }
+            else
+            {
+                int minutes = delta / 60;
+                if (minutes > 1)
+                {
+                    CPrintToChat(client, STORE_MESSAGE ... "You have {orange}%d {default}minutes until you may claim your daily reward.", minutes);
+                }
+                else
+                {
+                    CPrintToChat(client, STORE_MESSAGE ... "You have {orange}1 {default}minute until you may claim your daily reward.");
+                }
+            }
+
             return;
         }
 
