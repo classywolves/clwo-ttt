@@ -26,7 +26,7 @@ public Plugin myinfo =
     url = ""
 };
 
-g_bHasReducedDamage[MAXPLAYERS + 1] = { false, ... };
+bool g_bHasReducedDamage[MAXPLAYERS + 1] = { false, ... };
 
 enum struct PlayerData
 {
