@@ -89,6 +89,10 @@ public void DbCallback_SelectDaily(Database db, DBResultSet results, const char[
     }
 
     int client = GetClientOfUserId(userid);
+    if (client <= 0)
+    {
+        return;
+    }
     g_bIsClaiming[client] = false;
 
     int currTime = GetTime();
@@ -100,27 +104,27 @@ public void DbCallback_SelectDaily(Database db, DBResultSet results, const char[
         int delta = currDay - lastDay;
         if (delta <= 0)
         {
-            int lastTime = lastDay * 86400;
-            delta = currTime - lastTime;
+            int nextTime = (currDay + 1) * 86400;
+            delta = nextTime - currTime;
             int hours = delta / 3600;
             if (hours > 1)
             {
-                CPrintToChat(client, STORE_MESSAGE ... "You have {orange}%d {default}hours until you may claim your daily reward.", hours);
+                CReplyToCommand(client, STORE_MESSAGE ... "You have {orange}%d {default}hours until you may claim your daily reward.", hours);
             }
             else if (hours == 1)
             {
-                CPrintToChat(client, STORE_MESSAGE ... "You have {orange}1 {default}hour until you may claim your daily reward.");
+                CReplyToCommand(client, STORE_MESSAGE ... "You have {orange}1 {default}hour until you may claim your daily reward.");
             }
             else
             {
                 int minutes = delta / 60;
                 if (minutes > 1)
                 {
-                    CPrintToChat(client, STORE_MESSAGE ... "You have {orange}%d {default}minutes until you may claim your daily reward.", minutes);
+                    CReplyToCommand(client, STORE_MESSAGE ... "You have {orange}%d {default}minutes until you may claim your daily reward.", minutes);
                 }
                 else
                 {
-                    CPrintToChat(client, STORE_MESSAGE ... "You have {orange}1 {default}minute until you may claim your daily reward.");
+                    CReplyToCommand(client, STORE_MESSAGE ... "You have {orange}1 {default}minute until you may claim your daily reward.");
                 }
             }
 
