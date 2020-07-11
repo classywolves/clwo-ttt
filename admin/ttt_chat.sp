@@ -14,6 +14,7 @@
 #include <ttt_messages>
 #include <donators>
 #include <clientprefs>
+#include <big_brother>
 
 
 #define CHAT_SYMBOL '@'
@@ -640,7 +641,7 @@ void SendChatToAll(int client, const char[] unsafe_message)
     char buffer[16];
     char sFullPrint[1024];
     char sChannel[32];
-    char sTeam[128];
+    //char sTeam[128];
     char sPreTag[128];
     //decl String:sMessage[1024];
 
@@ -720,10 +721,10 @@ void SendChatToAdmin(int client, const char[] message)
     LogAction(client, -1, "\"%L\" triggered sm_chat (text %s)", client, message);
 }
 
-stock bool GetBoolFromCookie(int client, Handle Cookie)
+stock bool GetBoolFromCookie(int client, Handle cookie)
 {
     char cValue[8];
-    GetClientCookie(client,Cookie, cValue, sizeof(cValue));
+    GetClientCookie(client,cookie, cValue, sizeof(cValue));
     return view_as<bool>(StringToInt(cValue));
 }
 
@@ -828,6 +829,7 @@ void SendPrivateChat(int client, int target, const char[] unsafe_message)
     }
 
     LogAction(client, target, "\"%L\" triggered sm_psay to \"%L\" (text %s)", client, target, message);
+    BigBrother_LogMessage(client, target, message);
 }
 
 stock RemoveHexColors(const char[] input, char[] output, int size) {
@@ -1232,21 +1234,6 @@ public int Block_Callback(Menu menu, MenuAction action, int param1, int param2)
     }
 }
 
-stock int AccountIDToClient(int AccountID)
-{
-    for (int client = 1; client <= MaxClients; client++)
-    {
-        if(!IsValidClient(client))
-            continue;
-        int account_id = GetSteamAccountID(client,true);
-        if(account_id == 0)
-            continue;
-        if(AccountID == account_id)
-            return client;
-    }
-    return 0;
-}
-
 stock void ProcessChannel(char[] sChatType, char[] output, int maxlen)
 {
     //Allchat alive
@@ -1384,24 +1371,4 @@ stock bool FilterColorsFromMessage(char[] safe_message, int iLength, const char[
         ReplaceString(safe_message,iLength,sCodes[i],"");
     }
     return false;
-}
-
-
-stock bool IsCarryingClantag(int client)
-{
-    if(client == 0) //console fix
-        return true;
-    char cCl_clanid[64];
-    if(IsValidClient(client))
-    {
-        GetClientInfo(client, "cl_clanid",cCl_clanid, sizeof(cCl_clanid));
-    }
-    if(StrEqual(cCl_clanid,"5157979"))//5157979 == clwo.eu
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
 }
