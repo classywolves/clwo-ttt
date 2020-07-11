@@ -72,11 +72,11 @@ public OnPluginStart()
 
 public void RegisterCmds()
 {
-    RegAdminCmd("sm_spawngun", Command_SpawnGun, ADMFLAG_CONVARS, "Spawn a gun!");
-    RegAdminCmd("sm_spawnguns", Command_SpawnGuns, ADMFLAG_CONVARS, "Spawn all guns!");
-    RegAdminCmd("sm_addloc", Command_AddLoc, ADMFLAG_CONVARS, "Add a position for a gun to spawn!");
-    RegAdminCmd("sm_loadlocs", Command_LoadLocs, ADMFLAG_CONVARS, "Load locations for guns to spawn!");
-    RegAdminCmd("sm_showlocs", Command_ShowLocs, ADMFLAG_CONVARS, "Show all locations on a map!");
+    RegAdminCmd("sm_spawngun", Command_SpawnGun, ADMFLAG_CHEATS, "Spawn a gun!");
+    RegAdminCmd("sm_spawnguns", Command_SpawnGuns, ADMFLAG_CHEATS, "Spawn all guns!");
+    RegAdminCmd("sm_addloc", Command_AddLoc, ADMFLAG_CHEATS, "Add a position for a gun to spawn!");
+    RegAdminCmd("sm_loadlocs", Command_LoadLocs, ADMFLAG_CHEATS, "Load locations for guns to spawn!");
+    RegAdminCmd("sm_showlocs", Command_ShowLocs, ADMFLAG_CHEATS, "Show all locations on a map!");
 }
 
 public void HookEvents()
@@ -184,7 +184,7 @@ public void LoadPoints()
     char map[255], path[PLATFORM_MAX_PATH];
 
     GetCurrentMap(map, sizeof(map));
-    BuildPath(Path_SM, path, sizeof(path), "configs/lootpos/%s.txt", map);
+    BuildPath(Path_SM, path, sizeof(path), "configs/gun_spawns/%s.txt", map);
 
     mapPointsRead = OpenFile(path, "r");
     if (mapPointsRead == null) return;
