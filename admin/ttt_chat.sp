@@ -6,7 +6,7 @@
 #include <string>
 
 #undef REQUIRE_PLUGIN
-#include <colorvariables>
+#include <colorlib>
 #include <generics>
 #include <chat-processor>
 #include <ttt_ranks>
@@ -302,8 +302,8 @@ public Action CP_OnChatMessage(int& author, ArrayList recipients, char[] flagstr
         }
 
         //Remove colors from message
-        CRemoveColors(message, _CV_MAX_MESSAGE_LENGTH);
-        RemoveHexColors(message, message, _CV_MAX_MESSAGE_LENGTH);
+        CRemoveColors(message, MAXLENGTH_MESSAGE);
+        RemoveHexColors(message, message, MAXLENGTH_MESSAGE);
 
         //Remove colors from name
         CRemoveColors(name, iBufferSize);
@@ -750,8 +750,8 @@ void SendPrivateChat(int client, int target, const char[] unsafe_message)
     //Remove colors from message
     char message[2048];
     Format(message, sizeof(message), "%s", unsafe_message);
-    CRemoveColors(message, _CV_MAX_MESSAGE_LENGTH);
-    RemoveHexColors(message, message, _CV_MAX_MESSAGE_LENGTH);
+    CRemoveColors(message, sizeof(message));
+    RemoveHexColors(message, message, sizeof(message));
 
     //Get names and remove colors
     char clientName[MAX_NAME_LENGTH], targetName[MAX_NAME_LENGTH];
