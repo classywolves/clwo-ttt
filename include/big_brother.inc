@@ -8,7 +8,7 @@ native void BigBrother_LogMessage(int sender, int reciever, char[] message);
 public SharedPlugin __pl_big_brother =
 {
 	name = "big_brother",
-	file = "big_brother.smx",
+	file = "ttt_general.smx",
 #if defined REQUIRE_PLUGIN
 	required = 1,
 #else
