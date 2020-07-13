@@ -26,7 +26,7 @@ ENGINE = InnoDB;
 
 INSERT INTO `bb_chat` (`time`, `account_id`, `message`) VALUES (UNIX_TIMESTAMP(), '%d', '%s');
 
-INSERT INTO `bb_msg` (`time`, `account_id`, `receiver_id`, `message`) VALUES (UNIX_TIMESTAMP(), '%d', '%d', '%s');
+INSERT INTO `bb_msg` (`time`, `sender_id`, `receiver_id`, `message`) VALUES (UNIX_TIMESTAMP(), '%d', '%d', '%s');
 
 CREATE OR REPLACE VIEW `v_bb_chat` AS
 SELECT

@@ -14,7 +14,7 @@
 #define QUERY_CREATE_V_CHAT "CREATE OR REPLACE VIEW `v_bb_chat` AS SELECT `bb_chat`.`id`, `bb_chat`.`time`, `bb_chat`.`account_id`, `player_info`.`name`, `bb_chat`.`message` FROM `bb_chat` LEFT JOIN `player_info` ON `bb_chat`.`account_id` = `player_info`.`account_id` GROUP BY `bb_chat`.`id`;"
 #define QUERY_CREATE_V_MSG "CREATE OR REPLACE VIEW `v_bb_msg` AS SELECT `bb_msg`.`id`, `bb_msg`.`time`, `bb_msg`.`sender_id`, `sender_info`.`name` as `sender_name`, `bb_msg`.`receiver_id`, `receiver_info`.`name` as `receiver_name`, `bb_msg`.`message` FROM `bb_msg` LEFT JOIN `player_info` `sender_info` ON `bb_msg`.`sender_id` = `sender_info`.`account_id` LEFT JOIN `player_info` `receiver_info` ON `bb_msg`.`receiver_id` = `receiver_info`.`account_id` GROUP BY `bb_msg`.`id`;"
 #define QUERY_INSERT_CHAT "INSERT INTO `bb_chat` (`time`, `account_id`, `message`) VALUES (UNIX_TIMESTAMP(), '%d', '%s');"
-#define QUERY_INSERT_MSG  "INSERT INTO `bb_msg` (`time`, `account_id`, `receiver_id`, `message`) VALUES (UNIX_TIMESTAMP(), '%d', '%d', '%s');"
+#define QUERY_INSERT_MSG  "INSERT INTO `bb_msg` (`time`, `sender_id`, `receiver_id`, `message`) VALUES (UNIX_TIMESTAMP(), '%d', '%d', '%s');"
 
 public Plugin myinfo =
 {
