@@ -4,7 +4,6 @@
 #include <sdktools>
 #include <cstrike>
 
-#include <colorvariables>
 #include <generics>
 #include <ttt_messages>
 
@@ -57,45 +56,24 @@ Handle mapPointsRead;
 
 int g_iGlow;
 
-public OnPluginStart()
+public void OnPluginStart()
 {
-    RegisterCmds();
-    HookEvents();
-    InitDBs();
-    InitPrecache();
-    OnMapStart();
-
-    LoadTranslations("common.phrases");
-
-    PrintToServer("[INF] Loaded succcessfully");
-}
-
-public void RegisterCmds()
-{
-    RegAdminCmd("sm_spawngun", Command_SpawnGun, ADMFLAG_CHEATS, "Spawn a gun!");
     RegAdminCmd("sm_spawnguns", Command_SpawnGuns, ADMFLAG_CHEATS, "Spawn all guns!");
     RegAdminCmd("sm_addloc", Command_AddLoc, ADMFLAG_CHEATS, "Add a position for a gun to spawn!");
     RegAdminCmd("sm_loadlocs", Command_LoadLocs, ADMFLAG_CHEATS, "Load locations for guns to spawn!");
+    RegAdminCmd("sm_savelocs", Command_SaveLocs, ADMFLAG_CHEATS, "Save current gun locations to the server");
     RegAdminCmd("sm_showlocs", Command_ShowLocs, ADMFLAG_CHEATS, "Show all locations on a map!");
-}
 
-public void HookEvents()
-{
     HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
-}
 
-public void InitDBs()
-{
+    InitPrecache();
+
+    PrintToServer("[SWN] Loaded succcessfully");
 }
 
 public void InitPrecache()
 {
     g_iGlow = PrecacheModel("sprites/blueglow1.vmt");
-
-    //for (int i = 0; i < sizeof(models); i++) {
-    //  PrecacheModel(models[i][WPN_MDL]);
-    //  //AddFileToDownloadsTable(models[i][WPN_MDL]);
-    //}
 }
 
 public void OnMapStart()
@@ -105,37 +83,7 @@ public void OnMapStart()
 
 public Action OnRoundStart(Event event, const char[] name, bool dontBroadcast)
 {
-    //SpawnGuns();
-}
-
-public Action Command_SpawnGun(int client, int args)
-{
-    char name[128], mode[128]; // ipos[256];
-
-    float pos[3];
-    GetClientEyePosition(client, pos);
-
-    GetCmdArg(1, name, sizeof(name));
-    GetCmdArg(2, mode, sizeof(mode));
-
-    //if (args > 2) {
-    //  GetCmdArg(3, ipos, sizeof(ipos));
-
-    //  char floatValues[3][128];
-    //  ExplodeString(ipos, ";", floatValues, 3, 128);
-
-    //  pos[0] = StringToFloat(floatValues[0]);
-    //  pos[1] = StringToFloat(floatValues[1]);
-    //  pos[2] = StringToFloat(floatValues[2]);
-    //}
-
-    PrintToServer("SpawnGun() - %s %s %f;%f;%f setting ammo", name, mode, pos[0], pos[1], pos[2]);
-    SpawnGun(name, pos);
-
-    // name - "prop_physics" / "prop_physics_override"  
-    // mode - "models/props_junk/watermelon01.mdl" / "models/weapons/w_rif_ak47_dropped.mdl"
-
-    return Plugin_Handled;
+    SpawnGuns();
 }
 
 public Action Command_SpawnGuns(int client, int args)
@@ -150,7 +98,7 @@ public Action Command_AddLoc(int client, int args)
     float pos[3];
     GetClientEyePosition(client, pos);
     
-    CPrintToChat(client, TTT_MESSAGE ... "Adding loc at %f;%f;%f", pos[0], pos[1], pos[2]);
+    ReplyToCommand(client, "[SM] Adding loc at %f;%f;%f", pos[0], pos[1], pos[2]);
 
     AddLoc(pos);
 
@@ -164,20 +112,23 @@ public Action Command_LoadLocs(int client, int args)
     return Plugin_Handled;
 }
 
-public Action Command_ShowLocs(int client, int args)
+public Action Command_SaveLocs(int client, int argc)
 {
-    ShowLootSpawns(client);
+    SaveLocs();
+
+    return Plugin_Handled;
 }
 
-public void ShowLootSpawns(int client)
+public Action Command_ShowLocs(int client, int args)
 {
-    CPrintToChat(client, TTT_MESSAGE ... "Showing all %i loot spawning locations", totalPositions + 1);
-    for (int i = 0; i < totalPositions + 1; i++) 
+    ReplyToCommand(client, "[SM] Showing all %i loot spawning locations", totalPositions + 1);
+    for (int i = 0; i < totalPositions; ++i) 
     {
         TE_SetupGlowSprite(positions[i], g_iGlow, 10.0, 1.0, 235);
         TE_SendToAll();
     }
 }
+
 
 public void LoadPoints()
 {
@@ -210,11 +161,7 @@ public void LoadPoints()
         totalPositions++;
     }
 
-    totalPositions--;
-
     PrintToServer("Loaded %i lines", totalPositions);
-
-    if (totalPositions < 0) totalPositions = 0;
 
     mapPointsRead.Close();
 }
@@ -224,11 +171,11 @@ public void SpawnGuns()
     if (totalPositions)
     {
         int total = 100;
-        for (int i = 0; i < sizeof(models); i++)
+        for (int i = 0; i < sizeof(models); ++i)
         {
             float chance = StringToFloat(models[i][WPN_CHANCE]);
 
-            for (int j = 0; j < chance * total; j++)
+            for (int j = 0; j < chance * total; ++j)
             {
                 float pos[3];
                 GetPos(pos);
@@ -257,7 +204,7 @@ public int SpawnGun(char[] cWeaponName, float[3] pos)
     return weapon;
 }
 
-public void GetPos(float[3] pos)
+void GetPos(float[3] pos)
 {
     if (totalPositions)
     {
@@ -271,7 +218,7 @@ public void GetPos(float[3] pos)
     }
 }
 
-public void AddLoc(float pos[3])
+void AddLoc(float pos[3])
 {
     positions[totalPositions][0] = pos[0];
     positions[totalPositions][1] = pos[1];
@@ -279,18 +226,23 @@ public void AddLoc(float pos[3])
 
     totalPositions++;
 
-    char line[512];
-    Format(line, sizeof(line), "%f;%f;%f", pos[0], pos[1], pos[2]);
-
     TE_SetupGlowSprite(pos, g_iGlow, 10.0, 1.0, 235);
     TE_SendToAll();
+}
 
+void SaveLocs()
+{
+    char line[512];
     char map[255], path[PLATFORM_MAX_PATH];
 
     GetCurrentMap(map, sizeof(map));
     BuildPath(Path_SM, path, sizeof(path), "configs/lootpos/%s.txt", map);
 
-    mapPoints = OpenFile(path, "a");
-    WriteFileLine(mapPoints, line);
+    mapPoints = OpenFile(path, "w");
+    for (int i = 0; i < totalPositions; ++i)
+    {
+        Format(line, sizeof(line), "%f;%f;%f", positions[i][0], positions[i][1], positions[i][2]);
+        WriteFileLine(mapPoints, line);
+    }
     mapPoints.Close();
-} 
+}
