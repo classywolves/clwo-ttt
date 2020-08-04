@@ -2,6 +2,7 @@
 
 #include <sourcemod>
 #include <sdkhooks>
+#include <clientprefs>
 #include <colorlib>
 
 #include <generics>
@@ -30,11 +31,14 @@ public Plugin myinfo =
     url = ""
 };
 
+Cookie g_cClientUsesBind = null;
+
 enum struct PlayerData
 {
     int level;
     int cooldown;
     int cooldownEnd;
+    bool usesCommand;
     bool isUsingSpeed;
     bool useKeyPressed;
     float useKeyLastPressed;
@@ -45,12 +49,25 @@ PlayerData g_playerData[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
+    RegConsoleCmd("sm_speed", Command_Speed, "Allows for the binding of the speed increase skill.");
+
+    g_cClientUsesBind = new Cookie("skill_speed_uses_bind", "Whether a client uses the speed skill bind.", CookieAccess_Public);
+    g_cClientUsesBind.SetPrefabMenu(CookieMenu_OnOff_Int, "Skill - Adrenal Enhancements\nWould you like to use the \"sm_speed\" bind instead of double pressing +use.");
+
     if (Store_IsReady())
     {
         Store_OnRegister();
     }
 
     HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
+
+    for (int i = 0; i < MaxClients; ++i)
+    {
+        if (IsClientInGame(i) && !IsFakeClient(i) && AreClientCookiesCached(i))
+        {
+            OnClientCookiesCached(i);
+        }
+    }
 
     PrintToServer("[SPD] Loaded successfully");
 }
@@ -77,6 +94,18 @@ public void OnClientDisconnect(int client)
     ClearTimer(g_playerData[client].revokeTimer);
 }
 
+public void OnClientCookiesCached(int client)
+{
+    static char buffer[2];
+    g_cClientUsesBind.Get(client, buffer, sizeof(buffer));
+    g_playerData[client].usesCommand = view_as<bool>(StringToInt(buffer));
+}
+
+public Action Command_Speed(int client, int argc)
+{
+    DoClientSpeed(client);
+}
+
 public void TTT_OnRoundStart(int roundid, int innocents, int traitors, int detective)
 {
     int time = GetTime();
@@ -91,7 +120,8 @@ public void TTT_OnRoundStart(int roundid, int innocents, int traitors, int detec
 
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon)
 {
-    if (g_playerData[client].level <= 0 ||
+    if (g_playerData[client].usesCommand ||
+        g_playerData[client].level <= 0 ||
         g_playerData[client].isUsingSpeed ||
         !IsPlayerAlive(client)) 
     {
@@ -117,36 +147,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
         return Plugin_Continue;
     }
 
-    int currentTime = GetTime();
-    if (currentTime < g_playerData[client].cooldownEnd)
-    {
-        if (ErrorTimeout(client))
-        {
-            CPrintToChat(client, "{default}[TTT] > You are currently in cooldown for {orange}%d {default}more seconds.", g_playerData[client].cooldownEnd - GetTime());
-        }
-
-        return Plugin_Continue;
-    }
-
-    g_playerData[client].cooldownEnd = GetTime() + g_playerData[client].cooldown;
-
-    CPrintToChat(client, "{default}[TTT] > %s activated.", SPD_NAME);
-
-    int userid = GetClientUserId(client);
-    for (float i = 0.0; i < 0.5; i += 0.01)
-    {
-        DataPack pack;
-        CreateDataTimer(i, Timer_SpeedIncrease, pack);
-
-        pack.WriteCell(userid);
-        pack.WriteFloat(i);
-        pack.Reset();
-
-    }
-
-    g_playerData[client].isUsingSpeed = true;
-    CreateTimer(SPD_TIME, Timer_SpeedRevoke, userid);
-    CreateTimer(float(g_playerData[client].cooldown), Timer_SpeedRevoke, userid);
+    DoClientSpeed(client);
 
     return Plugin_Continue;
 }
@@ -218,6 +219,40 @@ void ClearClientData(int client)
     g_playerData[client].isUsingSpeed = false;
     g_playerData[client].useKeyPressed = false;
     g_playerData[client].useKeyLastPressed = 0.0;
+}
+
+void DoClientSpeed(int client)
+{
+    int currentTime = GetTime();
+    if (currentTime < g_playerData[client].cooldownEnd)
+    {
+        if (ErrorTimeout(client))
+        {
+            CPrintToChat(client, "{default}[TTT] > You are currently in cooldown for {orange}%d {default}more seconds.", g_playerData[client].cooldownEnd - GetTime());
+        }
+
+        return;
+    }
+
+    g_playerData[client].cooldownEnd = GetTime() + g_playerData[client].cooldown;
+
+    CPrintToChat(client, "{default}[TTT] > %s activated.", SPD_NAME);
+
+    int userid = GetClientUserId(client);
+    for (float i = 0.0; i < 0.5; i += 0.01)
+    {
+        DataPack pack;
+        CreateDataTimer(i, Timer_SpeedIncrease, pack);
+
+        pack.WriteCell(userid);
+        pack.WriteFloat(i);
+        pack.Reset();
+
+    }
+
+    g_playerData[client].isUsingSpeed = true;
+    CreateTimer(SPD_TIME, Timer_SpeedRevoke, userid);
+    CreateTimer(float(g_playerData[client].cooldown), Timer_SpeedRevoke, userid);
 }
 
 void SetClientSpeed(int client, float speed)
