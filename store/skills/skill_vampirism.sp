@@ -42,9 +42,6 @@ PlayerData g_playerData[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
-    g_iSpriteBeam = PrecacheModel("materials/sprites/laserbeam.vmt");
-    g_iSpriteHalo = PrecacheModel("materials/sprites/glow.vmt");
-
     LoopValidClients(i)
     {
         OnClientPutInServer(i);
@@ -61,6 +58,12 @@ public void OnPluginStart()
 public void OnPluginEnd()
 {
     Store_UnRegisterSkill(VAMP_ID);
+}
+
+public void OnMapStart()
+{
+    g_iSpriteBeam = PrecacheModel("materials/sprites/laserbeam.vmt");
+    g_iSpriteHalo = PrecacheModel("materials/sprites/glow.vmt");
 }
 
 public void Store_OnRegister()
