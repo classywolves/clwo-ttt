@@ -7,6 +7,15 @@
 #include <generics>
 #include <ttt_messages>
 
+public Plugin myinfo =
+{
+    name = "TTT Gun Spawn",
+    author = "c0rp3n",
+    description = "Custom store and credits system for CLWO TTT.",
+    version = "0.1.0",
+    url = ""
+};
+
 enum model {
     WPN_PROP,
     WPN_MDL,
@@ -56,6 +65,8 @@ Handle mapPointsRead;
 
 int g_iGlow;
 
+char g_cPath[PLATFORM_MAX_PATH];
+
 public void OnPluginStart()
 {
     RegAdminCmd("sm_spawnguns", Command_SpawnGuns, ADMFLAG_CHEATS, "Spawn all guns!");
@@ -67,6 +78,9 @@ public void OnPluginStart()
     HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
 
     InitPrecache();
+
+    BuildPath(Path_SM, g_cPath, sizeof(g_cPath), "configs/gun_spawns");
+    CreateDirectory(g_cPath, 0);
 
     PrintToServer("[SWN] Loaded succcessfully");
 }
@@ -132,12 +146,12 @@ public Action Command_ShowLocs(int client, int args)
 
 public void LoadPoints()
 {
-    char map[255], path[PLATFORM_MAX_PATH];
+    char map[255];
 
     GetCurrentMap(map, sizeof(map));
-    BuildPath(Path_SM, path, sizeof(path), "configs/gun_spawns/%s.txt", map);
+    BuildPath(Path_SM, g_cPath, sizeof(g_cPath), "configs/gun_spawns/%s.txt", map);
 
-    mapPointsRead = OpenFile(path, "r");
+    mapPointsRead = OpenFile(g_cPath, "r");
     if (mapPointsRead == null) return;
 
     char line[512];
@@ -233,12 +247,12 @@ void AddLoc(float pos[3])
 void SaveLocs()
 {
     char line[512];
-    char map[255], path[PLATFORM_MAX_PATH];
+    char map[255];
 
     GetCurrentMap(map, sizeof(map));
-    BuildPath(Path_SM, path, sizeof(path), "configs/lootpos/%s.txt", map);
+    BuildPath(Path_SM, g_cPath, sizeof(g_cPath), "configs/gun_spawns/%s.txt", map);
 
-    mapPoints = OpenFile(path, "w");
+    mapPoints = OpenFile(g_cPath, "w");
     for (int i = 0; i < totalPositions; ++i)
     {
         Format(line, sizeof(line), "%f;%f;%f", positions[i][0], positions[i][1], positions[i][2]);
