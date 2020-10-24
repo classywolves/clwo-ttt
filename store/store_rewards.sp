@@ -20,7 +20,10 @@ public Plugin myinfo =
     url = ""
 };
 
+bool g_bIsWeekend = false;
+
 ConVar g_cCrReward = null;
+ConVar g_cCrRewardWeekend = null;
 ConVar g_cRewardActiveTime = null;
 ConVar g_cRewardAfkTime = null;
 
@@ -34,13 +37,17 @@ bool g_bClientHasAdvertisingOn[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
+    g_bIsWeekend = IsWeekend();
+
     g_cCrReward = CreateConVar("clwo_store_reward", "1", "The maximum reward a player can get.");
+    g_cCrRewardWeekend = CreateConVar("clwo_store_reward_weekend", "5", "The maximum reward a player can get.");
     g_cRewardActiveTime = CreateConVar("clwo_store_active_reward_time", "1", "The delta in time between rewards in minutes 0 = Disabled.");
     g_cRewardAfkTime = CreateConVar("clwo_store_afk_reward_time", "5", "The delta in time between rewards in minutes 0 = Disabled.");
 
     AutoExecConfig(true, "store_rewards", "clwo");
 
     RegConsoleCmd("sm_loyalty", Command_Loyalty, "Displays information about loyalty cR rewards on TTT.");
+    RegAdminCmd("sm_test_is_weekend", Command_Weekend, ADMFLAG_CHEATS);
 
     HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
     HookEvent("round_end",   Event_RoundEnd,   EventHookMode_PostNoCopy);
@@ -53,6 +60,11 @@ public void OnConfigsExecuted()
     g_hRewardActiveTimer = CreateTimer(g_cRewardActiveTime.FloatValue * 60.0, Timer_RewardActive, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
     g_hRewardAfkTimer = CreateTimer(g_cRewardAfkTime.FloatValue * 60.0, Timer_RewardAfk, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
     g_hRewardHandoutTimer = CreateTimer(15.0 * 60.0, Timer_DoInactiveRewards, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+}
+
+public void OnMapStart()
+{
+    g_bIsWeekend = IsWeekend();
 }
 
 public void OnMapEnd()
@@ -97,6 +109,20 @@ public Action Command_Loyalty(int client, int argc)
     return Plugin_Handled;
 }
 
+public Action Command_Weekend(int client, int argc)
+{
+    if (g_bIsWeekend)
+    {
+        ReplyToCommand(client, "It is the weekend.");
+    }
+    else
+    {
+        ReplyToCommand(client, "It is not the weekend.");
+    }
+
+    return Plugin_Handled;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Timers
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +145,7 @@ public Action Timer_ShowRewardPanel(Handle timer, int userid)
 
 public Action Timer_RewardActive(Handle timer)
 {
-    int credits = g_cCrReward.IntValue;
+    int credits = GetReward();
     int team;
     LoopValidClients(i)
     {
@@ -142,7 +168,7 @@ public Action Timer_RewardActive(Handle timer)
 
 public Action Timer_RewardAfk(Handle timer)
 {
-    int credits = g_cCrReward.IntValue;
+    int credits = GetReward();
     int team;
     LoopValidClients(i)
     {
@@ -348,16 +374,26 @@ bool GetClientAdvertisingState(int client)
     return g_bClientHasAdvertisingOn[client];
 }
 
-bool IsCarryingClantag(int client)
+bool IsWeekend()
 {
-    char cCl_clanid[64];
-    GetClientInfo(client, "cl_clanid", cCl_clanid, sizeof(cCl_clanid));
-    if(StrEqual(cCl_clanid,"5157979", true))//5157979 == clwo.eu
+    static char buffer[2];
+    FormatTime(buffer, sizeof(buffer), "%w", GetTime());
+    if (buffer[0] == '0' || buffer[0] == '6')
     {
         return true;
     }
+
+    return false;
+}
+
+int GetReward()
+{
+    if (g_bIsWeekend)
+    {
+        return g_cCrRewardWeekend.IntValue;
+    }
     else
     {
-        return false;
+        return g_cCrReward.IntValue;
     }
 }
