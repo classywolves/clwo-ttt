@@ -13,7 +13,7 @@
 #include <ttt_messages>
 #include <ttt_targeting>    
 #include <generics>
-#include <colorvariables>
+#include <colorlib>
 #include <smlib/math>
 
 Handle gha_HiddenGravityTimers[MAXPLAYERS + 1] = { INVALID_HANDLE, ... };
@@ -51,11 +51,6 @@ ConVar cv_HiddenPounceAngle = null;
 public void OnPluginStart()
 {
     PrintToChatAll("[HID] Loaded successfully");
-    
-    LoopValidClients(i)
-    {
-        HookActions(i);
-    }
 
     cv_MPTeammatesAreEnemies = FindConVar("mp_teammates_are_enemies");
     cv_MPDropKnife = FindConVar("mp_drop_knife_enable");
@@ -85,18 +80,18 @@ public void OnPluginStart()
 public Action Command_Say(int client, int args)
 {
     char text[192], command[64];
-	GetCmdArgString(text, sizeof(text));
-	GetCmdArg(0, command, sizeof(command));
+    GetCmdArgString(text, sizeof(text));
+    GetCmdArg(0, command, sizeof(command));
 
-	int startidx = 0;
-	if(text[strlen(text)-1] == '"')
-	{
-		text[strlen(text)-1] = '\0';
-		startidx = 1;
-	}
+    int startidx = 0;
+    if(text[strlen(text)-1] == '"')
+    {
+        text[strlen(text)-1] = '\0';
+        startidx = 1;
+    }
 
-	if (strcmp(text[startidx], "hidden", false) == 0)
-	{
+    if (strcmp(text[startidx], "hidden", false) == 0)
+    {
         if(gb_HiddenRoundNR)
         {
             PrintToChat(client, "[HID] Hidden has already been voted for");
@@ -285,6 +280,11 @@ public Action Timer_HiddenCountdown(Handle timer)
 
 public void BeginHidden()
 {
+    LoopValidClients(i)
+    {
+        HookActions(i);
+    }
+
     cv_MPTeammatesAreEnemies.SetBool(false, true, true);
     cv_MPDropKnife.SetBool(false, true, true);
 
@@ -314,6 +314,7 @@ public void EndHidden()
 {
     LoopValidClients(i)
     {
+        UnhookActions(i);
         SetEntPropFloat(i, Prop_Send, "m_flLaggedMovementValue", 1.0);
         SetEntityGravity(i, 1.0);
         ClearHiddenTimers(i);
@@ -347,14 +348,14 @@ public void HiddenPanel()
     delete panel;    
 }
 
-public void HookActions(int client)
+void HookActions(int client)
 {   
     SDKHook(client, SDKHook_SetTransmit, Hook_HiddenSetTransmit);
     SDKHook(client, SDKHook_WeaponSwitchPost, Hook_HiddenOnWeaponSwitchPost);
     SDKHook(client, SDKHook_WeaponCanUse, Hook_HiddenWeaponCanUse);
 }
 
-public void HookDMG()
+void HookDMG()
 {
     LoopValidClients(i)
     {
@@ -362,7 +363,7 @@ public void HookDMG()
     }
 }
 
-public void UnhookActions(int client)
+void UnhookActions(int client)
 {
     SDKUnhook(client, SDKHook_SetTransmit, Hook_HiddenSetTransmit);
     SDKUnhook(client, SDKHook_WeaponSwitchPost, Hook_HiddenOnWeaponSwitchPost);
@@ -370,7 +371,7 @@ public void UnhookActions(int client)
     ClearHiddenTimers(client);
 }
 
-public void UnHookDMG()
+void UnHookDMG()
 {
     LoopValidClients(i)
     {
@@ -482,7 +483,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float vel[3
     return Plugin_Continue;
 }
 
-public void CreateHiddenTimers()
+void CreateHiddenTimers()
 {
     LoopValidClients(i)
     {
@@ -534,7 +535,7 @@ public void OnClientDisconnect(int client)
     UnhookActions(client);
 }
 
-public bool CanHiddenUse(char[] weaponName)
+bool CanHiddenUse(char[] weaponName)
 {
     if(StrContains(weaponName, "knife", false) != -1 || 
     StrContains(weaponName, "healthshot", false) != -1 || 
@@ -549,7 +550,7 @@ public bool CanHiddenUse(char[] weaponName)
     return false;
 }
 
-public void ClearHiddenTimers(int client)
+void ClearHiddenTimers(int client)
 {
     if(gha_HiddenDustTimers[client] != INVALID_HANDLE)
     {
@@ -563,7 +564,7 @@ public void ClearHiddenTimers(int client)
     }
 }
 
-public bool ErrorTimeout(int client, int timeout)
+bool ErrorTimeout(int client, int timeout)
 {
     int currentTime = GetTime();
     if (currentTime - gia_ErrorTimeout[client] < timeout)
@@ -575,7 +576,7 @@ public bool ErrorTimeout(int client, int timeout)
     return false;
 }
 
-public void HiddenPerformPounce(int client, int time)
+void HiddenPerformPounce(int client, int time)
 {
     if (time - gia_LastPounceTime[client] > 3)
     {
