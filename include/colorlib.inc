@@ -5,21 +5,18 @@
 
 #include <colorlib_map>
  
-#define MAX_MESSAGE_LENGTH 250
+#define MAX_MESSAGE_LENGTH 512
 
 #define SERVER_INDEX 0
 #define NO_INDEX -1
 #define NO_PLAYER -2
 
-enum _CL_ProtoBuff
-{
-    NotChecked = -1,
-    DoesNotSupport = 0,
-    Supports,
-}
-
 /* CL_Colors' properties */
-_CL_ProtoBuff _CL_proto_buff_support = NotChecked;
+bool _CL_proto_buff_support;
+int _CL_buffer_index;
+int _CL_buffer_size;
+char _CL_buffer[MAX_MESSAGE_LENGTH];
+char _CL_buffer_tag[MAX_MESSAGE_LENGTH];
 bool _CL_skip_list[MAXPLAYERS + 1] = { false, ... };
 
 /**
@@ -36,13 +33,9 @@ stock void CPrintToChat(int client, const char[] message, any ...)
 {
     SetGlobalTransTarget(client);
 
-    char buffer[MAX_MESSAGE_LENGTH];
-    int buffer_index = CPreFormat(buffer);
-    VFormat(buffer[buffer_index], sizeof(buffer) - buffer_index, message, 3);
-    CFormat(buffer[buffer_index], sizeof(buffer) - buffer_index);
-    PrintToChat(client, buffer);
-    CRemoveColors(buffer, sizeof(buffer));
-    PrintToConsole(client, buffer);
+    VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 3);
+    CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+    PrintToChat(client, _CL_buffer);
 }
 
 /**
@@ -60,14 +53,9 @@ stock void CPrintToChatEx(int client, int author, const char[] message, any ...)
 {
     SetGlobalTransTarget(client);
 
-    char buffer[MAX_MESSAGE_LENGTH];
-    int buffer_index = CPreFormat(buffer);
-    int buffer_size = sizeof(buffer) - buffer_index;
-    VFormat(buffer[buffer_index], buffer_size, message, 4);
-    CFormat(buffer[buffer_index], buffer_size, author);
-    _CL_SendChatMessage(client, author, buffer);
-    CRemoveColors(buffer, sizeof(buffer));
-    PrintToConsole(client, buffer);
+    VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 4);
+    CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+    _CL_SendChatMessage(client, author, _CL_buffer);
 }
 
 /**
@@ -80,20 +68,15 @@ stock void CPrintToChatEx(int client, int author, const char[] message, any ...)
  */
 stock void CPrintToChatAll(const char[] message, any ...)
 {
-    char buffer[MAX_MESSAGE_LENGTH];
-    int buffer_index = CPreFormat(buffer);
-    int buffer_size = sizeof(buffer) - buffer_index;
     for (int i = 1; i <= MaxClients; ++i)
     {
         if (IsClientInGame(i) && !IsFakeClient(i) && !_CL_skip_list[i])
         {
             SetGlobalTransTarget(i);
 
-            VFormat(buffer[buffer_index], buffer_size, message, 2);
-            CFormat(buffer[buffer_index], buffer_size);
-            PrintToChat(i, buffer);
-            CRemoveColors(buffer, sizeof(buffer));
-            PrintToConsole(i, buffer);
+            VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 2);
+            CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+            PrintToChat(i, _CL_buffer);
         }
 
         _CL_skip_list[i] = false;
@@ -112,20 +95,15 @@ stock void CPrintToChatAll(const char[] message, any ...)
  */
 stock void CPrintToChatAllEx(int author, const char[] message, any ...)
 {
-    char buffer[MAX_MESSAGE_LENGTH];
-    int buffer_index = CPreFormat(buffer);
-    int buffer_size = sizeof(buffer) - buffer_index;
     for (int i = 1; i <= MaxClients; ++i)
     {
         if (IsClientInGame(i) && !IsFakeClient(i) && !_CL_skip_list[i])
         {
             SetGlobalTransTarget(i);
 
-            VFormat(buffer[buffer_index], buffer_size, message, 3);
-            CFormat(buffer[buffer_index], buffer_size, author);
-            _CL_SendChatMessage(i, author, buffer);
-            CRemoveColors(buffer, sizeof(buffer));
-            PrintToConsole(i, buffer);
+            VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 3);
+            CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+            _CL_SendChatMessage(i, author, _CL_buffer);
         }
 
         _CL_skip_list[i] = false;
@@ -144,9 +122,6 @@ stock void CPrintToChatAllEx(int author, const char[] message, any ...)
  */
 stock void CPrintToChatTeam(int team, const char[] message, any ...)
 {
-    char buffer[MAX_MESSAGE_LENGTH];
-    int buffer_index = CPreFormat(buffer);
-    int buffer_size = sizeof(buffer) - buffer_index;
     for (int i = 1; i <= MaxClients; ++i)
     {
         if (IsClientInGame(i) &&
@@ -156,11 +131,9 @@ stock void CPrintToChatTeam(int team, const char[] message, any ...)
         {
             SetGlobalTransTarget(i);
 
-            VFormat(buffer[buffer_index], buffer_size, message, 3);
-            CFormat(buffer[buffer_index], buffer_size);
-            PrintToChat(i, buffer);
-            CRemoveColors(buffer, sizeof(buffer));
-            PrintToConsole(i, buffer);
+            VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 3);
+            CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+            PrintToChat(i, _CL_buffer);
         }
 
         _CL_skip_list[i] = false;
@@ -180,9 +153,6 @@ stock void CPrintToChatTeam(int team, const char[] message, any ...)
  */
 stock void CPrintToChatTeamEx(int team, int author, const char[] message, any ...)
 {
-    char buffer[MAX_MESSAGE_LENGTH];
-    int buffer_index = CPreFormat(buffer);
-    int buffer_size = sizeof(buffer) - buffer_index;
     for (int i = 1; i <= MaxClients; ++i)
     {
         if (IsClientInGame(i) &&
@@ -192,11 +162,9 @@ stock void CPrintToChatTeamEx(int team, int author, const char[] message, any ..
         {
             SetGlobalTransTarget(i);
 
-            VFormat(buffer[buffer_index], buffer_size, message, 4);
-            CFormat(buffer[buffer_index], buffer_size, author);
-            _CL_SendChatMessage(i, author, buffer);
-            CRemoveColors(buffer, sizeof(buffer));
-            PrintToConsole(i, buffer);
+            VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 4);
+            CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+            _CL_SendChatMessage(i, author, _CL_buffer);
         }
 
         _CL_skip_list[i] = false;
@@ -215,9 +183,6 @@ stock void CPrintToChatTeamEx(int team, int author, const char[] message, any ..
  */
 stock void CPrintToChatAdmins(int flags, const char[] message, any ...)
 {
-    char buffer[MAX_MESSAGE_LENGTH];
-    int buffer_index = CPreFormat(buffer);
-    int buffer_size = sizeof(buffer) - buffer_index;
     for (int i = 1; i <= MaxClients; ++i)
     {
         if (IsClientInGame(i) && !IsFakeClient(i) && !_CL_skip_list[i])
@@ -226,11 +191,9 @@ stock void CPrintToChatAdmins(int flags, const char[] message, any ...)
             {
                 SetGlobalTransTarget(i);
 
-                VFormat(buffer[buffer_index], buffer_size, message, 3);
-                CFormat(buffer[buffer_index], buffer_size);
-                PrintToChat(i, buffer);
-                CRemoveColors(buffer, sizeof(buffer));
-                PrintToConsole(i, buffer);
+                VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 3);
+                CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+                PrintToChat(i, _CL_buffer);
             }
         }
 
@@ -254,26 +217,23 @@ stock void CReplyToCommand(int client, const char[] message, any ...)
 {
     SetGlobalTransTarget(client);
 
-    char buffer[MAX_MESSAGE_LENGTH];
     if (client == 0)
     {
-        VFormat(buffer, sizeof(buffer), message, 3);
-        CRemoveTags(buffer, sizeof(buffer));
-        PrintToServer(buffer);
+        VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 3);
+        CRemoveTags(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+        PrintToServer(_CL_buffer[_CL_buffer_index]);
     }
     else if (GetCmdReplySource() == SM_REPLY_TO_CONSOLE)
     {
-        VFormat(buffer, sizeof(buffer), message, 3);
-        CRemoveTags(buffer, sizeof(buffer));
-        PrintToConsole(client, buffer);
+        VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 3);
+        CRemoveTags(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+        PrintToConsole(client, _CL_buffer[_CL_buffer_index]);
     }
     else
     {
-        int buffer_index = CPreFormat(buffer);
-        int buffer_size = sizeof(buffer) - buffer_index;
-        VFormat(buffer[buffer_index], buffer_size, message, 3);
-        CFormat(buffer[buffer_index], buffer_size);
-        PrintToChat(client, buffer);
+        VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 3);
+        CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+        PrintToChat(client, _CL_buffer);
     }
 }
 
@@ -294,26 +254,23 @@ stock void CReplyToCommandEx(int client, int author, const char[] message, any .
 {
     SetGlobalTransTarget(client);
 
-    char buffer[MAX_MESSAGE_LENGTH];
     if (client == 0)
     {
-        VFormat(buffer, sizeof(buffer), message, 4);
-        CRemoveTags(buffer, sizeof(buffer));
-        PrintToServer("%s", buffer);
+        VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 4);
+        CRemoveTags(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+        PrintToServer(_CL_buffer[_CL_buffer_index]);
     }
     else if (GetCmdReplySource() == SM_REPLY_TO_CONSOLE)
     {
-        VFormat(buffer, sizeof(buffer), message, 4);
-        CRemoveTags(buffer, sizeof(buffer));
-        PrintToConsole(client, "%s", buffer);
+        VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 4);
+        CRemoveTags(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+        PrintToConsole(client, _CL_buffer[_CL_buffer_index]);
     }
     else
     {
-        int buffer_index = CPreFormat(buffer);
-        int buffer_size = sizeof(buffer) - buffer_index;
-        VFormat(buffer[buffer_index], buffer_size, message, 4);
-        CFormat(buffer[buffer_index], buffer_size);
-        _CL_SendChatMessage(client, author, buffer);
+        VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 4);
+        CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+        _CL_SendChatMessage(client, author, _CL_buffer);
     }
 }
 
@@ -333,14 +290,9 @@ stock void CShowActivity(int client, const char[] message, any ...)
 {
     SetGlobalTransTarget(client);
 
-    char buffer[MAX_MESSAGE_LENGTH];
-    int buffer_index = CPreFormat(buffer);
-    int buffer_size = sizeof(buffer) - buffer_index;
-    VFormat(buffer[buffer_index], buffer_size, message, 3);
-    CFormat(buffer[buffer_index], buffer_size);
-    ShowActivity(client, buffer);
-    CRemoveColors(buffer, sizeof(buffer));
-    PrintToConsole(client, buffer);
+    VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 3);
+    CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+    ShowActivity(client, _CL_buffer[_CL_buffer_index]);
 }
 
 /**
@@ -358,21 +310,13 @@ stock void CShowActivity2(int client, const char[] tag, const char[] message, an
 {
     SetGlobalTransTarget(client);
 
-    char buffer[MAX_MESSAGE_LENGTH], buffer_tag[MAX_MESSAGE_LENGTH];
+    strcopy(_CL_buffer_tag, sizeof(_CL_buffer_tag), tag);
+    CFormat(_CL_buffer_tag, sizeof(_CL_buffer_tag));
 
-    int tag_index = CPreFormat(buffer_tag);
-    int tag_size = sizeof(buffer_tag) - tag_index;
-    strcopy(buffer_tag[tag_index], tag_size, tag);
-    CFormat(buffer_tag[tag_index], tag_size);
+    VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 4);
+    CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
 
-    int buffer_index = CPreFormat(buffer);
-    int buffer_size = sizeof(buffer) - buffer_index;
-    VFormat(buffer[buffer_index], buffer_size, message, 4);
-    CFormat(buffer[buffer_index], buffer_size);
-
-    ShowActivity2(client, buffer_tag, buffer);
-    CRemoveColors(buffer, sizeof(buffer));
-    PrintToConsole(client, buffer);
+    ShowActivity2(client, _CL_buffer_tag, _CL_buffer);
 }
 
 /**
@@ -390,21 +334,13 @@ stock void CShowActivityEx(int client, const char[] tag, const char[] message, a
 {
     SetGlobalTransTarget(client);
 
-    char buffer[MAX_MESSAGE_LENGTH], buffer_tag[MAX_MESSAGE_LENGTH];
+    strcopy(_CL_buffer_tag, sizeof(_CL_buffer_tag), tag);
+    CFormat(_CL_buffer_tag, sizeof(_CL_buffer_tag));
 
-    int tag_index = CPreFormat(buffer_tag);
-    int tag_size = sizeof(buffer_tag) - tag_index;
-    strcopy(buffer_tag[tag_index], tag_size, tag);
-    CFormat(buffer_tag[tag_index], tag_size);
+    VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 4);
+    CFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
 
-    int buffer_index = CPreFormat(buffer);
-    int buffer_size = sizeof(buffer) - buffer_index;
-    VFormat(buffer[buffer_index], buffer_size, message, 4);
-    CFormat(buffer[buffer_index], buffer_size);
-
-    ShowActivityEx(client, buffer_tag, buffer);
-    CRemoveColors(buffer, sizeof(buffer));
-    PrintToConsole(client, buffer);
+    ShowActivityEx(client, _CL_buffer_tag, _CL_buffer);
 }
 
 /**
@@ -417,16 +353,38 @@ stock void CShowActivityEx(int client, const char[] tag, const char[] message, a
  */
 stock void CPrintToServer(const char[] message, any ...)
 {
-    char buffer[MAX_MESSAGE_LENGTH];
-    VFormat(buffer, sizeof(buffer), message, 2);
-    CRemoveTags(buffer, sizeof(buffer));
-    PrintToServer(buffer);
+    VFormat(_CL_buffer[_CL_buffer_index], _CL_buffer_size, message, 2);
+    CRemoveTags(_CL_buffer[_CL_buffer_index], _CL_buffer_size);
+    PrintToServer(_CL_buffer[_CL_buffer_index]);
+}
+
+/**
+ * Gets a clients name that is safe to use with Color Lib.
+ *
+ * @param client    Client index.
+ * @param name      Buffer to store the clients name.
+ * @param maxlength The size of the buffer.
+ * @return          No return
+ */
+stock void CGetClientName(int client, char[] name, int maxlength, bool remove = true)
+{
+    GetClientName(client, name, maxlength);
+    if (remove)
+    {
+        CRemoveTags(name, maxlength);
+    }
+    else
+    {
+        CEscapeTags(name, maxlength);
+    }
 }
 
 /**
  * Removes color tags from the string.
+ * E.g. "{default}Hello {red}World" -> "Hello World".
  *
  * @param message   String.
+ * @param maxlength Size of the message buffer.
  * @return          No return
  */
 stock void CRemoveTags(char[] message, int maxlength)
@@ -439,7 +397,15 @@ stock void CRemoveTags(char[] message, int maxlength)
             break;
         }
 
-        if (message[i] == '\\')
+        if (message[i] == '{')
+        {
+            ++i;
+            while (message[i] != '}')
+            {
+                ++i;
+            }
+        }
+        else if (message[i] == '\\')
         {
             ++i;
             if (message[i] == '{')
@@ -454,15 +420,7 @@ stock void CRemoveTags(char[] message, int maxlength)
 
             ++index;
         }
-        else if (message[i] == '{')
-        {
-            ++i;
-            while (message[i] != '}')
-            {
-                ++i;
-            }
-        }
-        else if (index != i)
+        else
         {
             message[index] = message[i];
             ++index;
@@ -473,9 +431,11 @@ stock void CRemoveTags(char[] message, int maxlength)
 }
 
 /**
- * Removes colors from the string.
+ * Removes colors escape codes from the string.
+ * E.g. "\x01Hello \x02World" -> "Hello World".
  *
  * @param message   String.
+ * @param maxlength Size of the message buffer.
  * @return          No return
  */
 stock void CRemoveColors(char[] message, int maxlength)
@@ -488,7 +448,7 @@ stock void CRemoveColors(char[] message, int maxlength)
             break;
         }
 
-        if (message[i] >= 0x1 && message[i] <= 0x10)
+        if (message[i] >= 0x01 && message[i] <= 0x10)
         {
             ++i;
         }
@@ -496,6 +456,62 @@ stock void CRemoveColors(char[] message, int maxlength)
         message[index] = message[i];
         ++index;
     }
+
+    message[index] = 0x00;
+}
+
+/**
+ * Escapes colors escape codes from the string.
+ * E.g. "{red}Hello {blue}World" -> "\{red}Hello \{blue}World".
+ * This means they shal be ignored by CFormat, useful for sanitising player
+ * names for printing.
+ *
+ * @param message   String.
+ * @param maxlength Size of the message buffer.
+ * @return          No return
+ */
+stock void CEscapeTags(char[] message, int maxlength)
+{
+    int index = 0;
+    for (int i = 0; i < maxlength; ++i)
+    {
+        if (message[i] == 0x00)
+        {
+            break;
+        }
+
+        if (message[i] == '{')
+        {
+            message[index] = '\\';
+            ++index;
+            message[index] = '{';
+            ++index;
+        }
+        else if (message[i] == '\\')
+        {
+            ++i;
+            if (message[i] == '{')
+            {
+                message[index] = '\\';
+                ++index;
+                message[index] = '{';
+            }
+            else
+            {
+                message[index] = '\\';
+                --i;
+            }
+
+            ++index;
+        }
+        else
+        {
+            message[index] = message[i];
+            ++index;
+        }
+    }
+
+    message[index] = 0x00;
 }
 
 /**
@@ -517,22 +533,23 @@ stock void CSkipNextClient(int client)
 }
 
 /**
- * Initialises the buffer for color formatting
+ * Initialises the _CL_buffer for color formatting
  *
  * @param message   String.
  * @return          First free index in the array
  */
 stock int CPreFormat(char[] message)
 {
-    int index = 1;
-    message[0] = 0x01;
-
+    int index = 0;
     // If CS:GO set invisible precolor
     if (GetEngineVersion() == Engine_CSGO)
     {
-        message[index] = ' ';
+        message[0] = ' ';
         ++index;
     }
+
+    message[index] = 0x01;
+    ++index;
 
     return index;
 }
@@ -541,7 +558,7 @@ stock int CPreFormat(char[] message)
  * Replaces color tags in a string with color codes
  *
  * @param message   String.
- * @param maxlength Maximum length of the string buffer.
+ * @param maxlength Size of the message buffer.
  * @return          Client index that can be used for SayText2 author index
  * 
  * On error/Errors: If there is more then one team color is used an error will be thrown.
@@ -556,7 +573,27 @@ stock void CFormat(char[] message, int maxlength)
             break;
         }
 
-        if (message[i] == '\\')
+        if (message[i] == '{')
+        {
+            ++i;
+            int length = 0;
+            char cc = view_as<char>(_CL_ColorMap(message[i], length));
+            if (cc)
+            {
+                message[index] = cc;
+                i += length;
+            }
+            else
+            {
+                message[index] = '{';
+            }
+
+            /* we need to unpeek the increment for skipping over all of the
+             * color tag + so we dont skip a char for a bad tag */
+            --i;
+            ++index;
+        }
+        else if (message[i] == '\\')
         {
             ++i;
             if (message[i] == '{')
@@ -567,36 +604,6 @@ stock void CFormat(char[] message, int maxlength)
             {
                 message[index] = '\\';
                 --i;
-            }
-
-            ++index;
-        }
-        else if (message[i] == '{')
-        {
-            int ret_index = i;
-
-            ++i;
-            char color[16];
-            for (int icolor = 0; icolor < sizeof(color); ++icolor)
-            {
-                if (message[i] == '}')
-                {
-                    break;
-                }
-
-                color[icolor] = message[i];
-                ++i;
-            }
-
-            char cc = view_as<char>(_CL_ColorMap(color));
-            if (cc)
-            {
-                message[index] = cc;
-            }
-            else
-            {
-                message[index] = '{';
-                i = ret_index;
             }
 
             ++index;
@@ -612,20 +619,6 @@ stock void CFormat(char[] message, int maxlength)
 }
 
 /**
- * Checks for ProtoBuff support for CSayText2.
- *
- * @return          No return.
- */
-stock bool _CL_SupportsProtoBuf()
-{
-    if (_CL_proto_buff_support == NotChecked)
-    {
-        _CL_proto_buff_support = (GetFeatureStatus(FeatureType_Native, "GetUserMessageType") == FeatureStatus_Available) && (GetUserMessageType() == UM_Protobuf) ? Supports : DoesNotSupport;
-    }
-    return _CL_proto_buff_support == Supports;
-}
-
-/**
  * Sends a SayText2 usermessage to a client
  *
  * @param message   Client index
@@ -635,7 +628,7 @@ stock bool _CL_SupportsProtoBuf()
  */
 stock void CSayText2(int client, int author, const char[] message)
 {
-    if (_CL_SupportsProtoBuf())
+    if (_CL_proto_buff_support)
     {
         Protobuf pbMessage = view_as<Protobuf>(StartMessageOne("SayText2", client, USERMSG_RELIABLE|USERMSG_BLOCKHOOKS));
         pbMessage.SetInt("ent_idx", author);
@@ -676,3 +669,15 @@ stock void _CL_SendChatMessage(int client, int author, char[] message)
         PrintToChat(client, message);
     }
 }
+
+/* BADNESS BELOW THIS LINE DO NOT EDIT */
+
+public void OnPluginStart()
+{
+    _CL_proto_buff_support = (GetFeatureStatus(FeatureType_Native, "GetUserMessageType") == FeatureStatus_Available) && (GetUserMessageType() == UM_Protobuf);
+    _CL_buffer_index = CPreFormat(_CL_buffer);
+    _CL_buffer_size = sizeof(_CL_buffer) - _CL_buffer_index;
+    _CL_OnPluginStart();
+}
+
+#define OnPluginStart _CL_OnPluginStart
