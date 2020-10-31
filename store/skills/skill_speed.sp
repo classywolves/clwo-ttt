@@ -59,6 +59,7 @@ public void OnPluginStart()
         Store_OnRegister();
     }
 
+    HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
     HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
 
     for (int i = 1; i < MaxClients; ++i)
@@ -108,18 +109,6 @@ public Action Command_Speed(int client, int argc)
     return Plugin_Handled;
 }
 
-public void TTT_OnRoundStart(int roundid, int innocents, int traitors, int detective)
-{
-    int time = GetTime();
-    LoopClients(i) // There is probably a neater and faster way of resetting cooldowns at round start,
-    {              // however, it is unknown to me. - Dog
-                   // Corrected this to use GetTime, this is an integer not a 
-                   // float so this will have caused some weirdness.
-                   // Also cached the result of GetTime :) - c0rp3n
-        g_playerData[i].cooldownEnd = time;
-    }
-}
-
 public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float velocity[3], float angles[3], int &weapon)
 {
     if (g_playerData[client].usesCommand ||
@@ -161,6 +150,18 @@ public void Store_OnSkillUpdate(int client, int level)
     {
         SDKHook(client, SDKHook_OnTakeDamageAlivePost, Hook_OnTakeDamageAlivePost);
         g_playerData[client].cooldown = SPD_COOLDOWN_TIME / g_playerData[client].level;
+    }
+}
+
+public void Event_RoundStart(Event event, char[] name, bool dontBroadcast)
+{
+    int time = GetTime();
+    LoopClients(i) // There is probably a neater and faster way of resetting cooldowns at round start,
+    {              // however, it is unknown to me. - Dog
+                   // Corrected this to use GetTime, this is an integer not a 
+                   // float so this will have caused some weirdness.
+                   // Also cached the result of GetTime :) - c0rp3n
+        g_playerData[i].cooldownEnd = time;
     }
 }
 
