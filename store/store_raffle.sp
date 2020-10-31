@@ -6,8 +6,8 @@
 
 #include <colorlib>
 #include <generics>
-#include <clwo-store>
-#include <clwo-store-messages>
+#include <clwo_store_credits>
+#include <clwo_store_messages>
 
 public Plugin myinfo =
 {
@@ -95,14 +95,14 @@ public Action Command_Raffle(int client, int args)
     GetCmdArg(1, buffer, sizeof(buffer));
     int amount = StringToInt(buffer);
 
-    if (Store_GetCredits(client) < amount)
+    if (Store_GetClientCredits(client) < amount)
     {
         CPrintToChat(client, STORE_ERROR ... "You do not have enough credits to host this raffle.");
         return Plugin_Stop;
     }
     else
     {
-        Store_AddCredits(client, -amount);
+        Store_AddClientCredits(client, -amount);
     }
 
     Raffle_Create(client, amount);
@@ -241,7 +241,7 @@ public void Raffle_End()
             }
         }
 
-        Store_AddCredits(winner, g_raffle.prizePool);
+        Store_AddClientCredits(winner, g_raffle.prizePool);
         CPrintToChatAll(STORE_MESSAGE ... "{yellow}%N {default}won {orange}%dcR {default}from {yellow}%N's {default}raffle.", winner, g_raffle.prizePool, client);
     }
 
