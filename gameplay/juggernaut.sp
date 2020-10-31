@@ -55,18 +55,18 @@ public OnPluginStart()
 public Action Command_Say(int client, int args)
 {
     char text[192], command[64];
-	GetCmdArgString(text, sizeof(text));
-	GetCmdArg(0, command, sizeof(command));
+    GetCmdArgString(text, sizeof(text));
+    GetCmdArg(0, command, sizeof(command));
 
-	int startidx = 0;
-	if(text[strlen(text)-1] == '"')
-	{
-		text[strlen(text)-1] = '\0';
-		startidx = 1;
-	}
+    int startidx = 0;
+    if(text[strlen(text)-1] == '"')
+    {
+        text[strlen(text)-1] = '\0';
+        startidx = 1;
+    }
 
-	if (strcmp(text[startidx], "Jugg", false) == 0)
-	{
+    if (strcmp(text[startidx], "Jugg", false) == 0)
+    {
         if(gb_JuggRoundNR)
         {
             PrintToChat(client, "[JUGG] Jugg has already been voted for");

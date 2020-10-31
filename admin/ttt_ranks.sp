@@ -111,13 +111,10 @@ public void DbInitCallback(Database db, const char[] error, any data)
 
     LoopClients(i)
     {
+        playerRanks[i] = 0;
         if (IsValidClient(i))
         {
-            playerRanks[i] = Db_GetClientRank(i);
-        }
-        else
-        {
-            playerRanks[i] = 0;
+            Db_GetClientRank(i);
         }
     }
 }
@@ -132,13 +129,10 @@ public void OnMapLoad()
 {
     LoopClients(i)
     {
+        playerRanks[i] = 0;
         if (IsValidClient(i))
         {
-            playerRanks[i] = Db_GetClientRank(i);
-        }
-        else
-        {
-            playerRanks[i] = 0;
+            Db_GetClientRank(i);
         }
     }
 }
@@ -150,7 +144,7 @@ public void OnClientPutInServer(int client)
 
 public void OnClientPostAdminCheck(int client)
 {
-    playerRanks[client] = Db_GetClientRank(client);
+    Db_GetClientRank(client);
 }
 
 public Action Command_RefreshRanks(int client, int args)
@@ -159,7 +153,7 @@ public Action Command_RefreshRanks(int client, int args)
     {
         if (IsValidClient(i))
         {
-            playerRanks[i] = Db_GetClientRank(i);
+            Db_GetClientRank(i);
         }
     }
 
@@ -220,7 +214,7 @@ public int Native_GetClientRank(Handle plugin, int numParams)
     return playerRanks[client];
 }
 
-public int Db_GetClientRank(int client)
+public void Db_GetClientRank(int client)
 {
     char steamId[64];
     GetClientAuthId(client, AuthId_Steam2, steamId, 64);
