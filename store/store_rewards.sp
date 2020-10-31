@@ -40,7 +40,7 @@ public void OnPluginStart()
     g_bIsWeekend = IsWeekend();
 
     g_cCrReward = CreateConVar("clwo_store_reward", "1", "The maximum reward a player can get.");
-    g_cCrRewardWeekend = CreateConVar("clwo_store_reward_weekend", "5", "The maximum reward a player can get.");
+    g_cCrRewardWeekend = CreateConVar("clwo_store_reward_weekend", "2", "The maximum reward a player can get.");
     g_cRewardActiveTime = CreateConVar("clwo_store_active_reward_time", "1", "The delta in time between rewards in minutes 0 = Disabled.");
     g_cRewardAfkTime = CreateConVar("clwo_store_afk_reward_time", "5", "The delta in time between rewards in minutes 0 = Disabled.");
 
