@@ -52,7 +52,7 @@ public void OnPluginStart()
     RegConsoleCmd("sm_speed", Command_Speed, "Allows for the binding of the speed increase skill.");
 
     g_cClientUsesBind = new Cookie("skill_speed_uses_bind", "Whether a client uses the speed skill bind.", CookieAccess_Public);
-    g_cClientUsesBind.SetPrefabMenu(CookieMenu_OnOff_Int, "Skill - Adrenal Enhancements\nWould you like to use the \"sm_speed\" bind instead of double pressing +use.");
+    g_cClientUsesBind.SetPrefabMenu(CookieMenu_OnOff_Int, "Skill - Adrenal Enhancements\nWould you like to use the \"sm_speed\" bind instead of double pressing +use.", CookieMenuHandler_ClientUsesBind);
 
     if (Store_IsReady())
     {
@@ -61,7 +61,7 @@ public void OnPluginStart()
 
     HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
 
-    for (int i = 0; i < MaxClients; ++i)
+    for (int i = 1; i < MaxClients; ++i)
     {
         if (IsClientInGame(i) && !IsFakeClient(i) && AreClientCookiesCached(i))
         {
@@ -98,12 +98,14 @@ public void OnClientCookiesCached(int client)
 {
     static char buffer[2];
     g_cClientUsesBind.Get(client, buffer, sizeof(buffer));
-    g_playerData[client].usesCommand = view_as<bool>(StringToInt(buffer));
+    g_playerData[client].usesCommand = (buffer[0] == '1');
 }
 
 public Action Command_Speed(int client, int argc)
 {
     DoClientSpeed(client);
+
+    return Plugin_Handled;
 }
 
 public void TTT_OnRoundStart(int roundid, int innocents, int traitors, int detective)
@@ -211,6 +213,14 @@ public Action Timer_SpeedRevoke(Handle timer, int userid)
     return Plugin_Stop;
 }
 
+public void CookieMenuHandler_ClientUsesBind(int client, CookieMenuAction action, any info, char[] buffer, int maxlen)
+{
+    if (action == CookieMenuAction_SelectOption)
+    {
+        OnClientCookiesCached(client);
+    }
+}
+
 void ClearClientData(int client)
 {
     g_playerData[client].level = -1;
@@ -228,7 +238,7 @@ void DoClientSpeed(int client)
     {
         if (ErrorTimeout(client))
         {
-            CPrintToChat(client, "{default}[TTT] > You are currently in cooldown for {orange}%d {default}more seconds.", g_playerData[client].cooldownEnd - GetTime());
+            CPrintToChat(client, "[TTT] > You are currently in cooldown for {orange}%d {default}more seconds.", g_playerData[client].cooldownEnd - currentTime);
         }
 
         return;
@@ -236,7 +246,7 @@ void DoClientSpeed(int client)
 
     g_playerData[client].cooldownEnd = GetTime() + g_playerData[client].cooldown;
 
-    CPrintToChat(client, "{default}[TTT] > %s activated.", SPD_NAME);
+    CPrintToChat(client, "[TTT] > %s activated.", SPD_NAME);
 
     int userid = GetClientUserId(client);
     for (float i = 0.0; i < 0.5; i += 0.01)
@@ -252,7 +262,6 @@ void DoClientSpeed(int client)
 
     g_playerData[client].isUsingSpeed = true;
     CreateTimer(SPD_TIME, Timer_SpeedRevoke, userid);
-    CreateTimer(float(g_playerData[client].cooldown), Timer_SpeedRevoke, userid);
 }
 
 void SetClientSpeed(int client, float speed)
