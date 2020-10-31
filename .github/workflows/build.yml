@@ -25,6 +25,7 @@ jobs:
           
       - name: Clone TTT
         with:
+          uses: actions/checkout@v2
           repository: 'classywolves/private-ttt-mirror'
           path: 'deps/ttt'
           
