@@ -33,7 +33,8 @@ jobs:
           
       - name: Setup TTT
         run: |
-          TTT_INCLUDE=$GITHUB_WORKSPACE/deps/ttt/addons/sourcemod/scripting/include
+          TTT_PATH=$GITHUB_WORKSPACE/deps/ttt/
+          echo ::set-env name=TTT_INCLUDE::$TTT_PATH/addons/sourcemod/scripting/include
 
       - name: Compile Plugins
         run: |
