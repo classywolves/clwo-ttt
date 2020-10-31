@@ -29,7 +29,9 @@ public void OnPluginStart()
 	
 	gcv_iArraySize = CreateConVar("hl_bandisconnected_max", "100", "List size of ban disconnected players menu");
 	
+	RegAdminCmd("sm_bandcd", Command_BanDisconnected, ADMFLAG_BAN, "Ban a player after they have disconnected!");
 	RegAdminCmd("sm_bandisconnected", Command_BanDisconnected, ADMFLAG_BAN, "Ban a player after they have disconnected!");
+	RegAdminCmd("sm_listdcd", Command_ListDisconnected, ADMFLAG_BAN, "List all disconnected players!");
 	RegAdminCmd("sm_listdisconnected", Command_ListDisconnected, ADMFLAG_BAN, "List all disconnected players!");
 
 	HookEvent("player_disconnect", Event_PlayerDisconnect, EventHookMode_Pre);
