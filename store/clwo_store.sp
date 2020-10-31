@@ -401,10 +401,12 @@ void Menu_SkillInfo(int client, int skill)
         pSkill.DrawItem("Purchase", ITEMDRAW_CONTROL);
     }
 
+/*
     if (level > 0)
     {
         pSkill.DrawItem("Refund", ITEMDRAW_CONTROL);
     }
+*/
 
     pSkill.DrawItem("", ITEMDRAW_SPACER);
 
@@ -418,6 +420,7 @@ void Menu_SkillInfo(int client, int skill)
     delete pSkill;
 }
 
+/*
 void Menu_SkillRefund(int client, int skill)
 {
     Panel pRefund = new Panel();
@@ -431,6 +434,7 @@ void Menu_SkillRefund(int client, int skill)
 
     pRefund.DrawText("Are you sure you want to refund this skill you will only recieve 80% of the cR you spent.");
 }
+*/
 
 /*
 public int MenuHandler_Store(Menu menu, MenuAction action, int client, int data)
