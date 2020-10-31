@@ -96,7 +96,17 @@ public void TTT_OnBodyFound(int client, int victim, int entityref, bool silentID
             int reserve = GetEntProp(weapon, Prop_Send, "m_iPrimaryReserveAmmoCount");
             SetEntProp(weapon, Prop_Send, "m_iPrimaryReserveAmmoCount", reserve + scavenged);
 
-            CPrintToChat(client, "{default}[TTT] > You found {orange}%d {default}rounds on {yellow}%N's {default}body.", scavenged, victim);
+            static char victim_name[MAX_NAME_LENGTH];
+            if (IsValidClient(victim))
+            {
+                GetClientName(victim, victim_name, sizeof(victim_name));
+            }
+            else
+            {
+                strcopy(victim_name, sizeof(victim_name), "unknown");
+            }
+
+            CPrintToChat(client, "[TTT] > You found {orange}%d {default}rounds on {yellow}%s's {default}body.", scavenged, victim_name);
         }
     }
 }
