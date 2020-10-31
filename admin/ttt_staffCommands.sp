@@ -4,7 +4,7 @@
 #include <cstrike>
 
 #include <ttt>
-#include <colorvariables>
+#include <colorlib>
 #include <generics>
 #include <ttt_messages>
 #include <ttt_ranks>

@@ -11,7 +11,7 @@
  * Custom include files.
  */
 #include <ttt>
-#include <colorvariables>
+#include <colorlib>
 #include <generics>
 #include <ttt_messages>
 #include <ttt_targeting>

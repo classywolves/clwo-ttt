@@ -3,7 +3,7 @@
 #include <cstrike>
 
 #include <sourcebanspp>
-#include <colorvariables>
+#include <colorlib>
 
 #define PLUGIN_NAME "TTT Bandisconnected"
 

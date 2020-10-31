@@ -9,7 +9,7 @@
 #include <ttt_shop>
 #include <ttt_messages>
 #include <generics>
-#include <colorvariables>
+#include <colorlib>
 
 public Plugin myinfo = 
 {

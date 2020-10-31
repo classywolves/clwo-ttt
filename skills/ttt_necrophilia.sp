@@ -5,7 +5,7 @@
 #include <cstrike>
 
 #include <ttt>
-#include <colorvariables>
+#include <colorlib>
 #include <smlib/effects>
 #include <generics>
 #include <ttt_skills>

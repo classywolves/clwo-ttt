@@ -7,7 +7,7 @@
 
 #include <generics>
 #include <ttt_ranks>
-#include <colorvariables>
+#include <colorlib>
 
 int g_iMyParentIs[MAXPLAYERS+1];
 bool g_iAmEmpowered[MAXPLAYERS+1];

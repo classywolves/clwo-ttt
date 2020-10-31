@@ -7,7 +7,7 @@
 #include <nextmap>
 
 #include <ttt>
-#include <colorvariables>
+#include <colorlib>
 #include <autoexecconfig>
 
 #pragma newdecls required
