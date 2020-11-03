@@ -12,7 +12,7 @@
 #include <sourcecomms>
 #include <informers>
 
-ConVar cv_info_var_online_staff;
+//ConVar cv_info_var_online_staff;
 
 #define REQBL 11
 #define REQWL 9
@@ -40,7 +40,7 @@ public void informers_PostPluginStart()
 }
 public void informers_RegisterCvars()
 {
-    cv_info_var_online_staff = CreateConVar("Staff_online", "#unknown#", "" );
+    //cv_info_var_online_staff = CreateConVar("Staff_online", "#unknown#", "" );
     //cv_info_var_online_staff = CreateConVar("Staff_online", "#unknown#", "",FCVAR_NOTIFY );
 }
 public void informers_HookEvents()
