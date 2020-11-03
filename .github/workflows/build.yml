@@ -39,9 +39,9 @@ jobs:
 
       - name: Compile Plugins
         run: |
-          for file in ./*.sp ./**/*.sp
+          for file in $(find . -name '*.sp')
           do
             echo -e "\nCompiling $file..."
             spcomp -E -w234 -O2 -v2 -i $TTT_INCLUDE -i $SCRIPTS_PATH/include $file
           done
-        working-directory: '$SCRIPTS_PATH'
+        working-directory: ${{ env.SCRIPTS_PATH }}/
