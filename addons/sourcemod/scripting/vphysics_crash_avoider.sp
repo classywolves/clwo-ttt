@@ -229,6 +229,8 @@ float GetAngleOfLine(float dx, float dy, float adx, float ady)
         theta = g_fDeathAngles[g_iDeathAngleIndex];
         UpdateDeathAngleIndex();
     }
+
+    return theta;
 }
 
 /*
