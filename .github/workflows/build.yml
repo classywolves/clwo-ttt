@@ -18,6 +18,7 @@ jobs:
           SOURCEMOD_PATH=$GITHUB_WORKSPACE/addons/sourcemod
           echo ::set-env name=SOURCEMOD_PATH::$SOURCEMOD_PATH
           echo ::set-env name=SCRIPTS_PATH::$SOURCEMOD_PATH/scripting
+
       - name: Setup SourcePawn Compiler ${{ matrix.SM_VERSION }}
         uses: rumblefrog/setup-sp@master
         with:
@@ -38,9 +39,9 @@ jobs:
 
       - name: Compile Plugins
         run: |
-          for file in *.sp
+          for file in $(find . -name '*.sp')
           do
             echo -e "\nCompiling $file..."
-            spcomp -E -w234 -O2 -v2 -i $SCRIPTS_PATH/include -i $TTT_INCLUDE -i ../include $file
+            spcomp -E -w234 -O2 -v2 -i $TTT_INCLUDE -i $SCRIPTS_PATH/include $file
           done
-        working-directory: 'store'
+        working-directory: '$SCRIPTS_PATH'
