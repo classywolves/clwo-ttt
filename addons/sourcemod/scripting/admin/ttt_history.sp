@@ -24,22 +24,22 @@
 
 public Plugin myinfo =
 {
-	name = "TTT History",
-	author = "Popey",
-	description = "TTT Player history system.",
-	version = "1.0.0",
-	url = ""
+    name = "TTT History",
+    author = "Popey",
+    description = "TTT Player history system.",
+    version = "1.0.0",
+    url = ""
 };
 
 public OnPluginStart() {
-	RegisterCmds();
-	InitDBs();
+    RegisterCmds();
+    InitDBs();
 
-	PrintToServer("[HIS] Loaded successfully");
+    PrintToServer("[HIS] Loaded successfully");
 }
 
 public InitDBs() {
-	HistoryInit();
+    HistoryInit();
 }
 
 // == History is table:
@@ -51,54 +51,54 @@ public void RegisterCmds() {
 }
 
 public Action Command_AddHistory(int client, int args) {
-	// Usage is "/addhistory <target> <message>"
-	if (args < 2) {
-		CPrintToChat(client, TTT_USAGE ... "sm_addhistory <target> <message>");
-		return Plugin_Handled;
-	}
+    // Usage is "/addhistory <target> <message>"
+    if (args < 2) {
+        CPrintToChat(client, TTT_USAGE ... "sm_addhistory <target> <message>");
+        return Plugin_Handled;
+    }
 
-	char arg1[128], message[256], buffer[128], auth[64], adminAuth[64], adminName[64];
+    char arg1[128], message[256], buffer[128], auth[64], adminAuth[64], adminName[64];
 
-	GetCmdArg(1, arg1, sizeof(arg1));
-	int target = TTT_Target(arg1, client, true, true, false);
+    GetCmdArg(1, arg1, sizeof(arg1));
+    int target = TTT_Target(arg1, client, true, true, false);
 
-	if (target == -1)
+    if (target == -1)
     {
-		return Plugin_Handled;
-	}
+        return Plugin_Handled;
+    }
 
-	GetCmdArg(2, message, sizeof(message));
+    GetCmdArg(2, message, sizeof(message));
 
-	for (int i = 3; i <= args; i++) {
-		GetCmdArg(i, buffer, sizeof(buffer));
-		Format(message, sizeof(message), "%s %s", message, buffer);
-	}
+    for (int i = 3; i <= args; i++) {
+        GetCmdArg(i, buffer, sizeof(buffer));
+        Format(message, sizeof(message), "%s %s", message, buffer);
+    }
 
-	GetClientAuthId(target, AuthId_Steam2, auth, sizeof(auth));
-	GetClientAuthId(client, AuthId_Steam2, adminAuth, sizeof(adminAuth));
-	GetClientName(client, adminName, sizeof(adminName));
+    GetClientAuthId(target, AuthId_Steam2, auth, sizeof(auth));
+    GetClientAuthId(client, AuthId_Steam2, adminAuth, sizeof(adminAuth));
+    GetClientName(client, adminName, sizeof(adminName));
 
-	HistoryInsert(auth, message, "ADM_NOTE", adminName, adminAuth);
+    HistoryInsert(auth, message, "ADM_NOTE", adminName, adminAuth);
 
-	return Plugin_Handled;
+    return Plugin_Handled;
 }
 
 public Action Command_History(int client, int args) {
-	// Usage is "/history <target> <page>"
-	if (args < 1) {
-		CPrintToChat(client, TTT_USAGE ... "sm_addhistory <target> <page>");
-		return Plugin_Handled;
-	}
+    // Usage is "/history <target> <page>"
+    if (args < 1) {
+        CPrintToChat(client, TTT_USAGE ... "sm_addhistory <target> <page>");
+        return Plugin_Handled;
+    }
 
-	char arg1[128];
-	
-	GetCmdArg(1, arg1, sizeof(arg1));
-	int target = TTT_Target(arg1, client, true, true, false);
+    char arg1[128];
+    
+    GetCmdArg(1, arg1, sizeof(arg1));
+    int target = TTT_Target(arg1, client, true, true, false);
 
-	if (target == -1)
+    if (target == -1)
     {
-		return Plugin_Handled;
-	}
+        return Plugin_Handled;
+    }
 
     return Plugin_Handled;
 }

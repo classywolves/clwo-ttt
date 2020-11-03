@@ -16,7 +16,7 @@ public void ChangeToRandomMap()
 
     while (!file.EndOfFile() && file.ReadLine(line, sizeof(line)))
     {
-        if (line[0] == '/' && line[1] == '/') continue
+        if (line[0] == '/' && line[1] == '/') continue;
         maps.PushString(line);
     }
 

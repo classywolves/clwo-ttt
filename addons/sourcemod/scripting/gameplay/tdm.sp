@@ -44,18 +44,18 @@ public OnPluginStart()
 public Action Command_Say(int client, int args)
 {
     char text[192], command[64];
-	GetCmdArgString(text, sizeof(text));
-	GetCmdArg(0, command, sizeof(command));
+    GetCmdArgString(text, sizeof(text));
+    GetCmdArg(0, command, sizeof(command));
 
-	int startidx = 0;
-	if(text[strlen(text)-1] == '"')
-	{
-		text[strlen(text)-1] = '\0';
-		startidx = 1;
-	}
+    int startidx = 0;
+    if(text[strlen(text)-1] == '"')
+    {
+        text[strlen(text)-1] = '\0';
+        startidx = 1;
+    }
 
-	if (strcmp(text[startidx], "TDM", false) == 0 || strcmp(text[startidx], "team deathmatch", false) == 0)
-	{
+    if (strcmp(text[startidx], "TDM", false) == 0 || strcmp(text[startidx], "team deathmatch", false) == 0)
+    {
         if(gb_TDMRoundNR)
         {
             PrintToChat(client, "[TDM] TDM has already been voted for");
@@ -164,11 +164,11 @@ public void TTT_OnRoundEnd(int winner, Handle array)
     }
 }
 
-public Action Timer_TDMCountdown(Handle timer)
+public Action Timer_TDMCountdown(Handle timer, int client)
 {
     if(gi_TDMCountdown == 0)
     {
-        BeginTDM(client);
+        BeginTDM();
         ClearTimer(timer);
         gb_TDMRoundNR = false;
         cv_CustomGMNR.SetBool(false, false, true);
@@ -181,7 +181,7 @@ public Action Timer_TDMCountdown(Handle timer)
     return Plugin_Continue;
 }
 
-public void BeginTDM(int client)
+public void BeginTDM()
 {
     g_cvMPTeammatesAreEnemies.SetBool(false, true, true);
 

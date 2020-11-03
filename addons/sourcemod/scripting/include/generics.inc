@@ -139,21 +139,6 @@ stock int GenericOnSQLConnectCallback(Handle owner, Handle hndl, char [] error, 
     return 0;
 }
 
-stock int GetClientCookieInt(int client, Handle cookie, int defaultValue)
-{
-    char cookieValue[64];
-    GetClientCookie(that, cookie, cookieValue, sizeof(cookieValue));
-    if (cookieValue[0] == '\0') return defaultValue;
-    return StringToInt(cookieValue);
-}
-
-stock void SetClientCookieInt(int client, Handle cookie, int value)
-{
-    char cookieValue[64];
-    IntToString(value, cookieValue, sizeof(cookieValue));
-    SetClientCookie(that, cookie, cookieValue);
-}
-
 stock void IntToChar4(int value, char[] array,  int index = 0)
 {
     array[index] = (value >> 24) & 0xFF;

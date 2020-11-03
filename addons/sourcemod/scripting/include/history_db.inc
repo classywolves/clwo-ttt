@@ -37,11 +37,11 @@ public void HistoryInsert(char[] auth, char[] msg, char[] msgType, char[] adminN
 
 	Format(query, sizeof(query), "INSERT INTO history VALUES (%i, '%s', '%s', '%s', '%s', %s');", GetTime(), cAuth, cMsg, cMsgType, cAdminName, cAdminAuth);
 
-	historyDb.Query(HistoryInsertCallback, query)
+	historyDb.Query(HistoryInsertCallback, query);
 }
 
 public void HistoryInsertCallback(Database db, DBResultSet results, const char[] error, any data) {
 	if (results == null) {
-		LogError("HistoryInsertCallback: %s", error)
+		LogError("HistoryInsertCallback: %s", error);
 	}
 }
