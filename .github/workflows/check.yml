@@ -9,6 +9,12 @@ jobs:
       fail-fast: false
 
     steps:
+      - uses: actions/checkout@v2
+
+      - name: Set environment variables
+        run: |
+          echo "SOURCEMOD_PATH=$GITHUB_WORKSPACE/addons/sourcemod" >> $GITHUB_ENV
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -28,6 +34,7 @@ jobs:
         run: |
           pip install -r ./requirements.txt
           python3 ./setup.py install
+          echo "CHECK_PATH=$GITHUB_WORKSPACE/deps/colorlib-check"" >> $GITHUB_ENV
         working-directory: ./deps/colorlib-check/
 
       - name: Check Files
@@ -35,6 +42,6 @@ jobs:
           for file in $(find . -name '*.sp' -o -name '*.phrases.txt')
           do
             echo -e "Checking $file..."
-            colorlib_check -re -c "../../deps/colorlib-check/example_conf.yaml" $file
+            colorlib_check -re -c "$CHECK_PATH/example_conf.yaml" $file
           done
-        working-directory: ./addons/sourcemod/
+        working-directory: ${{ env.SOURCEMOD_PATH }}/
