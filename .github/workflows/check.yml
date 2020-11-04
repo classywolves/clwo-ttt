@@ -1,0 +1,39 @@
+name: Check files with ColorLib - Check
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Dependencies
+        run: python3 -m pip install --upgrade pip setuptools wheel
+
+      - name: Clone
+        uses: actions/checkout@v2
+        with:
+          repository: 'c0rp3n/colorlib-check'
+          ref: 'master'
+          path: 'deps/colorlib-check'
+
+      - name: Install
+        run: |
+          cd deps/colorlib-check
+          pip install -r ./requirements.txt
+          python3 ./setup.py install
+
+      - name: Check Files
+        run: |
+          for file in $(find . -name '*.sp' -name '*.phrases.txt')
+          do
+            echo -e "\Checking $file..."
+            colorlib_check -re -c "./deps/colorlib-check/example_conf.yaml" $file
+          done
