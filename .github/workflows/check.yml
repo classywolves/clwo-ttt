@@ -9,6 +9,11 @@ jobs:
       fail-fast: false
 
     steps:
+      - name: Set environment variables
+        run: |
+          SOURCEMOD_PATH=$GITHUB_WORKSPACE/addons/sourcemod
+          echo ::set-env name=SOURCEMOD_PATH::$SOURCEMOD_PATH
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -37,4 +42,4 @@ jobs:
             echo -e "Checking $file..."
             colorlib_check -re -c "./deps/colorlib-check/example_conf.yaml" $file
           done
-        working-directory: './addons/sourcemod'
+        working-directory: ${{ env.SOURCEMOD_PATH }}/
