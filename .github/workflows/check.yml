@@ -37,4 +37,4 @@ jobs:
             echo -e "Checking $file..."
             colorlib_check -re -c "./deps/colorlib-check/example_conf.yaml" $file
           done
-        working-directory: $GITHUB_WORKSPACE/addons/sourcemod/
+        working-directory: './addons/sourcemod'
