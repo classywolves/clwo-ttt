@@ -168,8 +168,9 @@ public void OnMapEnd()
     g_ChangeMapAtRoundEnd = false;
     g_ChangeMapInProgress = false;
 
-    g_VoteTimer = null;
-    g_RetryTimer = null;
+
+    delete g_VoteTimer;
+    delete g_RetryTimer;
 
     char map[PLATFORM_MAX_PATH];
     GetCurrentMap(map, sizeof(map));
