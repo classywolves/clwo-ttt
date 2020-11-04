@@ -668,7 +668,7 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
         {
             if (IsValidClient(victim))
             {
-                CPrintToChat(victim, TTT_MESSAGE ... "{yellow}%N {default}has handled your case against {yellow}%s {defalt}and has concluded them to be {red}guilty{default}. Thanks for your report.", client, attackerName);
+                CPrintToChat(victim, TTT_MESSAGE ... "{yellow}%N {default}has handled your case against {yellow}%s {default}and has concluded them to be {red}guilty{default}. Thanks for your report.", client, attackerName);
             }
             if (IsValidClient(attacker))
             {
