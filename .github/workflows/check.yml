@@ -34,7 +34,7 @@ jobs:
         run: |
           pip install -r ./requirements.txt
           python3 ./setup.py install
-          echo "CHECK_PATH=$GITHUB_WORKSPACE/deps/colorlib-check"" >> $GITHUB_ENV
+          echo "CHECK_PATH=$GITHUB_WORKSPACE/deps/colorlib-check" >> $GITHUB_ENV
         working-directory: ./deps/colorlib-check/
 
       - name: Check Files
