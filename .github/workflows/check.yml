@@ -30,13 +30,13 @@ jobs:
 
       - name: Install
         run: |
-          cd deps/colorlib-check
           pip install -r ./requirements.txt
           python3 ./setup.py install
+        working-directory: ./deps/colorlib-check/
 
       - name: Check Files
         run: |
-          for file in $(find . -name '*.sp' -o -name '*.phrases.txt')
+          for file in $(find . \( -name '*.sp' -o -name '*.phrases.txt' \))
           do
             echo -e "Checking $file..."
             colorlib_check -re -c "../../deps/colorlib-check/example_conf.yaml" $file
