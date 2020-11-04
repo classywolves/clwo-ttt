@@ -34,6 +34,6 @@ jobs:
         run: |
           for file in $(find . -name '*.sp' -o -name '*.phrases.txt')
           do
-            echo -e "\Checking $file..."
+            echo -e "Checking $file..."
             colorlib_check -re -c "./deps/colorlib-check/example_conf.yaml" $file
           done
