@@ -2,7 +2,7 @@
 
 char messages[][255] = {
   "Check us out today at {purple}https://CLWO.eu/{lightgreen}!",
-  "Current Map: {purple}{currentmap}",
+  "Current Map: {purple}<currentmap>",
   "Come talk to us over at {purple}https://discord.clwo.eu{lightgreen}!",
   "Issue joining a team? Type {purple}!t {lightgreen}in chat."
 }
@@ -19,7 +19,7 @@ public Action Timer_Announcement(Handle timer) {
   GetCurrentMap(currentMap, sizeof(currentMap));
 
   strcopy(message, sizeof(message), messages[currentMessage]);
-  ReplaceString(message ,sizeof(message), "{currentmap}", currentMap);
+  ReplaceString(message ,sizeof(message), "<currentmap>", currentMap);
 
   CPrintToChatAll("{orchid}[{green}T{darkred}T{blue}T{orchid}]{lightgreen} %s", message);
 
