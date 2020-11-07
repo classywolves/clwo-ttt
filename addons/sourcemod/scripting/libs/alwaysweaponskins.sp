@@ -506,14 +506,6 @@ static Handle s_hWeaponItemDefinition = null;
 static Handle s_hWeaponIsKnife = null;
 static Handle s_hWeaponTeam = null;
 
-public Action Command_MemCheck(int client, int argc)
-{
-    ReplyToCommand(client, "s_hWeaponClassname.Size() %d", GetArraySize(s_hWeaponClassname));
-    ReplyToCommand(client, "s_hWeaponItemDefinition.Size() %d", GetArraySize(s_hWeaponItemDefinition));
-    ReplyToCommand(client, "s_hWeaponIsKnife.Size() %d", GetArraySize(s_hWeaponIsKnife));
-    ReplyToCommand(client, "s_hWeaponTeam.Size() %d", GetArraySize(s_hWeaponTeam));
-}
-
 int GetWeaponIndexOfClassname(const char[] classname)
 {
     int count = GetArraySize(s_hWeaponClassname);
@@ -705,6 +697,8 @@ bool BuildItems()
     
     } while (KvGotoNextKey(kv));
 
+    delete kv;
+
     return true;
 }
 
@@ -732,4 +726,17 @@ void GetCSTeamName(int team, char[] buffer, int size)
             strcopy(buffer, size, "CS_TEAM_CT");
         }
     }
+}
+
+public Action Command_MemCheck(int client, int argc)
+{
+    ReplyToCommand(client, "s_hMapWeapons.Size() %d", GetArraySize(s_hMapWeapons));
+
+    ReplyToCommand(client, "Item Defs");
+    ReplyToCommand(client, "s_hWeaponClassname.Size() %d", GetArraySize(s_hWeaponClassname));
+    ReplyToCommand(client, "s_hWeaponItemDefinition.Size() %d", GetArraySize(s_hWeaponItemDefinition));
+    ReplyToCommand(client, "s_hWeaponIsKnife.Size() %d", GetArraySize(s_hWeaponIsKnife));
+    ReplyToCommand(client, "s_hWeaponTeam.Size() %d", GetArraySize(s_hWeaponTeam));
+
+    return Plugin_Handled;
 }
