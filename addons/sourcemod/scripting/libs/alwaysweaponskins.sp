@@ -59,6 +59,8 @@ public void OnPluginStart()
         SetFailState("Unable to load items data from 'items_game.txt'");
         return;
     }
+
+    RegAdminCmd("sm_aws_mem_check", Command_MemCheck, ADMFLAG_ROOT);
     
     CreateConvars();
 }
@@ -76,7 +78,7 @@ static bool s_bSkipMapWeapons = true;
 static bool s_bSkipNamedWeapons = true;
 static bool s_bDebugMessages = false;
 
-stock void CreateConvars()
+void CreateConvars()
 {
     s_ConVar_Enable = CreateConVar("aws_enable", "1", "Enables plugin");
     s_ConVar_SkipMapWeapons = CreateConVar("aws_skipmapweapons", "0", "Disables replacement of map weapons");
@@ -92,10 +94,10 @@ stock void CreateConvars()
     int flags = GetConVarFlags(version);
     flags |= FCVAR_NOTIFY;
     SetConVarFlags(version, flags);
-    CloseHandle(version);
+    delete version;
 }
 
-stock void LoadConvars()
+void LoadConvars()
 {
     s_bEnable = GetConVarBool(s_ConVar_Enable);
     s_bSkipMapWeapons = GetConVarBool(s_ConVar_SkipMapWeapons);
@@ -118,7 +120,7 @@ public void OnCvarChanged(Handle cvar, const char[] oldVal, const char[] newVal)
 /***************************************************
  * DHOOKS STUFF
  **************************************************/
-public bool HookOnGiveNamedItem()
+bool HookOnGiveNamedItem()
 {
     Handle config = LoadGameConfigFile("sdktools.games");
     if(config == null)
@@ -130,7 +132,7 @@ public bool HookOnGiveNamedItem()
     int offset = GameConfGetOffset(config, "GiveNamedItem");
     if (offset == -1)
     {
-        CloseHandle(config);
+        delete config;
         LogError("Unable to find offset 'GiveNamedItem' in game data 'sdktools.games'");
         return false;
     }
@@ -139,7 +141,7 @@ public bool HookOnGiveNamedItem()
     s_hGiveNamedItemPost = DHookCreate(offset, HookType_Entity, ReturnType_CBaseEntity, ThisPointer_CBaseEntity, OnGiveNamedItemPost);
     if (s_hGiveNamedItemPost == INVALID_HANDLE)
     {
-        CloseHandle(config);
+        delete config;
         LogError("Unable to post hook 'int CCSPlayer::GiveNamedItem(char const*, int, CEconItemView*, bool)'");
         return false;
     }
@@ -154,7 +156,7 @@ public bool HookOnGiveNamedItem()
     s_hGiveNamedItem = DHookCreate(offset, HookType_Entity, ReturnType_CBaseEntity, ThisPointer_CBaseEntity, OnGiveNamedItemPre);
     if (s_hGiveNamedItem == INVALID_HANDLE)
     {
-        CloseHandle(config);
+        delete config;
         LogError("Unable to hook 'int CCSPlayer::GiveNamedItem(char const*, int, CEconItemView*, bool)'");
         return false;
     }
@@ -164,6 +166,9 @@ public bool HookOnGiveNamedItem()
     DHookAddParam(s_hGiveNamedItem, HookParamType_Int, -1, DHookPass_ByVal);
     DHookAddParam(s_hGiveNamedItem, HookParamType_Bool, -1, DHookPass_ByVal);
     DHookAddParam(s_hGiveNamedItem, HookParamType_Unknown, -1, DHookPass_ByVal);
+
+    delete config;
+
     return true;
 }
 
@@ -436,17 +441,17 @@ public Action OnPostWeaponEquip(int client, int weapon)
 /***************************************************
  * MAP WEAPON STUFF
  **************************************************/
-stock bool IsMapWeapon(int entity, bool remove=false)
+bool IsMapWeapon(int entity, bool remove=false)
 {
     if (s_hMapWeapons == null)
         return false;
-        
+
     int count = GetArraySize(s_hMapWeapons);
     for (int i = 0; i < count; i++)
     {
         if (GetArrayCell(s_hMapWeapons, i) != entity)
             continue;
-        
+
         if (remove)
             RemoveFromArray(s_hMapWeapons, i);
         return true;
@@ -501,7 +506,15 @@ static Handle s_hWeaponItemDefinition = null;
 static Handle s_hWeaponIsKnife = null;
 static Handle s_hWeaponTeam = null;
 
-stock int GetWeaponIndexOfClassname(const char[] classname)
+public Action Command_MemCheck(int client, int argc)
+{
+    ReplyToCommand(client, "s_hWeaponClassname.Size() %d", GetArraySize(s_hWeaponClassname));
+    ReplyToCommand(client, "s_hWeaponItemDefinition.Size() %d", GetArraySize(s_hWeaponItemDefinition));
+    ReplyToCommand(client, "s_hWeaponIsKnife.Size() %d", GetArraySize(s_hWeaponIsKnife));
+    ReplyToCommand(client, "s_hWeaponTeam.Size() %d", GetArraySize(s_hWeaponTeam));
+}
+
+int GetWeaponIndexOfClassname(const char[] classname)
 {
     int count = GetArraySize(s_hWeaponClassname);
     char buffer[128];
@@ -514,7 +527,7 @@ stock int GetWeaponIndexOfClassname(const char[] classname)
     return -1;
 }
 
-public int GetItemDefinitionByClassname(const char[] classname)
+int GetItemDefinitionByClassname(const char[] classname)
 {
     if (StrEqual(classname, "weapon_knife"))
         return 42;
@@ -534,7 +547,7 @@ public int GetItemDefinitionByClassname(const char[] classname)
     return -1;
 }
 
-static int GetWeaponTeamByItemDefinition(int itemdefinition)
+int GetWeaponTeamByItemDefinition(int itemdefinition)
 {
     // weapon_knife
     if (itemdefinition == 42)
@@ -553,7 +566,7 @@ static int GetWeaponTeamByItemDefinition(int itemdefinition)
     return CS_TEAM_NONE;
 }
 
-static bool IsItemDefinitionKnife(int itemdefinition)
+bool IsItemDefinitionKnife(int itemdefinition)
 {
     if (itemdefinition == 42 || itemdefinition == 59)
         return true;
@@ -572,7 +585,7 @@ static bool IsItemDefinitionKnife(int itemdefinition)
     return false;
 }
 
-stock bool BuildItems()
+bool BuildItems()
 {
     Handle kv = CreateKeyValues("items_game");
     if (!FileToKeyValues(kv, "scripts/items/items_game.txt"))
@@ -698,7 +711,7 @@ stock bool BuildItems()
 /***************************************************
  * CS_TEAM HELPERS
  **************************************************/
-stock void GetCSTeamName(int team, char[] buffer, int size)
+void GetCSTeamName(int team, char[] buffer, int size)
 {
     switch (team)
     {
