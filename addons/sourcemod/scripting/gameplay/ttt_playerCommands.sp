@@ -163,7 +163,7 @@ public Action Command_Spectate(int client, int args)
 public Action Command_Terrorist(int client, int args)
 {
     ChangeClientTeam(client, CS_TEAM_T);
-    CPrintToChat(client, TTT_MESSAGE ... "You have been moved to the {team1}T {default}side.");
+    CPrintToChat(client, TTT_MESSAGE ... "You have been moved to the {team 1}T {default}side.");
 
     return Plugin_Handled;
 }
@@ -171,7 +171,7 @@ public Action Command_Terrorist(int client, int args)
 public Action Command_Spectator(int client, int args)
 {
     ChangeClientTeam(client, CS_TEAM_SPECTATOR);
-    CPrintToChat(client, TTT_MESSAGE ... "You have been moved to {team0}Spectator.");
+    CPrintToChat(client, TTT_MESSAGE ... "You have been moved to {team 0}Spectator.");
 
     return Plugin_Handled;
 }
@@ -179,7 +179,7 @@ public Action Command_Spectator(int client, int args)
 public Action Command_CounterTerrorist(int client, int args)
 {
     ChangeClientTeam(client, CS_TEAM_CT);
-    CPrintToChat(client, TTT_MESSAGE ... "You have been moved to the {team2}CT {default}side.");
+    CPrintToChat(client, TTT_MESSAGE ... "You have been moved to the {team 2}CT {default}side.");
 
     return Plugin_Handled;
 }
