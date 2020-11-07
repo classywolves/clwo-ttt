@@ -250,15 +250,15 @@ public Action Command_Profile(int client, int args)
     char expBar[80];
     GetExperienceBar(client, expBar);
 
-    CPrintToChat(client, "┏━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
+    CPrintToChat(client, "┏━━━━━━━━━━━━━ {green}%.24N {default}━━━━━━━━━━━━━━", client);
     CPrintToChat(client, "┃ Playtime: %d hours", RoundFloat(float(MostActive_GetPlayTimeTotal(client)) / 3600));
-    CPrintToChat(client, "┃ Karma: %d ({GREEN}+%d{DEFAULT}, {RED}-%d{DEFAULT}, %d%%)", TTT_GetClientKarma(client), goodActions, badActions, goodActionPercentage);
+    CPrintToChat(client, "┃ Karma: %d ({green}+%d{default}, {red}-%d{default}, %d%%)", TTT_GetClientKarma(client), goodActions, badActions, goodActionPercentage);
     CPrintToChat(client, "┃ Level: %d (%d / %d | %d%%)", playerLevels[client], playerExperience[client], levelUpExperience, RoundToFloor((float(playerExperience[client]) / float(levelUpExperience - playerExperience[client])) * 100.0));
     CPrintToChat(client, "┃ EXP: %s", expBar);
     // CPrintToChat(client, "┃ ");
     // CPrintToChat(client, "┃ ");
     // CPrintToChat(client, "┃ ");
-    CPrintToChat(client, "┗━━━━━━━━━━━━━ {GREEN}%.24N {DEFAULT}━━━━━━━━━━━━━━", client);
+    CPrintToChat(client, "┗━━━━━━━━━━━━━ {green}%.24N {default}━━━━━━━━━━━━━━", client);
 
     return Plugin_Handled;
 }
