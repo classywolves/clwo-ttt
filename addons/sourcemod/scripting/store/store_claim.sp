@@ -109,7 +109,7 @@ public void DbCallback_SelectClientHasClaimed(Database db, DBResultSet results, 
 
         if (amount > 0)
         {
-            CPrintToChat(client, "[Store] You have gained {oragne}%dcR {default}for your previous playtime, wellcome back.", amount);
+            CPrintToChat(client, "[Store] You have gained {orange}%dcR {default}for your previous playtime, wellcome back.", amount);
             CPrintToChat(client, "[Store] Use /skills to spend your newly earned cR.", amount);
             Store_AddClientCredits(client, amount);
         }
