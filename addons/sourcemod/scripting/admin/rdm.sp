@@ -20,6 +20,8 @@ public Plugin myinfo = {
 
 Database g_database = null;
 
+char g_query[768];
+
 int g_currentRound = -1;
 int g_lastDeathIndex = -1;
 
@@ -268,11 +270,10 @@ void Db_InsertDeath(int victim, int attacker)
     char sAttackerRole[10] = "none";
     RoleEnum(sAttackerRole, sizeof(sAttackerRole), attackerRole);
 
-    char query[768];
     Format(
-        query, sizeof(query), "INSERT INTO `deaths` (`death_index`, `death_time`, `victim_id`, `victim_role`, `attacker_id`, `attacker_role`, `last_gun_fire`, `round`) VALUES ('%d', '%d', '%d', '%s', '%d', '%s', '%d', '%d');",
+        g_query, sizeof(g_query), "INSERT INTO `deaths` (`death_index`, `death_time`, `victim_id`, `victim_role`, `attacker_id`, `attacker_role`, `last_gun_fire`, `round`) VALUES ('%d', '%d', '%d', '%s', '%d', '%s', '%d', '%d');",
         ++g_lastDeathIndex, GetTime(), victimId, sVictimRole, attackerId, sAttackerRole, g_playerData[victim].lastGunFired, g_currentRound);
-    g_database.Query(DbCallback_InsertDeath, query);
+    g_database.Query(DbCallback_InsertDeath, g_query);
 }
 
 public void DbCallback_InsertDeath(Database db, DBResultSet results, const char[] error, any data)
@@ -290,9 +291,8 @@ void Db_InsertHandle(int client, int death)
 
     int accountID = GetSteamAccountID(client);
 
-    char query[768];
-    Format(query, sizeof(query), "INSERT INTO `handles` (`death_index`, `admin_id`) VALUES ('%d', '%d');", death, accountID);
-    g_database.Query(DbCallback_InsertHandle, query, GetClientUserId(client));
+    Format(g_query, sizeof(g_query), "INSERT INTO `handles` (`death_index`, `admin_id`) VALUES ('%d', '%d');", death, accountID);
+    g_database.Query(DbCallback_InsertHandle, g_query, GetClientUserId(client));
 }
 
 public void DbCallback_InsertHandle(Database db, DBResultSet results, const char[] error, int userid)
@@ -309,9 +309,8 @@ public void DbCallback_InsertHandle(Database db, DBResultSet results, const char
 
 void Db_InsertReport(int client, int death)
 {
-    char query[768];
-    Format(query, sizeof(query), "INSERT INTO `reports` (`death_index`) VALUES ('%d');", death);
-    g_database.Query(DbCallback_InsertReport, query, GetClientUserId(client));
+    Format(g_query, sizeof(g_query), "INSERT INTO `reports` (`death_index`) VALUES ('%d');", death);
+    g_database.Query(DbCallback_InsertReport, g_query, GetClientUserId(client));
 }
 
 public void DbCallback_InsertReport(Database db, DBResultSet results, const char[] error, int userid)
@@ -356,9 +355,8 @@ public void DbCallback_SelectLastDeathIndex(Database db, DBResultSet results, co
 
 void Db_SelectCaseCount()
 {
-    char query[768];
-    Format(query, sizeof(query), "SELECT COUNT(*) AS `case_count` FROM `open_cases`;");
-    g_database.Query(DbCallback_SelectCaseCount, query);
+    Format(g_query, sizeof(g_query), "SELECT COUNT(*) AS `case_count` FROM `open_cases`;");
+    g_database.Query(DbCallback_SelectCaseCount, g_query);
 }
 
 public void DbCallback_SelectCaseCount(Database db, DBResultSet results, const char[] error, any data)
@@ -389,9 +387,8 @@ public void DbCallback_SelectCaseCount(Database db, DBResultSet results, const c
 
 void Db_SelectNextCase(int client)
 {
-    char query[128];
-    Format(query, sizeof(query), "SELECT `death_index` FROM `open_cases` ORDER BY `death_index` ASC LIMIT 1;");
-    g_database.Query(DbCallback_SelectNextCase, query, GetClientUserId(client));
+    Format(g_query, sizeof(g_query), "SELECT `death_index` FROM `open_cases` ORDER BY `death_index` ASC LIMIT 1;");
+    g_database.Query(DbCallback_SelectNextCase, g_query, GetClientUserId(client));
 }
 
 public void DbCallback_SelectNextCase(Database db, DBResultSet results, const char[] error, int userid)
@@ -420,9 +417,8 @@ void Db_SelectLastCase(int client)
 {
     int accountID = GetSteamAccountID(client);
 
-    char query[128];
-    Format(query, sizeof(query), "SELECT `death_index` FROM `ongoing_cases` WHERE `admin_id` = '%d' LIMIT 1;", accountID);
-    g_database.Query(DbCallback_SelectLastCase, query, GetClientUserId(client));
+    Format(g_query, sizeof(g_query), "SELECT `death_index` FROM `ongoing_cases` WHERE `admin_id` = '%d' LIMIT 1;", accountID);
+    g_database.Query(DbCallback_SelectLastCase, g_query, GetClientUserId(client));
 }
 
 public void DbCallback_SelectLastCase(Database db, DBResultSet results, const char[] error, int userid)
@@ -446,9 +442,8 @@ void Db_SelectClientDeaths(int client)
 {
     int accountID = GetSteamAccountID(client);
 
-    char query[768];
-    Format(query, sizeof(query), "SELECT `death_index`, `attacker_name`, `round` FROM `death_info` WHERE `victim_id` = '%d' ORDER BY `death_time`  DESC LIMIT 10;", accountID);
-    g_database.Query(DbCallback_SelectClientDeaths, query, GetClientUserId(client));
+    Format(g_query, sizeof(g_query), "SELECT `death_index`, `attacker_name`, `round` FROM `death_info` WHERE `victim_id` = '%d' ORDER BY `death_time`  DESC LIMIT 10;", accountID);
+    g_database.Query(DbCallback_SelectClientDeaths, g_query, GetClientUserId(client));
 }
 
 public void DbCallback_SelectClientDeaths(Database db, DBResultSet results, const char[] error, int userid)
@@ -485,9 +480,8 @@ public void DbCallback_SelectClientDeaths(Database db, DBResultSet results, cons
 
 void Db_SelectCaseBaseInfo(int client)
 {
-    char query[768];
-    Format(query, sizeof(query), "SELECT `death_index`, `victim_name`, `attacker_name` FROM `case_info` WHERE `death_index` = '%d';", g_playerData[client].currentCase);
-    g_database.Query(DbCallback_SelectCaseBaseInfo, query, GetClientUserId(client));
+    Format(g_query, sizeof(g_query), "SELECT `death_index`, `victim_name`, `attacker_name` FROM `case_info` WHERE `death_index` = '%d';", g_playerData[client].currentCase);
+    g_database.Query(DbCallback_SelectCaseBaseInfo, g_query, GetClientUserId(client));
 }
 
 public void DbCallback_SelectCaseBaseInfo(Database db, DBResultSet results, const char[] error, int userid)
@@ -512,9 +506,8 @@ public void DbCallback_SelectCaseBaseInfo(Database db, DBResultSet results, cons
 
 void Db_SelectInfo(int client)
 {
-    char query[768];
-    Format(query, sizeof(query), "SELECT `death_index`, `death_time`, `victim_name`, `victim_role`+0, `victim_karma`, `attacker_name`, `attacker_role`+0, `attacker_karma`, `last_gun_fire`, `round` FROM `case_info` WHERE `death_index` = '%d';", g_playerData[client].currentCase);
-    g_database.Query(DbCallback_SelectInfo, query, GetClientUserId(client));
+    Format(g_query, sizeof(g_query), "SELECT `death_index`, `death_time`, `victim_name`, `victim_role`+0, `victim_karma`, `attacker_name`, `attacker_role`+0, `attacker_karma`, `last_gun_fire`, `round` FROM `case_info` WHERE `death_index` = '%d';", g_playerData[client].currentCase);
+    g_database.Query(DbCallback_SelectInfo, g_query, GetClientUserId(client));
 }
 
 public void DbCallback_SelectInfo(Database db, DBResultSet results, const char[] error, int userid)
@@ -555,9 +548,8 @@ public void DbCallback_SelectInfo(Database db, DBResultSet results, const char[]
 
 void Db_SelectVerdictInfo(int client, int death)
 {
-    char query[256];
-    Format(query, sizeof(query), "SELECT `death_index`, `victim_id`, `victim_name`, `attacker_id`, `attacker_name`, `verdict`+0 FROM `case_info` WHERE `death_index` = '%d';", death);
-    g_database.Query(DbCallback_SelectVerdictInfo, query, GetClientUserId(client));
+    Format(g_query, sizeof(g_query), "SELECT `death_index`, `victim_id`, `victim_name`, `attacker_id`, `attacker_name`, `verdict`+0 FROM `case_info` WHERE `death_index` = '%d';", death);
+    g_database.Query(DbCallback_SelectVerdictInfo, g_query, GetClientUserId(client));
 }
 
 public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const char[] error, int userid)
@@ -635,9 +627,8 @@ void Db_UpdateVerdict(int client, int death, CaseVerdict verdict)
         sVerdict = "guilty";
     }
 
-    char query[768];
-    Format(query, sizeof(query), "UPDATE `handles` SET `handles`.`verdict` = '%s' WHERE `death_index` = '%d';", sVerdict, death);
-    g_database.Query(DbCallback_UpdateVerdict, query, GetClientUserId(client));
+    Format(g_query, sizeof(g_query), "UPDATE `handles` SET `handles`.`verdict` = '%s' WHERE `death_index` = '%d';", sVerdict, death);
+    g_database.Query(DbCallback_UpdateVerdict, g_query, GetClientUserId(client));
 }
 
 public void DbCallback_UpdateVerdict(Database db, DBResultSet results, const char[] error, int userid)
