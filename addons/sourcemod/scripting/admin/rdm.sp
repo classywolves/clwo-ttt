@@ -23,13 +23,6 @@ Database g_database = null;
 int g_currentRound = -1;
 int g_lastDeathIndex = -1;
 
-enum CaseChoice
-{
-    CaseChoice_None,
-    CaseChoice_Warn,
-    CaseChoice_Slay
-};
-
 enum CaseVerdict
 {
     CaseVerdict_None,
@@ -314,20 +307,10 @@ public void DbCallback_InsertHandle(Database db, DBResultSet results, const char
     Db_SelectCaseBaseInfo(client);
 }
 
-void Db_InsertReport(int client, int death, CaseChoice punishment)
+void Db_InsertReport(int client, int death)
 {
-    char sPunishment[5] = "none";
-    if (punishment == CaseChoice_Slay)
-    {
-        sPunishment = "slay";
-    }
-    else if (punishment == CaseChoice_Warn)
-    {
-        sPunishment = "warn";
-    }
-
     char query[768];
-    Format(query, sizeof(query), "INSERT INTO `reports` (`death_index`, `punishment`) VALUES ('%d', '%s');", death, sPunishment);
+    Format(query, sizeof(query), "INSERT INTO `reports` (`death_index`) VALUES ('%d');", death);
     g_database.Query(DbCallback_InsertReport, query, GetClientUserId(client));
 }
 
@@ -442,7 +425,8 @@ void Db_SelectLastCase(int client)
     g_database.Query(DbCallback_SelectLastCase, query, GetClientUserId(client));
 }
 
-public void DbCallback_SelectLastCase(Database db, DBResultSet results, const char[] error, int userid) {
+public void DbCallback_SelectLastCase(Database db, DBResultSet results, const char[] error, int userid)
+{
     if (results == null)
     {
         LogError("DbCallback_SelectLastCase: %s", error);
@@ -506,7 +490,8 @@ void Db_SelectCaseBaseInfo(int client)
     g_database.Query(DbCallback_SelectCaseBaseInfo, query, GetClientUserId(client));
 }
 
-public void DbCallback_SelectCaseBaseInfo(Database db, DBResultSet results, const char[] error, int userid) {
+public void DbCallback_SelectCaseBaseInfo(Database db, DBResultSet results, const char[] error, int userid)
+{
     if (results == null)
     {
         LogError("DbCallback_SelectCaseBaseInfo: %s", error);
@@ -532,7 +517,8 @@ void Db_SelectInfo(int client)
     g_database.Query(DbCallback_SelectInfo, query, GetClientUserId(client));
 }
 
-public void DbCallback_SelectInfo(Database db, DBResultSet results, const char[] error, int userid) {
+public void DbCallback_SelectInfo(Database db, DBResultSet results, const char[] error, int userid)
+{
     if (results == null)
     {
         LogError("DbCallback_SelectInfo: %s", error);
@@ -564,54 +550,18 @@ public void DbCallback_SelectInfo(Database db, DBResultSet results, const char[]
         CPrintToChat(client, TTT_MESSAGE ... "The victim had shot last {orange}%d {default}seconds before there death.", time - lastshot);
         CPrintToChat(client, TTT_MESSAGE ... "Accuser: {yellow}%s{default}({orange}%d{default}) - %s", victimName, victimKarma, sVictimRole);
         CPrintToChat(client, TTT_MESSAGE ... "Accused: {yellow}%s{default}({orange}%d{default}) - %s", attackerName, attackerKarma, sAttackerRole);
-        Db_SelectPunishment(client);
-    }
-}
-
-void Db_SelectPunishment(int client)
-{
-    char query[256];
-    Format(query, sizeof(query), "SELECT `punishment`+0 FROM `case_info` WHERE `death_index` = '%d';",  g_playerData[client].currentCase);
-    g_database.Query(DbCallback_SelectPunishment, query, GetClientUserId(client));
-}
-
-public void DbCallback_SelectPunishment(Database db, DBResultSet results, const char[] error, int userid) {
-    if (results == null)
-    {
-        LogError("DbCallback_SelectPunishment: %s", error);
-        return;
-    }
-
-    if(results.FetchRow())
-    {
-        int client = GetClientOfUserId(userid);
-        CaseChoice punishment = view_as<CaseChoice>(results.FetchInt(0));
-        char cPunishment[64];
-        if(punishment == CaseChoice_Slay)
-        {
-            cPunishment = "Slay";
-        }
-        else if(punishment == CaseChoice_Warn)
-        {
-            cPunishment = "Warn";
-        }
-        else 
-        {
-            CPrintToChat(client, TTT_ERROR ... "Something went wrong while retrieving the Punishment!");
-            return;
-        }
-        CPrintToChat(client, TTT_MESSAGE ... "Punishment chosen: %s", cPunishment);
     }
 }
 
 void Db_SelectVerdictInfo(int client, int death)
 {
     char query[256];
-    Format(query, sizeof(query), "SELECT `death_index`, `victim_id`, `victim_name`, `attacker_id`, `attacker_name`, `punishment`+0, `verdict`+0 FROM `case_info` WHERE `death_index` = '%d';", death);
+    Format(query, sizeof(query), "SELECT `death_index`, `victim_id`, `victim_name`, `attacker_id`, `attacker_name`, `verdict`+0 FROM `case_info` WHERE `death_index` = '%d';", death);
     g_database.Query(DbCallback_SelectVerdictInfo, query, GetClientUserId(client));
 }
 
-public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const char[] error, int userid) {
+public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const char[] error, int userid)
+{
     if (results == null)
     {
         LogError("DbCallback_SelectVerdictInfo: %s", error);
@@ -627,17 +577,8 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
         char victimName[64]; results.FetchString(2, victimName, sizeof(victimName));
         int attackerID = results.FetchInt(3);
         char attackerName[64]; results.FetchString(4, attackerName, sizeof(attackerName));
-        CaseChoice punishment = view_as<CaseChoice>(results.FetchInt(5));
-        CaseVerdict verdict = view_as<CaseVerdict>(results.FetchInt(6));
-        char cPunishment[12], cVerdict[24];
-        if(punishment == CaseChoice_Slay)
-        {   
-            cPunishment = "Slay";
-        }
-        if(punishment == CaseChoice_Warn)
-        {   
-            cPunishment = "Warn";
-        }
+        CaseVerdict verdict = view_as<CaseVerdict>(results.FetchInt(5));
+        char cVerdict[24];
 
         if(verdict == CaseVerdict_Guilty)
         {
@@ -672,20 +613,13 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
             }
             if (IsValidClient(attacker))
             {
-                if (punishment == CaseChoice_Slay)
-                {
-                    CPrintToChat(attacker, TTT_MESSAGE ... "You are being slayed next round by {yellow}%N {default}for killing {yellow}%s{default}. If you have any questions about this please message staff by using an @ before your message.", client, victimName);
-                    TTT_AddRoundSlays(attacker, 1, false);
-                }
-                else if (punishment == CaseChoice_Warn)
-                {
-                    CPrintToChat(attacker, TTT_MESSAGE ... "You have been found guilty of RDM by {yellow}%N {default}for killing {yellow}%s {default}further action may be taken. If you have any questions about this please message staff by using an @ before your message or /chat.", client, victimName);
-                }
+                CPrintToChat(attacker, TTT_MESSAGE ... "You are being slayed next round by {yellow}%N {default}for killing {yellow}%s{default}. If you have any questions about this please message staff by using an @ before your message.", client, victimName);
+                TTT_AddRoundSlays(attacker, 1, false);
             }
             CPrintToChat(client, TTT_MESSAGE ... "You have concluded the defendant {red}guilty {default}for case {orange}%d.", death);
         }
 
-        LogAction(client, attackerID, "\"%L\" concluded \"%L\"'s case against \"%L\" (Verdict: %s | Punishment %s)", client, victimID, attackerID, cVerdict, cPunishment);
+        LogAction(client, attackerID, "\"%L\" concluded \"%L\"'s case against \"%L\" (Verdict: %s)", client, victimID, attackerID, cVerdict);
     }
 }
 
@@ -706,7 +640,8 @@ void Db_UpdateVerdict(int client, int death, CaseVerdict verdict)
     g_database.Query(DbCallback_UpdateVerdict, query, GetClientUserId(client));
 }
 
-public void DbCallback_UpdateVerdict(Database db, DBResultSet results, const char[] error, int userid) {
+public void DbCallback_UpdateVerdict(Database db, DBResultSet results, const char[] error, int userid)
+{
     if (results == null)
     {
         LogError("DbCallback_UpdateVerdict: %s", error);
@@ -724,44 +659,17 @@ public void DbCallback_UpdateVerdict(Database db, DBResultSet results, const cha
 // Menus
 ////////////////////////////////////////////////////////////////////////////////
 
-int MenuHandler_RDM(Menu menu, MenuAction action, int client, int data) {
-    switch (action) {
-        case MenuAction_Select: {
-            char info[8];
-            menu.GetItem(data, info, 8);
-            g_playerData[client].currentDeath = StringToInt(info);
-
-            Menu punishMenu = new Menu(MenuHandler_PunishChoice);
-            punishMenu.SetTitle("Would you like you killer to be?");
-            punishMenu.AddItem("", "Slain next round");
-            punishMenu.AddItem("", "Warned");
-
-            punishMenu.Display(client, 240);
-        }
-        case MenuAction_End:
-        {
-            delete menu;
-        }
-    }
-}
-
-int MenuHandler_PunishChoice(Menu menu, MenuAction action, int client, int choice)
+int MenuHandler_RDM(Menu menu, MenuAction action, int client, int data)
 {
     switch (action)
     {
         case MenuAction_Select:
         {
-            CaseChoice punishment = CaseChoice_None;
-            if (choice == 0)
-            {
-                punishment = CaseChoice_Slay;
-            }
-            else if (choice == 1)
-            {
-                punishment = CaseChoice_Warn;
-            }
+            char info[8];
+            menu.GetItem(data, info, 8);
+            int death = StringToInt(info);
 
-            Db_InsertReport(client, g_playerData[client].currentDeath, punishment);
+            Db_InsertReport(client, death);
         }
         case MenuAction_End:
         {
