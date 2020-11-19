@@ -434,7 +434,7 @@ public void DbCallback_SelectLastCase(Database db, DBResultSet results, const ch
     {
         int death = results.FetchInt(0);
         g_playerData[client].currentCase = death;
-        CPrintToChat(client, "Loaded historic case %d. Use /info to get the case info.");
+        CPrintToChat(client, "Loaded historic case %d. Use /info to get the case info.", death);
     }
 }
 
