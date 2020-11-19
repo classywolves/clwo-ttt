@@ -367,13 +367,22 @@ void Menu_SkillInfo(int client, int skill)
 
     int level = -1;
     char levelText[32] = "";
-    if (g_playerData[client].skills.GetValue(skillData.id, level))
+    if (!(g_playerData[client].skills.GetValue(skillData.id, level)))
     {
-        Format(levelText, sizeof(levelText), "Current Level: %d\n", level);
+        level = 0;
+    }
+
+    if (level == 0)
+    {
+        Format(levelText, sizeof(levelText), "Now Owned (Max: %d)\n", skillData.level);
+    }
+    else if (level < skillData.level)
+    {
+        Format(levelText, sizeof(levelText), "Current Level: %d (Max: %d)\n", level, skillData.level);
     }
     else
     {
-        level = 0;
+        Format(levelText, sizeof(levelText), "Current Level: %d (Maximum)\n", level);
     }
 
     int price = 0;
