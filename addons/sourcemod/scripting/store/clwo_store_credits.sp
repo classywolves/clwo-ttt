@@ -19,6 +19,8 @@ public Plugin myinfo =
 
 Database g_database = null;
 
+char g_sQuery[256];
+
 ConVar g_cCredits = null;
 
 int g_iCredits[MAXPLAYERS + 1] = { -1, ... };
@@ -162,9 +164,8 @@ public void Db_SelectClientCredits(int client)
         return;
     }
 
-    char query[128];
-    Format(query, sizeof(query), "SELECT `credits` FROM `store_players` WHERE `account_id` = '%d';", accountID);
-    g_database.Query(DbCallback_SelectClientCredits, query, GetClientUserId(client));
+    Format(g_sQuery, sizeof(g_sQuery), "SELECT `credits` FROM `store_players` WHERE `account_id` = '%d';", accountID);
+    g_database.Query(DbCallback_SelectClientCredits, g_sQuery, GetClientUserId(client));
 }
 
 public void DbCallback_SelectClientCredits(Database db, DBResultSet results, const char[] error, int userid)
@@ -198,9 +199,8 @@ public void Db_InsertClientCredits(int client, int credits)
         return;
     }
 
-    char query[128];
-    Format(query, sizeof(query), "INSERT INTO `store_players` (`account_id`, `credits`) VALUES ('%d', '%d');", accountID, credits);
-    g_database.Query(DbCallback_InsertClientCredits, query, GetClientUserId(client));
+    Format(g_sQuery, sizeof(g_sQuery), "INSERT INTO `store_players` (`account_id`, `credits`) VALUES ('%d', '%d');", accountID, credits);
+    g_database.Query(DbCallback_InsertClientCredits, g_sQuery, GetClientUserId(client));
 }
 
 public void DbCallback_InsertClientCredits(Database db, DBResultSet results, const char[] error, int userid)
@@ -226,9 +226,8 @@ public void Db_UpdateClientCredits(int client)
         return;
     }
 
-    char query[128];
-    Format(query, sizeof(query), "UPDATE `store_players` SET `credits` = '%d' WHERE `account_id` = '%d';", g_iCredits[client], accountID);
-    g_database.Query(DbCallback_UpdateClientCredits, query, GetClientUserId(client));
+    Format(g_sQuery, sizeof(g_sQuery), "UPDATE `store_players` SET `credits` = '%d' WHERE `account_id` = '%d';", g_iCredits[client], accountID);
+    g_database.Query(DbCallback_UpdateClientCredits, g_sQuery, GetClientUserId(client));
 }
 
 public void DbCallback_UpdateClientCredits(Database db, DBResultSet results, const char[] error, int userid)
