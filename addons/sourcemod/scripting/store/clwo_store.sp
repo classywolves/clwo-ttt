@@ -28,6 +28,8 @@ public Plugin myinfo =
 bool g_bStoreReady = false;
 bool g_bCreditsLoaded = false;
 
+char g_sQuery[256];
+
 Database g_database = null;
 
 ArrayList g_aStoreSkills = null;
@@ -194,9 +196,8 @@ void Db_InsertUpdateSkill(int client, int skill, int level)
     char skillID[16];
     SkillIndexToID(skill, skillID, sizeof(skillID));
 
-    char query[256];
-    Format(query, sizeof(query), "INSERT INTO `store_skills` (`account_id`, `skill_id`, `level`) VALUES ('%d', '%s', '%d') ON DUPLICATE KEY UPDATE `level` = '%d';", accountID, skillID, level, level);
-    g_database.Query(DbCallback_InsertUpdateSkill, query, GetClientUserId(client));
+    Format(g_sQuery, sizeof(g_sQuery), "INSERT INTO `store_skills` (`account_id`, `skill_id`, `level`) VALUES ('%d', '%s', '%d') ON DUPLICATE KEY UPDATE `level` = '%d';", accountID, skillID, level, level);
+    g_database.Query(DbCallback_InsertUpdateSkill, g_sQuery, GetClientUserId(client));
 }
 
 public void DbCallback_InsertUpdateSkill(Database db, DBResultSet results, const char[] error, int userid)
@@ -212,9 +213,8 @@ void Db_UpdateSkillEnabled(int client, const char[] id, bool enabled)
 {
     int accountID = GetSteamAccountID(client);
 
-    char query[256];
-    Format(query, sizeof(query), "UPDATE `store_skills` SET `enabled` = %s WHERE `account_id` = '%d' AND `skill_id` = '%s';", enabled ? "TRUE" : "FALSE", accountID, id);
-    g_database.Query(DbCallback_UpdateSkillEnabled, query, GetClientUserId(client));
+    Format(g_sQuery, sizeof(g_sQuery), "UPDATE `store_skills` SET `enabled` = %s WHERE `account_id` = '%d' AND `skill_id` = '%s';", enabled ? "TRUE" : "FALSE", accountID, id);
+    g_database.Query(DbCallback_UpdateSkillEnabled, g_sQuery, GetClientUserId(client));
 }
 
 public void DbCallback_UpdateSkillEnabled(Database db, DBResultSet results, const char[] error, int userid)
@@ -230,9 +230,8 @@ void Db_SelectClientSkills(int client)
 {
     int accountID = GetSteamAccountID(client, true);
 
-    char query[256];
-    Format(query, sizeof(query), "SELECT `skill_id`, `level`, `enabled` FROM `store_skills` WHERE `account_id` = '%d';", accountID);
-    g_database.Query(DbCallback_SelectClientSkills, query, GetClientUserId(client));
+    Format(g_sQuery, sizeof(g_sQuery), "SELECT `skill_id`, `level`, `enabled` FROM `store_skills` WHERE `account_id` = '%d';", accountID);
+    g_database.Query(DbCallback_SelectClientSkills, g_sQuery, GetClientUserId(client));
 }
 
 public void DbCallback_SelectClientSkills(Database db, DBResultSet results, const char[] error, int userid)
