@@ -4,15 +4,6 @@
 #define _clwo_store_included
 
 /*
- * Called when an item is purchased in the menu. Return Plugin_Stop
- * to prevent the purchase and stop any credit deductions.
- *
- * @param client        The Client who purchased the item.
- * @param count         The amount bought.
- */
-typedef Store_ItemPurchaseCallback = function void (int client, int count);
-
-/*
  * Called when a clients skill is loaded or updated.
  *
  * @param client        The Client who purchased the item.
@@ -41,20 +32,6 @@ forward void Store_OnClientSkillsLoaded(int client);
 native bool Store_IsReady();
 
 /*
- * Registers an item to the store.
- *
- * @param id                The short-tag identifier of the item (must be unique).
- * @param name              The name of the item.
- * @param price             The price of the item.
- * @param callback          The function to call when this item is purchased.
- * @param maxCount          The optional max count a client may have of the item. (Default: 0 - No limit)
- * @param sort              The priority in Sorting. Buy menu is sorted from high to low. (Default: 0)
- *
- * @return                  The items unique integer id for this session.
- */
-native void Store_RegisterItem(char[] id, char[] name, char[] description, int price, Store_ItemPurchaseCallback callback, int maxCount = 0, int sort = 0);
-
-/*
  * Registers a skill to the store.
  *
  * @param id                The short-tag identifier of the skill (must be unique).
@@ -77,26 +54,7 @@ native void Store_RegisterSkill(char[] id, char[] name, char[] description, int 
  *
  * @return                  Whether the item was succesfully removed.
  */
-native bool Store_UnRegisterItem(char[] id);
-
-/*
- * Un registers an item from the store.
- *
- * @param id                The short-tag identifier of the item.
- *
- * @return                  Whether the item was succesfully removed.
- */
 native bool Store_UnRegisterSkill(char[] id);
-
-/*
- * Gets an the amount of this item owned by the client.
- *
- * @param client            The client to be checked.
- * @param id                The items unique integer id for this session.
- *
- * @return                  The count the user has of this item.
- */
-native int Store_GetItem(int client, char[] id);
 
 /*
  * Gets the level of this skill for the given client.
@@ -107,17 +65,6 @@ native int Store_GetItem(int client, char[] id);
  * @return                  The count the user has of this item.
  */
 native int Store_GetSkill(int client, char[] id);
-
-/*
- * Adds the specified amount of this item to the clients inventory.
- *
- * @param client            The client to be checked.
- * @param id                The items unique integer id for this session.
- * @param amount            The amount to be added.
- *
- * @return                  The count the user has of this item.
- */
-native int Store_AddItem(int client, char[] id, int amount);
 
 stock bool Store_CheckLibraryExists()
 {
@@ -145,12 +92,8 @@ public void __pl_clwo_store_SetNTVOptional()
 {
     MarkNativeAsOptional("Store_IsReady");
 
-    MarkNativeAsOptional("Store_RegisterItem");
     MarkNativeAsOptional("Store_RegisterSkill");
-    MarkNativeAsOptional("Store_UnRegisterItem");
     MarkNativeAsOptional("Store_UnRegisterSkill");
-    MarkNativeAsOptional("Store_GetItem");
     MarkNativeAsOptional("Store_GetSkill");
-    MarkNativeAsOptional("Store_AddItem");
 }
 #endif

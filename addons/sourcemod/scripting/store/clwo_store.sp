@@ -14,6 +14,8 @@
 #define REQUIRE_PLUGIN
 #include <clwo_store_messages>
 
+#define SKILL_ARRAY_SIZE 16
+
 public Plugin myinfo =
 {
     name = "CLWO Store",
@@ -28,10 +30,8 @@ bool g_bCreditsLoaded = false;
 
 Database g_database = null;
 
-ArrayList g_aStoreItems = null;
 ArrayList g_aStoreSkills = null;
 
-StringMap g_smItemIndexMap = null;
 StringMap g_smSkillIndexMap = null;
 
 GlobalForward g_OnRegisterForward = null;
@@ -39,18 +39,6 @@ GlobalForward g_OnReadyForward = null;
 GlobalForward g_fOnClientSkillsLoaded = null;
 
 ConVar g_cSortItems = null;
-
-enum struct Item
-{
-    char id[16];
-    char name[64];
-    char description[192];
-    int price;
-    int maxCount;
-    int sort;
-    Handle plugin;
-    Function callback;
-}
 
 enum struct Skill
 {
@@ -67,9 +55,8 @@ enum struct Skill
 
 enum struct PlayerData
 {
-    StringMap items;
-    StringMap skills;
-    int selectedItem;
+    bool enabled[SKILL_ARRAY_SIZE];
+    int levels[SKILL_ARRAY_SIZE];
     int selectedSkill;
 }
 
@@ -83,13 +70,9 @@ public APLRes AskPluginLoad2(Handle plugin, bool late, char[] error, int err_max
 
     CreateNative("Store_IsReady", Native_IsReady);
 
-    CreateNative("Store_RegisterItem", Native_RegisterItem);
     CreateNative("Store_RegisterSkill", Native_RegisterSkill);
-    CreateNative("Store_UnRegisterItem", Native_UnRegisterItem);
     CreateNative("Store_UnRegisterSkill", Native_UnRegisterSkill);
-    CreateNative("Store_GetItem", Native_GetItem);
     CreateNative("Store_GetSkill", Native_GetSkill);
-    CreateNative("Store_AddItem", Native_AddItem);
 
     RegPluginLibrary("clwo-store");
 
@@ -102,14 +85,11 @@ public void OnPluginStart()
 
     AutoExecConfig(true, "store", "clwo");
 
-    g_aStoreItems = new ArrayList(sizeof(Item), 0);
     g_aStoreSkills = new ArrayList(sizeof(Skill), 0);
 
-    g_smItemIndexMap = new StringMap();
     g_smSkillIndexMap = new StringMap();
 
     RegConsoleCmd("sm_skills", Command_Skills, "Displays the skills menu to the client.");
-    //RegConsoleCmd("sm_store", Command_Store, "Displays the store to the client.");
 
     Database.Connect(DbCallback_Connect, "store");
 
@@ -139,27 +119,30 @@ public void OnLibraryRemoved(const char[] name)
 
 public void OnClientPutInServer(int client)
 {
-    g_playerData[client].items = new StringMap();
-    g_playerData[client].skills = new StringMap();
-    g_playerData[client].selectedItem = -1;
+    for (int i = 0; i < SKILL_ARRAY_SIZE; ++i)
+    {
+        g_playerData[client].enabled[i] = false;
+        g_playerData[client].levels[i] = 0;
+    }
     g_playerData[client].selectedSkill = -1;
 }
 
 public void OnClientPostAdminCheck(int client)
 {
-    Db_SelectClientItems(client);
-    Db_SelectClientSkills(client);
+    if (g_bStoreReady)
+    {
+        Db_SelectClientSkills(client);
+    }
 }
 
 public void OnClientDisconnect(int client)
 {
-    g_playerData[client].items.Clear();
-    g_playerData[client].skills.Clear();
-    g_playerData[client].selectedItem = -1;
+    for (int i = 0; i < SKILL_ARRAY_SIZE; ++i)
+    {
+        g_playerData[client].enabled[i] = false;
+        g_playerData[client].levels[i] = 0;
+    }
     g_playerData[client].selectedSkill = -1;
-
-    delete g_playerData[client].items;
-    delete g_playerData[client].skills;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,15 +155,6 @@ public Action Command_Skills(int client, int args)
 
     return Plugin_Handled;
 }
-
-/*
-public Action Command_Store(int client, int args)
-{
-    Menu_Store(client);
-
-    return Plugin_Handled;
-}
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // Database
@@ -195,14 +169,7 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
     }
 
     g_database = db;
-    SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_items` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `account_id` INT UNSIGNED NOT NULL, `item_id` VARCHAR(16) NOT NULL, `quantity` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`), UNIQUE `unique_item_entry` (`account_id`, `item_id`)) ENGINE = InnoDB;");
     SQL_FastQuery(g_database, "CREATE TABLE IF NOT EXISTS `store_skills` ( `id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `account_id` INT UNSIGNED NOT NULL, `skill_id` VARCHAR(16) NOT NULL, `level` INT UNSIGNED NOT NULL, PRIMARY KEY (`id`), UNIQUE `unique_skill_entry` (`account_id`, `skill_id`) ) ENGINE = InnoDB;");
-
-    LoopValidClients(i)
-    {
-        OnClientPutInServer(i);
-        OnClientPostAdminCheck(i);
-    }
 
     Call_StartForward(g_OnRegisterForward);
     Call_Finish();
@@ -212,7 +179,12 @@ public void DbCallback_Connect(Database db, const char[] error, any data)
     Call_StartForward(g_OnReadyForward);
     Call_Finish();
 
-    PrintToServer(STORE_MESSAGE ... "%d Items have been registered.", g_aStoreItems.Length + g_aStoreSkills.Length);
+    PrintToServer(STORE_MESSAGE ... "%d Skills have been registered.", g_aStoreSkills.Length);
+
+    LoopValidClients(i)
+    {
+        Db_SelectClientSkills(i);
+    }
 }
 
 void Db_InsertUpdateSkill(int client, int skill, int level)
@@ -236,35 +208,21 @@ public void DbCallback_InsertUpdateSkill(Database db, DBResultSet results, const
     }
 }
 
-void Db_SelectClientItems(int client)
+void Db_UpdateSkillEnabled(int client, const char[] id, bool enabled)
 {
-    int accountID = GetSteamAccountID(client, true);
+    int accountID = GetSteamAccountID(client);
 
-    char query[128];
-    Format(query, sizeof(query), "SELECT `item_id`, `quantity` FROM `store_items` WHERE `account_id` = '%d';", accountID);
-    g_database.Query(DbCallback_SelectClientItems, query, GetClientUserId(client));
+    char query[256];
+    Format(query, sizeof(query), "UPDATE `store_skills` SET `enabled` = %s WHERE `account_id` = '%d' AND `skill_id` = '%s';", enabled ? "TRUE" : "FALSE", accountID, id);
+    g_database.Query(DbCallback_UpdateSkillEnabled, query, GetClientUserId(client));
 }
 
-public void DbCallback_SelectClientItems(Database db, DBResultSet results, const char[] error, int userid)
+public void DbCallback_UpdateSkillEnabled(Database db, DBResultSet results, const char[] error, int userid)
 {
     if (results == null)
     {
-        PrintToServer("DbCallback_SelectClientItems: %s", error);
+        PrintToServer("DbCallback_UpdateSkillEnabled: %s", error);
         return;
-    }
-
-    int client = GetClientOfUserId(userid);
-    if (IsValidClient(client))
-    {
-        while (results.FetchRow())
-        {
-            char id[16];
-            results.FetchString(0, id, sizeof(id));
-
-            int amount = results.FetchInt(1);
-
-            g_playerData[client].items.SetValue(id, amount);
-        }
     }
 }
 
@@ -272,8 +230,8 @@ void Db_SelectClientSkills(int client)
 {
     int accountID = GetSteamAccountID(client, true);
 
-    char query[128];
-    Format(query, sizeof(query), "SELECT `skill_id`, `level` FROM `store_skills` WHERE `account_id` = '%d';", accountID);
+    char query[256];
+    Format(query, sizeof(query), "SELECT `skill_id`, `level`, `enabled` FROM `store_skills` WHERE `account_id` = '%d';", accountID);
     g_database.Query(DbCallback_SelectClientSkills, query, GetClientUserId(client));
 }
 
@@ -294,13 +252,20 @@ public void DbCallback_SelectClientSkills(Database db, DBResultSet results, cons
             results.FetchString(0, id, sizeof(id));
 
             int level = results.FetchInt(1);
+            bool enabled = (results.FetchInt(2) != 0);
 
-            g_playerData[client].skills.SetValue(id, level);
+            PrintToConsole(client, "[Store] Fetched skill %s level %d (enabled: %s)", id, level, enabled ? "true" : "false");
 
             int skill = SkillIDToIndex(id);
             if (skill >= 0)
             {
-                Function_OnSkillUpdate(client, skill, level);
+                SetClientSkillEnabled(client, skill, enabled);
+                SetClientSkill(client, skill, level);
+
+                if (enabled)
+                {
+                    Function_OnSkillUpdate(client, skill, level);
+                }
             }
         }
 
@@ -340,8 +305,8 @@ void Menu_Skills(int client)
 
         char message[192];
 
-        int level = -1;
-        if (g_playerData[client].skills.GetValue(skill.id, level))
+        int level = GetClientSkill(client, i);
+        if (level)
         {
             Format(message, sizeof(message), "%s (Level: %d)", skill.name, level);
         }
@@ -365,16 +330,12 @@ void Menu_SkillInfo(int client, int skill)
 
     pSkill.SetTitle(skillData.name);
 
-    int level = -1;
-    char levelText[32] = "";
-    if (!(g_playerData[client].skills.GetValue(skillData.id, level)))
-    {
-        level = 0;
-    }
+    int level = GetClientSkill(client, skill);
+    static char levelText[64];
 
     if (level == 0)
     {
-        Format(levelText, sizeof(levelText), "Now Owned (Max: %d)\n", skillData.level);
+        Format(levelText, sizeof(levelText), "Not Owned (Max: %d)\n", skillData.level);
     }
     else if (level < skillData.level)
     {
@@ -409,13 +370,22 @@ void Menu_SkillInfo(int client, int skill)
     {
         pSkill.DrawItem("Purchase", ITEMDRAW_CONTROL);
     }
+    else
+    {
+        pSkill.CurrentKey = 2;
+    }
 
-/*
     if (level > 0)
     {
-        pSkill.DrawItem("Refund", ITEMDRAW_CONTROL);
+        if (GetClientSkillEnabled(client, skill))
+        {
+            pSkill.DrawItem("Disable", ITEMDRAW_CONTROL);
+        }
+        else
+        {
+            pSkill.DrawItem("Enable", ITEMDRAW_CONTROL);
+        }
     }
-*/
 
     pSkill.DrawItem("", ITEMDRAW_SPACER);
 
@@ -489,6 +459,12 @@ public int PanelHandler_SkillInfo(Menu menu, MenuAction action, int client, int 
                 case 1: // Purchase
                 {
                     Purchase_Skill(client, g_playerData[client].selectedSkill);
+                    Menu_SkillInfo(client, g_playerData[client].selectedSkill);
+                }
+                case 2:
+                {
+                    ToggleClientSkillEnabled(client, g_playerData[client].selectedSkill);
+                    Menu_SkillInfo(client, g_playerData[client].selectedSkill);
                 }
                 case 8: // Back
                 {
@@ -536,38 +512,6 @@ public int MenuHandler_Skills(Menu menu, MenuAction action, int client, int data
 public int Native_IsReady(Handle plugin, int numParams)
 {
     return g_bStoreReady;
-}
-
-public int Native_RegisterItem(Handle plugin, int numParams)
-{
-    Item item;
-    GetNativeString(1, item.id, sizeof(item.id));
-    GetNativeString(2, item.name, sizeof(item.name));
-    GetNativeString(3, item.description, sizeof(item.description));
-    item.price = GetNativeCell(4);
-    item.maxCount = GetNativeCell(5);
-    item.sort = GetNativeCell(6);
-
-    for (int i = 0; i < g_aStoreItems.Length; i++)
-    {
-        Item temp;
-        g_aStoreItems.GetArray(i, temp);
-        if (StrEqual(temp.id, item.id, false))
-        {
-            PrintToServer(STORE_ERROR ... "Item %s already registered.", item.id);
-            return -1;
-        }
-    }
-
-    g_smItemIndexMap.SetValue(item.id, g_aStoreItems.Length);
-    g_aStoreItems.PushArray(item);
-
-    if (g_cSortItems.BoolValue)
-    {
-        SortADTArrayCustom(g_aStoreItems, Sort_Items);
-    }
-
-    return 0;
 }
 
 public int Native_RegisterSkill(Handle plugin, int numParams)
@@ -620,29 +564,11 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
 
     if (g_bStoreReady)
     {
-        LateLoadSkill(skill.id);
+        LateLoadSkill();
         LogMessage(STORE_MESSAGE ... "Late loaded skill %s (%s)", skill.name, skill.id);
     }
 
     return 0;
-}
-
-public int Native_UnRegisterItem(Handle plugin, int numParams)
-{
-    char id[16];
-    GetNativeString(1, id, sizeof(id));
-
-    int index = -1;
-    if (g_smItemIndexMap.GetValue(id, index))
-    {
-        PrintToServer(STORE_ERROR ... "Item %s is not currently registered.", id);
-        return false;
-    }
-
-    g_aStoreItems.Erase(index);
-    g_smItemIndexMap.Remove(id);
-
-    return true;
 }
 
 public int Native_UnRegisterSkill(Handle plugin, int numParams)
@@ -663,23 +589,6 @@ public int Native_UnRegisterSkill(Handle plugin, int numParams)
     return true;
 }
 
-public int Native_GetItem(Handle plugin, int numParams)
-{
-    int client = GetNativeCell(1);
-
-    char id[16];
-    GetNativeString(2, id, sizeof(id));
-
-    int count = -1;
-    if (g_playerData[client].items.GetValue(id, count))
-    {
-        PrintToServer(STORE_ERROR ... "Item %s is not currently registered.", id);
-        return 0;
-    }
-
-    return count;
-}
-
 public int Native_GetSkill(Handle plugin, int numParams)
 {
     int client = GetNativeCell(1);
@@ -687,15 +596,10 @@ public int Native_GetSkill(Handle plugin, int numParams)
     char id[16];
     GetNativeString(2, id, sizeof(id));
 
-    int level = 0;
-    g_playerData[client].skills.GetValue(id, level);
+    int skill = SkillIDToIndex(id);
+    int level = GetClientSkill(client, skill);
 
     return level;
-}
-
-public int Native_AddItem(Handle plugin, int numParams)
-{
-    return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -722,32 +626,10 @@ void Function_OnSkillUpdate(int client, int skill, int level)
 // Stocks
 ////////////////////////////////////////////////////////////////////////////////
 
-public int Sort_Items(int i, int j, Handle array, Handle hndl)
-{
-    Item item1;
-    Item item2;
-
-    g_aStoreItems.GetArray(i, item1);
-    g_aStoreItems.GetArray(j, item2);
-
-    if (item1.sort < item2.sort)
-    {
-        return -1;
-    }
-    else if (item1.sort > item2.sort)
-    {
-        g_smItemIndexMap.SetValue(item1.id, j);
-        g_smItemIndexMap.SetValue(item2.id, i);
-        return 1;
-    }
-
-    return 0;
-}
-
 public int Sort_Skills(int i, int j, Handle array, Handle hndl)
 {
-    Skill skill1;
-    Skill skill2;
+    static Skill skill1;
+    static Skill skill2;
 
     g_aStoreSkills.GetArray(i, skill1);
     g_aStoreSkills.GetArray(j, skill2);
@@ -790,10 +672,9 @@ bool Purchase_Skill(int client, int skill)
     Skill skillData;
     g_aStoreSkills.GetArray(skill, skillData);
 
-    int level = 0;
-    g_playerData[client].skills.GetValue(skillData.id, level);
+    int level = GetClientSkill(client, skill);
 
-    LogMessage("purchase skill: %s (level: %d) - skill_index: %d, plugin: %d", skillData.name, level + 1, skill, skillData.plugin);
+    LogMessage("client %d purchase skill: %s (level: %d) - skill_index: %d, plugin: %d", client, skillData.name, level + 1, skill, skillData.plugin);
 
     int cr = Store_GetClientCredits(client);
     int price = RoundToNearest(float(skillData.price) * Pow(skillData.increase, float(level)));
@@ -806,10 +687,11 @@ bool Purchase_Skill(int client, int skill)
             return false;
         }
 
-        Function_OnSkillUpdate(client, skill, level);
+        bool enabled = GetClientSkillEnabled(client, skill);
+        Function_OnSkillUpdate(client, skill, enabled ? level : 0);
 
         cr = Store_SubClientCredits(client, price);
-        g_playerData[client].skills.SetValue(skillData.id, level);
+        SetClientSkill(client, skill, level);
         Db_InsertUpdateSkill(client, skill, level);
 
         Menu_SkillInfo(client, skill);
@@ -834,20 +716,46 @@ void UpdateSkillMap()
     }
 }
 
-void LateLoadSkill(char[] skillID)
+void LateLoadSkill()
 {
-    int skill = SkillIDToIndex(skillID);
-    if (skill < 0)
-    {
-        return;
-    }
-
-    int level;
     LoopValidClients(i)
     {
-        if (g_playerData[i].skills.GetValue(skillID, level))
-        {
-            Function_OnSkillUpdate(i, skill, level);
-        }
+        OnClientPutInServer(i);
+        OnClientPostAdminCheck(i);
     }
+}
+
+bool GetClientSkillEnabled(int client, int skill)
+{
+    return g_playerData[client].enabled[skill];
+}
+
+bool SetClientSkillEnabled(int client, int skill, bool enabled)
+{
+    return g_playerData[client].enabled[skill] = enabled;
+}
+
+int GetClientSkill(int client, int skill)
+{
+    return g_playerData[client].levels[skill];
+}
+
+int SetClientSkill(int client, int skill, int level)
+{
+    return g_playerData[client].levels[skill] = level;
+}
+
+void ToggleClientSkillEnabled(int client, int skill)
+{
+    char id[16];
+    SkillIndexToID(skill, id, sizeof(id));
+
+    int level = GetClientSkill(client, skill);
+
+    bool enabled = !GetClientSkillEnabled(client, skill);
+    SetClientSkillEnabled(client, skill, enabled);
+
+    Function_OnSkillUpdate(client, skill, enabled ? level : 0);
+
+    Db_UpdateSkillEnabled(client, id, enabled);
 }
