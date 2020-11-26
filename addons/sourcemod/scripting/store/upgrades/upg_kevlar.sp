@@ -79,9 +79,9 @@ public void Event_PlayerSpawned(Event event, const char[] name, bool dontBroadca
 
 public void TTT_OnRoundStart()
 {
-    for (int i = 0; i < MaxClients; ++i)
+    for (int i = 1; i < MaxClients; ++i)
     {
-        if (IsClientInGame(i) && IsPlayerAlive(i))
+        if (IsClientConnected(i) && IsPlayerAlive(i))
         {
             SetClientKevlar(i);
         }
