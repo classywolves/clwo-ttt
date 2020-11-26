@@ -12,6 +12,14 @@
 typedef Store_SkillUpdateCallback = function void (int client, int level);
 
 /*
+ * Called when a clients skill is loaded or updated.
+ *
+ * @param client        The Client who purchased the item.
+ * @param count         The Level of the Skill.
+ */
+typedef Store_UpgradeUpdateCallback = function void (int client, bool has);
+
+/*
  * Called when the store is ready to register items.
  * Allows for the plugin to be reloaded.
  */
@@ -48,7 +56,7 @@ native bool Store_IsReady();
 native void Store_RegisterSkill(char[] id, char[] name, char[] description, int price, float step, int level, Store_SkillUpdateCallback callback, int sort = 0);
 
 /*
- * Un registers an item from the store.
+ * Un-registers a skill from the store.
  *
  * @param id                The short-tag identifier of the item.
  *
@@ -65,6 +73,29 @@ native bool Store_UnRegisterSkill(char[] id);
  * @return                  The count the user has of this item.
  */
 native int Store_GetSkill(int client, char[] id);
+
+/*
+ * Registers a upgrade to the store.
+ *
+ * @param id                The short-tag identifier of the upgrade (must be unique).
+ * @param name              The name of the upgrade.
+ * @param description       The information about the upgrade.
+ * @param price             The price of the upgrade.
+ * @param callback          The function to call when this skill is loaded / updated.
+ * @param sort              The priority in Sorting. Buy menu is sorted from high to low. (Default: 0)
+ *
+ * @return                  The items unique integer id for this session.
+ */
+native void Store_RegisterUpgrade(char[] id, char[] name, char[] description, int price, Store_UpgradeUpdateCallback callback, int sort = 0);
+
+/*
+ * Un-registers a upgrade from the store.
+ *
+ * @param id                The short-tag identifier of the item.
+ *
+ * @return                  Whether the item was succesfully removed.
+ */
+native bool Store_UnRegisterUpgrade(char[] id);
 
 stock bool Store_CheckLibraryExists()
 {
@@ -95,5 +126,7 @@ public void __pl_clwo_store_SetNTVOptional()
     MarkNativeAsOptional("Store_RegisterSkill");
     MarkNativeAsOptional("Store_UnRegisterSkill");
     MarkNativeAsOptional("Store_GetSkill");
+    MarkNativeAsOptional("Store_RegisterUpgrade");
+    MarkNativeAsOptional("Store_UnRegisterUpgrade");
 }
 #endif

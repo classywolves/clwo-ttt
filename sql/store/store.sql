@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS `ttt_store`.`store_items` 
+CREATE TABLE IF NOT EXISTS `store_items` 
 (
 	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`account_id` INT UNSIGNED NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `ttt_store`.`store_items`
 )
 ENGINE = InnoDB;
 
-CREATE TABLE IF NOT EXISTS `ttt_store`.`store_skills` 
+CREATE TABLE IF NOT EXISTS `store_skills` 
 (
 	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
 	`account_id` INT UNSIGNED NOT NULL,
@@ -21,10 +21,26 @@ CREATE TABLE IF NOT EXISTS `ttt_store`.`store_skills`
 )
 ENGINE = InnoDB;
 
-SELECT `item_id`, `quantity` FROM `store_items` WHERE `account_id` = '%d';
+CREATE TABLE IF NOT EXISTS `store_upgrades` 
+(
+	`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+	`account_id` INT UNSIGNED NOT NULL,
+	`upg_id` VARCHAR(16) NOT NULL,
+	PRIMARY KEY (`id`),
+	UNIQUE `unique_upg_entry` (`account_id`, `upg_id`)
+)
+ENGINE = InnoDB;
+
+-- SKILLS
 
 SELECT `skill_id`, `level`, `enabled` FROM `store_skills` WHERE `account_id` = '%d';
 
 INSERT INTO `store_skills` (`account_id`, `skill_id`, `level`) VALUES ('%d', '%s', '%d') ON DUPLICATE KEY UPDATE `level` = '%d';
 
 UPDATE `store_skills` SET `enabled` = %s WHERE `account_id` = '%d' AND `skill_id` = '%d';
+
+-- UPGRADES
+
+SELECT `upg_id` FROM `store_upgrades` WHERE `account_id` = '%d';
+
+INSERT INTO `store_upgrades` (`account_id`, `upg_id`) VALUES ('%d', '%s');
