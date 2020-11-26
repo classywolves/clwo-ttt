@@ -15,6 +15,8 @@ public Plugin myinfo =
 
 Database g_database;
 
+char g_sQuery[256];
+
 public OnPluginStart()
 {
     Database.Connect(DbCallback_Connect, "ttt");
@@ -25,7 +27,7 @@ public OnPluginStart()
 public void OnClientAuthorized(int client, const char[] auth)
 {
     int accountId = GetSteamAccountID(client);
-    char name[64];
+    static char name[64];
     GetClientName(client, name, sizeof(name));
 
     Db_InsertPlayerInfo(client, accountId, name, auth);
@@ -34,21 +36,17 @@ public void OnClientAuthorized(int client, const char[] auth)
 
 public void Db_InsertPlayerInfo(int client, int accountId, const char[] name, const char[] auth)
 {
-    char communityId[64];
+    static char communityId[64];
     GetClientAuthId(client, AuthId_SteamID64, communityId, sizeof(communityId));
 
-    char query[256];
-    Format(query, sizeof(query), "INSERT INTO `player_info` (`account_id`, `name`, `auth_id`, `community_id`) VALUES ('%d', '%s', '%s', '%s') ON DUPLICATE KEY UPDATE `name` = '%s';", accountId, name, auth, communityId, name);
-
-    g_database.Query(DbCallback_InsertPlayerInfo, query, GetClientUserId(client));
+    Format(g_sQuery, sizeof(g_sQuery), "INSERT INTO `player_info` (`account_id`, `name`, `auth_id`, `community_id`) VALUES ('%d', '%s', '%s', '%s') ON DUPLICATE KEY UPDATE `name` = '%s';", accountId, name, auth, communityId, name);
+    g_database.Query(DbCallback_InsertPlayerInfo, g_sQuery, GetClientUserId(client));
 }
 
 public void Db_InsertPlayerName(int client, int accountId, const char[] name)
 {
-    char query[256];
-    Format(query, sizeof(query), "INSERT INTO `player_names` (`account_id`, `name`) VALUES ('%d', '%s') ON DUPLICATE KEY UPDATE `account_id`=`account_id`;", accountId, name);
-
-    g_database.Query(DbCallback_InsertPlayerName, query, GetClientUserId(client));
+    Format(g_sQuery, sizeof(g_sQuery), "INSERT INTO `player_names` (`account_id`, `name`) VALUES ('%d', '%s') ON DUPLICATE KEY UPDATE `account_id`=`account_id`;", accountId, name);
+    g_database.Query(DbCallback_InsertPlayerName, g_sQuery, GetClientUserId(client));
 }
 
 public void DbCallback_Connect(Database db, const char[] error, any data)
