@@ -8,13 +8,13 @@
 #define REQUIRE_PLUGIN
 
 #define HEALTH_ID "hlth"
-#define HEALTH_NAME "Health +"
+#define HEALTH_NAME "Health"
 #define HEALTH_DESCRIPTION "You start the round with an extra 10 health. (Only I & T)"
 #define HEALTH_PRICE 5000
 #define HEALTH_SORT 50
 
 #define HEALTH2_ID "hlt2"
-#define HEALTH2_NAME "Health ++"
+#define HEALTH2_NAME "Health +"
 #define HEALTH2_DESCRIPTION "You start the round with extra 10 health (stacks)."
 #define HEALTH2_PRICE 20000
 #define HEALTH2_SORT 51
