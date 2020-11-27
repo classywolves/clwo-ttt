@@ -420,23 +420,23 @@ void Menu_Skills(int client)
 
 void Menu_SkillInfo(int client, int skill)
 {
-    Panel pSkill = new Panel();
+    Panel panel = new Panel();
 
-    Skill skillData;
-    g_aSkills.GetArray(skill, skillData);
+    Skill sd;
+    g_aSkills.GetArray(skill, sd);
 
-    pSkill.SetTitle(skillData.name);
+    panel.SetTitle(sd.name);
 
     int level = GetClientSkill(client, skill);
     static char levelText[64];
 
     if (level == 0)
     {
-        Format(levelText, sizeof(levelText), "Not Owned (Max: %d)\n", skillData.level);
+        Format(levelText, sizeof(levelText), "Not Owned (Max: %d)\n", sd.level);
     }
-    else if (level < skillData.level)
+    else if (level < sd.level)
     {
-        Format(levelText, sizeof(levelText), "Current Level: %d (Max: %d)\n", level, skillData.level);
+        Format(levelText, sizeof(levelText), "Current Level: %d (Max: %d)\n", level, sd.level);
     }
     else
     {
@@ -445,13 +445,13 @@ void Menu_SkillInfo(int client, int skill)
 
     int price = 0;
     char priceText[32] = "";
-    if (level > 0 && level < skillData.level)
+    if (level > 0 && level < sd.level)
     {
-        price = RoundToNearest(float(skillData.price) * Pow(skillData.increase, float(level)));
+        price = RoundToNearest(float(sd.price) * Pow(sd.increase, float(level)));
     }
     else if (level == 0)
     {
-        price = skillData.price;
+        price = sd.price;
     }
 
     if (price)
@@ -460,40 +460,42 @@ void Menu_SkillInfo(int client, int skill)
     }
 
     char text[192];
-    Format(text, sizeof(text), "%s%s\n%s", levelText, skillData.description, priceText);
-    pSkill.DrawText(text);
+    Format(text, sizeof(text), "%s%s\n%s", levelText, sd.description, priceText);
+    panel.DrawText(text);
 
-    if (level < skillData.level)
+    if (level < sd.level)
     {
-        pSkill.DrawItem("Purchase", ITEMDRAW_CONTROL);
+        panel.DrawItem("Purchase", ITEMDRAW_CONTROL);
     }
     else
     {
-        pSkill.CurrentKey = 2;
+        panel.CurrentKey = 2;
     }
 
     if (level > 0)
     {
         if (GetClientSkillEnabled(client, skill))
         {
-            pSkill.DrawItem("Disable", ITEMDRAW_CONTROL);
+            panel.DrawItem("Disable", ITEMDRAW_CONTROL);
         }
         else
         {
-            pSkill.DrawItem("Enable", ITEMDRAW_CONTROL);
+            panel.DrawItem("Enable", ITEMDRAW_CONTROL);
         }
+
+        panel.DrawItem("Refund", ITEMDRAW_CONTROL);
     }
 
-    pSkill.DrawItem("", ITEMDRAW_SPACER);
+    panel.DrawItem("", ITEMDRAW_SPACER);
 
-    pSkill.CurrentKey = 8;
-    pSkill.DrawItem("Back", ITEMDRAW_CONTROL);
-    pSkill.DrawItem("Exit", ITEMDRAW_CONTROL);
+    panel.CurrentKey = 8;
+    panel.DrawItem("Back", ITEMDRAW_CONTROL);
+    panel.DrawItem("Exit", ITEMDRAW_CONTROL);
 
     g_playerData[client].selected = skill;
-    pSkill.Send(client, PanelHandler_SkillInfo, 240);
+    panel.Send(client, PanelHandler_SkillInfo, 240);
 
-    delete pSkill;
+    delete panel;
 }
 
 /*
@@ -501,11 +503,11 @@ void Menu_SkillRefund(int client, int skill)
 {
     Panel pRefund = new Panel();
 
-    Skill skillData;
-    g_aSkills.GetArray(skill, skillData);
+    Skill sd;
+    g_aSkills.GetArray(skill, sd);
 
     static char title[64];
-    Format(title, sizeof(title), "Refund: %s", skillData.name);
+    Format(title, sizeof(title), "Refund: %s", sd.name);
     pRefund.SetTitle(title);
 
     pRefund.DrawText("Are you sure you want to refund this skill you will only recieve 80% of the cR you spent.");
@@ -556,10 +558,14 @@ public int PanelHandler_SkillInfo(Menu menu, MenuAction action, int client, int 
                     Purchase_Skill(client, g_playerData[client].selected);
                     Menu_SkillInfo(client, g_playerData[client].selected);
                 }
-                case 2:
+                case 2: // Toggle Enabled
                 {
                     ToggleClientSkillEnabled(client, g_playerData[client].selected);
                     Menu_SkillInfo(client, g_playerData[client].selected);
+                }
+                case 3: // Refund
+                {
+                    Menu_SkillRefund(client, g_playerData[client].selected);
                 }
                 case 8: // Back
                 {
@@ -592,6 +598,56 @@ public int MenuHandler_Skills(Menu menu, MenuAction action, int client, int data
             menu.GetItem(data, info, sizeof(info));
             int skill = SkillIDToIndex(info);
             Menu_SkillInfo(client, skill);
+        }
+        case MenuAction_End:
+        {
+            delete menu;
+        }
+    }
+}
+
+void Menu_SkillRefund(int client, int skill)
+{
+    Panel panel = new Panel();
+
+    Skill sd;
+    g_aSkills.GetArray(skill, sd);
+
+    static char buffer[192];
+    Format(buffer, sizeof(buffer), "Refund: %s", sd.name);
+    panel.SetTitle(buffer);
+
+    int price = GetRefundPrice(sd.price, sd.increase, GetClientSkill(client, skill));
+    Format(buffer, sizeof(buffer), "Are you sure you would like to refund \"%s\" for %dcR.\n", sd.name, price);
+    panel.DrawText(buffer);
+
+    panel.DrawItem("Yes", ITEMDRAW_CONTROL);
+    panel.DrawItem("No", ITEMDRAW_CONTROL);
+
+    panel.Send(client, PanelHandler_SkillRefund, 240);
+
+    delete panel;
+}
+
+public int PanelHandler_SkillRefund(Menu menu, MenuAction action, int client, int choice)
+{
+    switch (action)
+    {
+        case MenuAction_Select:
+        {
+            switch (choice)
+            {
+                case 1: // Yes
+                {
+                    RefundSkill(client, g_playerData[client].selected);
+                }
+            }
+
+            Menu_SkillInfo(client, g_playerData[client].selected);
+        }
+        case MenuAction_Display :
+        {
+
         }
         case MenuAction_End:
         {
@@ -967,6 +1023,24 @@ public int Sort_Upgrades(int i, int j, Handle array, Handle hndl)
 // Stocks
 ////////////////////////////////////////////////////////////////////////////////
 
+int GetPrice(int base, float increase, int level)
+{
+    return RoundToNearest(float(base) * Pow(increase, float(level)));
+}
+
+int GetRefundPrice(int price, float increase, int level)
+{
+    int ret = price;
+    for (int i = 2; i <= level; ++i)
+    {
+        ret += GetPrice(price, increase, level);
+    }
+
+    ret = RoundToNearest(float(ret) * 0.8);
+
+    return ret;
+}
+
 int SkillIDToIndex(char[] id)
 {
     int index = -1;
@@ -990,20 +1064,20 @@ bool Purchase_Skill(int client, int skill)
         return false;
     }
 
-    Skill skillData;
-    g_aSkills.GetArray(skill, skillData);
+    Skill sd;
+    g_aSkills.GetArray(skill, sd);
 
     int level = GetClientSkill(client, skill);
 
-    LogMessage("client %d purchase skill: %s (level: %d) - skill_index: %d, plugin: %d", client, skillData.name, level + 1, skill, skillData.plugin);
+    LogMessage("client %d purchase skill: %s (level: %d) - skill_index: %d, plugin: %d", client, sd.name, level + 1, skill, sd.plugin);
 
     int cr = Store_GetClientCredits(client);
-    int price = RoundToNearest(float(skillData.price) * Pow(skillData.increase, float(level)));
+    int price = GetPrice(sd.price, sd.increase, level);
     if (cr >= price)
     {
         ++level;
 
-        if (level > skillData.level)
+        if (level > sd.level)
         {
             return false;
         }
@@ -1015,7 +1089,43 @@ bool Purchase_Skill(int client, int skill)
         SetClientSkill(client, skill, level);
         Db_InsertUpdateSkill(client, skill, level);
 
-        CPrintToChat(client, "[Store] You just purchased {yellow}%s {default}for {orange}%dcR {default}(remaining credits {orange}%dcR{default}).", skillData.name, price, cr);
+        CPrintToChat(client, "[Store] You just purchased {yellow}%s {default}for {orange}%dcR {default}(remaining balance {orange}%dcR{default}).", sd.name, price, cr);
+
+        return true;
+    }
+
+    return false;
+}
+
+bool RefundSkill(int client, int skill)
+{
+    if (!g_bCreditsLoaded)
+    {
+        return false;
+    }
+
+    Skill sd;
+    g_aSkills.GetArray(skill, sd);
+
+    int level = GetClientSkill(client, skill);
+    if (level <= 0)
+    {
+        return false;
+    }
+
+    int price = GetRefundPrice(sd.price, sd.increase, level);
+
+    LogMessage("client %d refund skill: %s (level: %d) price: %d - skill_index: %d, plugin: %d", client, sd.name, level, price, skill, sd.plugin);
+
+    if (price > 0)
+    {
+        Function_OnSkillUpdate(client, skill, 0);
+        SetClientSkill(client, skill, 0);
+
+        Db_InsertUpdateSkill(client, skill, 0);
+        int cr = Store_AddClientCredits(client, price);
+
+        CPrintToChat(client, "[Store] You just refunded {yellow}%s {default}for {orange}%dcR {default}(current balance {orange}%dcR{default}).", sd.name, price, cr);
 
         return true;
     }
