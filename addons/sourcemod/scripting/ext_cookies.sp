@@ -47,11 +47,21 @@ public int Native_GetCookieID(Handle plugin, int argc)
     return Db_GetCookieID(g_cookie);
 }
 
+public int Native_GetCookieBySteamID(Handle plugin, int argc)
+{
+    int cookieID = GetNativeCell(1);
+    GetNativeString(2, g_steamID, sizeof(g_steamID));
+    Function callback = GetNativeCell(3);
+    Db_GetCookieBySteamID(cookieID, g_steamID, plugin, callback);
+
+    return 0;
+}
+
 public int Native_SetCookieBySteamID(Handle plugin, int argc)
 {
     int cookieID = GetNativeCell(1);
-    GetNativeString(1, g_steamID, sizeof(g_steamID));
-    GetNativeString(1, g_value, sizeof(g_value));
+    GetNativeString(2, g_steamID, sizeof(g_steamID));
+    GetNativeString(3, g_value, sizeof(g_value));
     Db_SetCookieBySteamID(cookieID, g_steamID, g_value);
 
     return 0;
@@ -89,13 +99,48 @@ int Db_GetCookieID(const char[] cookie)
     return 0;
 }
 
-/*
-void Db_GetCookieBySteamID(int cookieID, const char[] steamID)
+void Db_GetCookieBySteamID(int cookieID, const char[] steamID, Handle plugin, Function callback)
 {
+    DataPack data = new DataPack();
     g_db.Format(g_query, sizeof(g_query), "SELECT `value` FROM `sm_cookie_cache` WHERE `cookie_id` = '%d' AND `player` REGEXP '^STEAM_[0-9]:%s$' LIMIT 1;", cookieID, steamID);
-    g_db.Query(DbCallback_DoNothing, g_query);
+    g_db.Query(DbCallback_GetCookieBySteamID, g_query, data);
+
+    data.WriteCell(cookieID);
+    data.WriteString(steamID);
+    data.WriteCell(plugin);
+    data.WriteFunction(callback);
+    data.Reset();
 }
-*/
+
+public void DbCallback_GetCookieBySteamID(Database db, DBResultSet results, const char[] error, DataPack data)
+{
+    if (db != null && strlen(error) != 0)
+    {
+        SetFailState("Failed to connect to database.");
+        return;
+    }
+
+    int cookieID = data.ReadCell();
+    data.ReadString(g_steamID, sizeof(g_steamID));
+    Handle plugin = data.ReadCell();
+    Function callback = data.ReadFunction();
+
+    static char value[128];
+    if (results.FetchRow())
+    {
+        results.FetchString(0, value, sizeof(value));
+    }
+    else
+    {
+        strcopy(value, sizeof(value), "");
+    }
+
+    Call_StartFunction(plugin, callback);
+    Call_PushCell(cookieID);
+    Call_PushString(g_steamID);
+    Call_PushString(value);
+    Call_Finish();
+}
 
 void Db_SetCookieBySteamID(int cookieID, const char[] steamID, const char[] value)
 {
