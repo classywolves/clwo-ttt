@@ -392,8 +392,8 @@ void Menu_Store(int client)
 
 void Menu_Skills(int client)
 {
-    Menu mSkills = new Menu(MenuHandler_Skills);
-    mSkills.SetTitle("Skills");
+    Menu menu = new Menu(MenuHandler_Skills);
+    menu.SetTitle("Skills");
 
     for (int i = 0; i < g_aSkills.Length; i++)
     {
@@ -412,10 +412,10 @@ void Menu_Skills(int client)
             Format(message, sizeof(message), "%s (Not Owned)", skill.name);
         }
 
-        mSkills.AddItem(skill.id, message);
+        menu.AddItem(skill.id, message);
     }
 
-    mSkills.Display(client, 240);
+    menu.Display(client, 240);
 }
 
 void Menu_SkillInfo(int client, int skill)

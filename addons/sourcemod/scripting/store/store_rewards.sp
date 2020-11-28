@@ -4,6 +4,7 @@
 #include <sourcemod>
 #include <cstrike>
 #include <colorlib>
+#include <ttt>
 
 #include <generics>
 #include <clwo_store_credits>
@@ -141,6 +142,8 @@ public Action Timer_ShowRewardPanel(Handle timer, int userid)
 
 public Action Timer_RewardActive(Handle timer)
 {
+    if (TTT_GetRoundStatus() == Round_Inactive) return Plugin_Continue;
+
     int credits = GetReward();
     int team;
     LoopValidClients(i)
@@ -169,7 +172,8 @@ public Action Timer_RewardAfk(Handle timer)
     LoopValidClients(i)
     {
         team = GetClientTeam(i);
-        if (team == CS_TEAM_SPECTATOR || team == CS_TEAM_NONE)
+        if (TTT_GetRoundStatus() == Round_Inactive ||
+            team == CS_TEAM_SPECTATOR || team == CS_TEAM_NONE)
         {
             if (ClientAllowedToGetReward(i))
             {
