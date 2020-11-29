@@ -29,13 +29,13 @@ public OnPluginStart()
 
 public void RegisterCmds()
 {
-    RegAdminCmd("sm_bantimes", Command_BanTimes, ADMFLAG_GENERIC, "List Common Time Lengths.");
-    RegAdminCmd("sm_forcespec", Command_ForceSpectator, ADMFLAG_GENERIC, "Moves a player to spectator.");
-    RegAdminCmd("sm_reloadplugin", Command_ReloadPlugin, ADMFLAG_RCON, "Reloads the passed plugin.");
-    RegAdminCmd("sm_slaynr", Command_SlayNextRound, ADMFLAG_GENERIC, "Slay a player before roles are assigned for the next round.");
-    RegAdminCmd("sm_unslaynr", Command_RemoveSlayNextRound, ADMFLAG_GENERIC, "Remove slays for a player before roles are assigned for the next round.");
-    RegAdminCmd("sm_tp", Command_Teleport, ADMFLAG_GENERIC, "Allows a staff member to teleport another player.");
-    RegAdminCmd("sm_teleport", Command_Teleport, ADMFLAG_GENERIC, "Allows a staff member to teleport another player.");
+    RegAdminCmd("sm_bantimes", Command_BanTimes, ADMFLAG_GENERIC, "sm_bantimes - List Common Time Lengths.");
+    RegAdminCmd("sm_forcespec", Command_ForceSpectator, ADMFLAG_GENERIC, "sm_forcespec <#userid|name> - Moves a player to spectator.");
+    RegAdminCmd("sm_reloadplugin", Command_ReloadPlugin, ADMFLAG_RCON, "sm_reloadplugin <plugin> - Reloads the passed plugin.");
+    RegAdminCmd("sm_slaynr", Command_SlayNextRound, ADMFLAG_GENERIC, "sm_slaynr <#userid|name> - Slay a player before roles are assigned for the next round.");
+    RegAdminCmd("sm_unslaynr", Command_RemoveSlayNextRound, ADMFLAG_GENERIC, "sm_unslaynr <#userid|name> - Remove slays for a player before roles are assigned for the next round.");
+    RegAdminCmd("sm_tp", Command_Teleport, ADMFLAG_GENERIC, "sm_tp <#userid|name> [#userid|name] - Allows a staff member to teleport another player.");
+    RegAdminCmd("sm_teleport", Command_Teleport, ADMFLAG_GENERIC, "sm_teleport <#userid|name> [#userid|name] - Allows a staff member to teleport another player.");
 }
 
 public Action Command_BanTimes(int client, int args) {

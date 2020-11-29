@@ -75,7 +75,7 @@ public OnPluginStart()
 
 public void RegisterCmds()
 {
-    RegAdminCmd("sm_rguns", Command_RandomGuns, ADMFLAG_CHANGEMAP, "Give all players a random gun!");
+    RegAdminCmd("sm_rguns", Command_RandomGuns, ADMFLAG_CHANGEMAP, "sm_rguns - Give all players a random gun!");
 }
 
 public void HookEvents()

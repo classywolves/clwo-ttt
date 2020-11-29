@@ -55,8 +55,8 @@ public void OnPluginStart() {
 	Database.Connect(T_Connect, "ttt");
 
 	//Commands
-	RegConsoleCmd("sm_calladmin", Command_CallAdmin, "Sends a message to staff members");
-	RegConsoleCmd("sm_callstaff", Command_CallAdmin, "Sends a message to staff members");
+	RegConsoleCmd("sm_calladmin", Command_CallAdmin, "sm_calladmin - Sends a message to staff members");
+	RegConsoleCmd("sm_callstaff", Command_CallAdmin, "sm_callstaff - Sends a message to staff members");
 }
 
 ////////

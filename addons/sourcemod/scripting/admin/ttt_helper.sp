@@ -35,9 +35,10 @@ public OnPluginStart()
 	PrintToServer("[HLP] Loaded succcessfully");
 }
 
-public void RegisterCmds() {
-	RegConsoleCmd("sm_hmsg", Command_HMsg, "/msg Helper.");
-	RegConsoleCmd("sm_hr", Command_HR, "/r Helper.");
+public void RegisterCmds()
+{
+	RegConsoleCmd("sm_hmsg", Command_HMsg, "sm_hmsg <#userid|name> - Shows a help message for sm_msg to a player");
+	RegConsoleCmd("sm_hr", Command_HR, "sm_hr <#userid|name> - Shows a help message for sm_r to a player");
 }
 
 public Action Command_HMsg(int client, int args)

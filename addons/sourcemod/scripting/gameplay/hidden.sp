@@ -68,13 +68,13 @@ public void OnPluginStart()
 
     RegConsoleCmd("say", Command_Say);
 
-    RegAdminCmd("sm_reloadhidden", Command_ReloadHidden, ADMFLAG_GENERIC, "Reload Hidden Plugin");
-    RegAdminCmd("sm_hidden", Command_Hidden, ADMFLAG_VOTE, "Begin Hidden Gamemode");
-    RegAdminCmd("sm_cancelhidden", Command_CancelHidden, ADMFLAG_VOTE, "Cancel Hidden Gamemode");
-    RegAdminCmd("sm_chs", Command_CHS, ADMFLAG_ROOT, "Change Hidden Speed");
-    RegAdminCmd("sm_chg", Command_CHG, ADMFLAG_ROOT, "Change Hidden Gravity");
-    RegAdminCmd("sm_chh", Command_CHH, ADMFLAG_ROOT, "Change Hidden Health");
-    RegAdminCmd("sm_chhct", Command_CHHCT, ADMFLAG_ROOT, "Change Hidden CT Health");
+    RegAdminCmd("sm_reloadhidden", Command_ReloadHidden, ADMFLAG_GENERIC, "sm_reloadhidden - Reload Hidden Plugin");
+    RegAdminCmd("sm_hidden", Command_Hidden, ADMFLAG_VOTE, "sm_hidden - Begin Hidden Gamemode");
+    RegAdminCmd("sm_cancelhidden", Command_CancelHidden, ADMFLAG_VOTE, "sm_cancelhidden - Cancel Hidden Gamemode");
+    RegAdminCmd("sm_chs", Command_CHS, ADMFLAG_ROOT, "sm_chs <speed> - Change Hidden Speed");
+    RegAdminCmd("sm_chg", Command_CHG, ADMFLAG_ROOT, "sm_chg <gravity> - Change Hidden Gravity");
+    RegAdminCmd("sm_chh", Command_CHH, ADMFLAG_ROOT, "sm_chh <health> - Change Hidden Health");
+    RegAdminCmd("sm_chhct", Command_CHHCT, ADMFLAG_ROOT, "sm_chhct <health> - Change Hidden CT Health");
 }
 
 public Action Command_Say(int client, int args)
@@ -182,7 +182,7 @@ public Action Command_CHS(int client, int args)
     if(args < 1)
     {
         CPrintToChat(client, "[HID] cv_HiddenSpeed = %f", cv_HiddenSpeed.FloatValue);
-        CPrintToChat(client, TTT_USAGE ... "sm_chs [speed]");
+        CPrintToChat(client, TTT_USAGE ... "sm_chs <speed>");
         return Plugin_Handled;
     }
 

@@ -8,7 +8,7 @@ ConVar cv_CustomGMNR = null;
 public void OnPluginStart()
 {
     cv_CustomGMNR = CreateConVar("cv_CustomGMNR", "false", "Is it a custom gamemode next round");
-    RegAdminCmd("sm_reloadgm", Command_ReloadGM, ADMFLAG_GENERIC, "Reload custom gamemodes");
+    RegAdminCmd("sm_reloadgm", Command_ReloadGM, ADMFLAG_GENERIC, "sm_reloadgm - Reload custom gamemodes");
 }
 
 public Action Command_ReloadGM(int client, int args)

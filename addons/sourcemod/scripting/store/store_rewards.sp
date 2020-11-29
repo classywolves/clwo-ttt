@@ -43,8 +43,8 @@ public void OnPluginStart()
 
     AutoExecConfig(true, "store_rewards", "clwo");
 
-    RegConsoleCmd("sm_loyalty", Command_Loyalty, "Displays information about loyalty cR rewards on TTT.");
-    RegAdminCmd("sm_test_is_weekend", Command_Weekend, ADMFLAG_CHEATS);
+    RegConsoleCmd("sm_loyalty", Command_Loyalty, "sm_loyalty - Displays information about loyalty cR rewards on TTT.");
+    RegAdminCmd("sm_test_is_weekend", Command_Weekend, ADMFLAG_CHEATS, "sm_test_is_weekend - Well");
 
     HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
     HookEvent("round_end",   Event_RoundEnd,   EventHookMode_PostNoCopy);

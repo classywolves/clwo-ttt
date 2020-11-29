@@ -34,24 +34,24 @@ public OnPluginStart()
 
 public void RegisterCmds()
 {
-    RegConsoleCmd("sm_staff", Command_Staff, "List the all of the staff who are currently online.");
-    RegConsoleCmd("sm_admins", Command_Staff, "List the all of the staff who are currently online.");
+    RegConsoleCmd("sm_staff", Command_Staff, "sm_staff - List the all of the staff who are currently online");
+    RegConsoleCmd("sm_admins", Command_Staff, "sm_admins - List the all of the staff who are currently online");
 
     //RegConsoleCmd("sm_alive", Command_Alive, "Displays the currently alive / undiscovered players.");
 
-    RegConsoleCmd("sm_spec", Command_Spectate, "Choose which of the alive players you would like to spectate.");
+    RegConsoleCmd("sm_spec", Command_Spectate, "sm_spec - Choose which of the alive players you would like to spectate");
 
-    RegConsoleCmd("sm_t", Command_Terrorist, "Move Player to T.");
-    RegConsoleCmd("sm_ct", Command_CounterTerrorist, "Move Player to CT.");
-    RegConsoleCmd("sm_afk", Command_Spectator, "Move Player to Spectator.");
+    RegConsoleCmd("sm_t", Command_Terrorist, "sm_t - Move Player to T");
+    RegConsoleCmd("sm_ct", Command_CounterTerrorist, "sm_ct - Move Player to CT");
+    RegConsoleCmd("sm_afk", Command_Spectator, "sm_afk - Move Player to Spectator");
 
-    RegConsoleCmd("sm_rank", Command_Rank, "Displays your current ranking based upon your karma.");
-    RegConsoleCmd("sm_playtime", Command_Playtime, "Displays your current total playtime.");
+    RegConsoleCmd("sm_rank", Command_Rank, "sm_rank - Displays your current ranking based upon your karma");
+    RegConsoleCmd("sm_playtime", Command_Playtime, "sm_playtime - Displays your current total playtime");
 
-    RegConsoleCmd("sm_give", Command_Give, "Gives the given amount of credits to another player.");
+    RegConsoleCmd("sm_give", Command_Give, "sm_give <#userid|name> <credits> - Gives the given amount of credits to another player");
 
-    RegConsoleCmd("sm_rules", Command_Rules, "Sends link to rule thread in chat.");
-    RegConsoleCmd("sm_guide", Command_Guide, "Sends link to guide thread in chat.");
+    RegConsoleCmd("sm_rules", Command_Rules, "sm_rules - Sends link to rule thread in chat");
+    RegConsoleCmd("sm_guide", Command_Guide, "sm_guide - Sends link to guide thread in chat");
 }
 
 public void InitDBs()

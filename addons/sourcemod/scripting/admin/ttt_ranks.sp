@@ -121,8 +121,8 @@ public void DbInitCallback(Database db, const char[] error, any data)
 
 public void RegisterCmds()
 {
-    RegAdminCmd("sm_refreshranks", Command_RefreshRanks, ADMFLAG_RCON, "Refetches the ranks from the database.");
-    RegConsoleCmd("sm_rankcheck", Command_Rank, "Outputs a users current rank.");
+    RegAdminCmd("sm_refreshranks", Command_RefreshRanks, ADMFLAG_RCON, "sm_refreshranks - Refetches the ranks from the database.");
+    RegConsoleCmd("sm_rankcheck", Command_Rank, "sm_rankcheck - Outputs a users current rank.");
 }
 
 public void OnMapLoad()

@@ -45,15 +45,17 @@ public InitDBs() {
 // == History is table:
 // SteamID, Timestamp, Message, MsgType AdminID, AdminName
 
-public void RegisterCmds() {
-  RegAdminCmd("sm_addhistory", Command_AddHistory, ADMFLAG_CHAT, "Add a message to a players log");
-  RegAdminCmd("sm_history", Command_History, ADMFLAG_CHAT, "List a players history");
+public void RegisterCmds()
+{
+  RegAdminCmd("sm_addhistory", Command_AddHistory, ADMFLAG_CHAT, "sm_addhistory <#userid|name> <message> - Add a message to a players log");
+  RegAdminCmd("sm_history", Command_History, ADMFLAG_CHAT, "sm_history <#userid|name> - Lists a players history");
 }
 
-public Action Command_AddHistory(int client, int args) {
+public Action Command_AddHistory(int client, int args)
+{
     // Usage is "/addhistory <target> <message>"
     if (args < 2) {
-        CPrintToChat(client, TTT_USAGE ... "sm_addhistory <target> <message>");
+        CPrintToChat(client, TTT_USAGE ... "sm_addhistory <#userid|name> <message>");
         return Plugin_Handled;
     }
 
@@ -83,7 +85,8 @@ public Action Command_AddHistory(int client, int args) {
     return Plugin_Handled;
 }
 
-public Action Command_History(int client, int args) {
+public Action Command_History(int client, int args)
+{
     // Usage is "/history <target> <page>"
     if (args < 1) {
         CPrintToChat(client, TTT_USAGE ... "sm_addhistory <target> <page>");

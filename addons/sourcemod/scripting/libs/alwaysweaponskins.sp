@@ -60,7 +60,7 @@ public void OnPluginStart()
         return;
     }
 
-    RegAdminCmd("sm_aws_mem_check", Command_MemCheck, ADMFLAG_ROOT);
+    RegAdminCmd("sm_aws_mem_check", Command_MemCheck, ADMFLAG_ROOT, "sm_aws_mem_check - Checks for the memory usage of aws");
     
     CreateConvars();
 }

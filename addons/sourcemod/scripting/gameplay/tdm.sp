@@ -35,10 +35,10 @@ public OnPluginStart()
 
     RegConsoleCmd("say", Command_Say);
 
-    RegAdminCmd("sm_reloadtdm", Command_ReloadTDM, ADMFLAG_GENERIC, "Reload TDM Plugin");
-    RegAdminCmd("sm_tdm", Command_TDM, ADMFLAG_VOTE, "Start a heavy suit team deathmatch");
-    RegAdminCmd("sm_teamdeathmatch", Command_TDM, ADMFLAG_VOTE, "Start a heavy suit team deathmatch");
-    RegAdminCmd("sm_canceltdm", Command_CancelTDM, ADMFLAG_VOTE, "Cancel heavy suit team deathmatch");
+    RegAdminCmd("sm_reloadtdm", Command_ReloadTDM, ADMFLAG_GENERIC, "sm_reloadtdm - Reload TDM Plugin");
+    RegAdminCmd("sm_tdm", Command_TDM, ADMFLAG_VOTE, "sm_tdm - Start a heavy suit team deathmatch");
+    RegAdminCmd("sm_teamdeathmatch", Command_TDM, ADMFLAG_VOTE, "sm_teamdeathmatch - Start a heavy suit team deathmatch");
+    RegAdminCmd("sm_canceltdm", Command_CancelTDM, ADMFLAG_VOTE, "sm_canceltdm - Cancel heavy suit team deathmatch");
 }
 
 public Action Command_Say(int client, int args)

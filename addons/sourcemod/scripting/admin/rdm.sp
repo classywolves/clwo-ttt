@@ -21,6 +21,10 @@ public Plugin myinfo = {
 Database g_database = null;
 
 char g_query[768];
+char g_sVictimName[MAX_NAME_LENGTH];
+char g_sAttackerName[MAX_NAME_LENGTH];
+char g_sVictimRole[MAX_NAME_LENGTH];
+char g_sAttackerRole[MAX_NAME_LENGTH];
 
 int g_currentRound = -1;
 int g_lastDeathIndex = -1;
@@ -51,12 +55,12 @@ PlayerData g_playerData[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
-    RegConsoleCmd("sm_rdm", Command_RDM, "Shows the RDM report window for all recent killers.");
-    RegAdminCmd("sm_cases", Command_CaseCount, ADMFLAG_GENERIC, "Shows the current amount of cases to staff.");
-    RegAdminCmd("sm_handle", Command_Handle, ADMFLAG_GENERIC, "Handles the next case or a user inputted case.");
-    RegAdminCmd("sm_info", Command_Info, ADMFLAG_GENERIC, "Displays all of the information for a given case.");
-    RegAdminCmd("sm_verdict", Command_Verdict, ADMFLAG_GENERIC, "Shows a member of staff the availible verdicts for there current case.");
-    
+    RegConsoleCmd("sm_rdm", Command_RDM, "sm_rdm - Shows the RDM report window for all recent killers");
+    RegAdminCmd("sm_cases", Command_CaseCount, ADMFLAG_GENERIC, "sm_cases - Shows the current amount of cases to staff");
+    RegAdminCmd("sm_handle", Command_Handle, ADMFLAG_GENERIC, "sm_handle - Handles the next case or a user inputted case");
+    RegAdminCmd("sm_info", Command_Info, ADMFLAG_GENERIC, "sm_info - Displays all of the information for a given case");
+    RegAdminCmd("sm_verdict", Command_Verdict, ADMFLAG_GENERIC, "sm_verdict [innocent|guilty] - Shows a member of staff the availible verdicts for there current case");
+
     HookEvent("weapon_fire", Event_OnWeaponFire, EventHookMode_Post);
 
     LoopValidClients(i)
@@ -150,7 +154,7 @@ public Action Command_Verdict(int client, int args)
     }
     else
     {
-        char response[64];
+        static char response[64];
         GetCmdArg(1, response, 64);
 
         CaseVerdict verdict = CaseVerdict_None;
@@ -262,12 +266,12 @@ void Db_InsertDeath(int victim, int attacker)
 {
     int victimId = GetSteamAccountID(victim);
     int victimRole = TTT_GetClientRole(victim);
-    char sVictimRole[10] = "none";
+    static char sVictimRole[10];
     RoleEnum(sVictimRole, sizeof(sVictimRole), victimRole);
 
     int attackerId = GetSteamAccountID(attacker);
     int attackerRole = TTT_GetClientRole(attacker);
-    char sAttackerRole[10] = "none";
+    static char sAttackerRole[10];
     RoleEnum(sAttackerRole, sizeof(sAttackerRole), attackerRole);
 
     Format(
@@ -496,10 +500,10 @@ public void DbCallback_SelectCaseBaseInfo(Database db, DBResultSet results, cons
     {
         int client = GetClientOfUserId(userid);
         int death = results.FetchInt(0);
-        char victimName[64]; results.FetchString(1, victimName, sizeof(victimName));
-        char attackerName[64]; results.FetchString(2, attackerName, sizeof(attackerName));
+        results.FetchString(1, g_sVictimName, sizeof(g_sVictimName));
+        results.FetchString(2, g_sAttackerName, sizeof(g_sAttackerName));
 
-        CPrintToChat(client, TTT_MESSAGE ... "You have taken case {orange}#%d: {yellow}%s's {default}accusing {yellow}%s of RDM.", death, victimName, attackerName);
+        CPrintToChat(client, TTT_MESSAGE ... "You have taken case {orange}#%d: {yellow}%s's {default}accusing {yellow}%s of RDM.", death, g_sVictimName, g_sAttackerName);
     }
 }
 
@@ -524,25 +528,22 @@ public void DbCallback_SelectInfo(Database db, DBResultSet results, const char[]
 
         int death = results.FetchInt(0);
         int time = results.FetchInt(1);
-        char victimName[64]; results.FetchString(2, victimName, sizeof(victimName));
+        results.FetchString(2, g_sVictimName, sizeof(g_sVictimName));
         Role victimRole = view_as<Role>(results.FetchInt(3));
         int victimKarma = results.FetchInt(4);
-        char attackerName[64]; results.FetchString(5, attackerName, sizeof(attackerName));
+        results.FetchString(5, g_sAttackerName, sizeof(g_sAttackerName));
         Role attackerRole = view_as<Role>(results.FetchInt(6));
         int attackerKarma = results.FetchInt(7);
         int lastshot = results.FetchInt(8);
         int round = results.FetchInt(9);
 
-        char sVictimRole[16];
-        RoleString(sVictimRole, sizeof(sVictimRole), victimRole);
-
-        char sAttackerRole[16];
-        RoleString(sAttackerRole, sizeof(sAttackerRole), attackerRole);
+        RoleString(g_sVictimRole, sizeof(g_sVictimRole), victimRole);
+        RoleString(g_sAttackerRole, sizeof(g_sAttackerRole), attackerRole);
 
         CPrintToChat(client, TTT_MESSAGE ... "Case information for Death: {orange}%d{default}({orange}%d {default}rounds ago)", death, g_currentRound - round);
         CPrintToChat(client, TTT_MESSAGE ... "The victim had shot last {orange}%d {default}seconds before there death.", time - lastshot);
-        CPrintToChat(client, TTT_MESSAGE ... "Accuser: {yellow}%s{default}({orange}%d{default}) - %s", victimName, victimKarma, sVictimRole);
-        CPrintToChat(client, TTT_MESSAGE ... "Accused: {yellow}%s{default}({orange}%d{default}) - %s", attackerName, attackerKarma, sAttackerRole);
+        CPrintToChat(client, TTT_MESSAGE ... "Accuser: {yellow}%s{default}({orange}%d{default}) - %s", g_sVictimName, victimKarma, g_sVictimRole);
+        CPrintToChat(client, TTT_MESSAGE ... "Accused: {yellow}%s{default}({orange}%d{default}) - %s", g_sAttackerName, attackerKarma, g_sAttackerRole);
     }
 }
 
@@ -566,9 +567,9 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
 
         int death = results.FetchInt(0);
         int victimID = results.FetchInt(1);
-        char victimName[64]; results.FetchString(2, victimName, sizeof(victimName));
+        results.FetchString(2, g_sVictimName, sizeof(g_sVictimName));
         int attackerID = results.FetchInt(3);
-        char attackerName[64]; results.FetchString(4, attackerName, sizeof(attackerName));
+        results.FetchString(4, g_sAttackerName, sizeof(g_sAttackerName));
         CaseVerdict verdict = view_as<CaseVerdict>(results.FetchInt(5));
         char cVerdict[24];
 
@@ -589,11 +590,11 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
         {
             if (IsValidClient(victim))
             {
-                CPrintToChat(victim, TTT_MESSAGE ... "{yellow}%N {default}has handled your case against {yellow}%s {default}and has concluded them to be {green}innocent{default}, if you have any questions please message staff using an @ before your message or /chat.", client, attackerName);
+                CPrintToChat(victim, TTT_MESSAGE ... "{yellow}%N {default}has handled your case against {yellow}%s {default}and has concluded them to be {green}innocent{default}, if you have any questions please message staff using an @ before your message or /chat.", client, g_sAttackerName);
             }
             if (IsValidClient(attacker))
             {
-                CPrintToChat(attacker, TTT_MESSAGE ... "{yellow}%N {default}has found you {green}innocent {default}in your defense against {yellow}%s{default}, have a nice day.", client, victimName);
+                CPrintToChat(attacker, TTT_MESSAGE ... "{yellow}%N {default}has found you {green}innocent {default}in your defense against {yellow}%s{default}, have a nice day.", client, g_sVictimName);
             }
             CPrintToChat(client, TTT_MESSAGE ... "You have concluded the defendant {green}innocent {default}for case {orange}%d", death);
         }
@@ -601,11 +602,11 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
         {
             if (IsValidClient(victim))
             {
-                CPrintToChat(victim, TTT_MESSAGE ... "{yellow}%N {default}has handled your case against {yellow}%s {default}and has concluded them to be {red}guilty{default}. Thanks for your report.", client, attackerName);
+                CPrintToChat(victim, TTT_MESSAGE ... "{yellow}%N {default}has handled your case against {yellow}%s {default}and has concluded them to be {red}guilty{default}. Thanks for your report.", client, g_sAttackerName);
             }
             if (IsValidClient(attacker))
             {
-                CPrintToChat(attacker, TTT_MESSAGE ... "You are being slayed next round by {yellow}%N {default}for killing {yellow}%s{default}. If you have any questions about this please message staff by using an @ before your message.", client, victimName);
+                CPrintToChat(attacker, TTT_MESSAGE ... "You are being slayed next round by {yellow}%N {default}for killing {yellow}%s{default}. If you have any questions about this please message staff by using an @ before your message.", client, g_sVictimName);
                 TTT_AddRoundSlays(attacker, 1, false);
             }
             CPrintToChat(client, TTT_MESSAGE ... "You have concluded the defendant {red}guilty {default}for case {orange}%d.", death);
@@ -617,14 +618,18 @@ public void DbCallback_SelectVerdictInfo(Database db, DBResultSet results, const
 
 void Db_UpdateVerdict(int client, int death, CaseVerdict verdict)
 {
-    char sVerdict[9] = "none";
+    static char sVerdict[9] = "";
     if (verdict == CaseVerdict_Innocent)
     {
-        sVerdict = "innocent";
+        strcopy(sVerdict, sizeof(sVerdict), "innocent");
     }
     else if (verdict == CaseVerdict_Guilty)
     {
-        sVerdict = "guilty";
+        strcopy(sVerdict, sizeof(sVerdict), "guilty");
+    }
+    else
+    {
+        strcopy(sVerdict, sizeof(sVerdict), "none");
     }
 
     Format(g_query, sizeof(g_query), "UPDATE `handles` SET `handles`.`verdict` = '%s' WHERE `death_index` = '%d';", sVerdict, death);

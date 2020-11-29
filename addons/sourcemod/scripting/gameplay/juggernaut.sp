@@ -44,12 +44,12 @@ public OnPluginStart()
 
     RegConsoleCmd("say", Command_Say);
 
-    RegAdminCmd("sm_reloadjugg", Command_ReloadJugg, ADMFLAG_GENERIC, "Reload Jugg Plugin");
-    RegAdminCmd("sm_jugg", Command_Jugg, ADMFLAG_VOTE, "Start a Juggernaut round");
-    RegAdminCmd("sm_canceljugg", Command_CancelJugg, ADMFLAG_VOTE, "Cancel Juggernaut");
-    RegAdminCmd("sm_juggernaut", Command_Jugg, ADMFLAG_VOTE, "Start a Juggernaut round");
-    RegAdminCmd("sm_chb", Command_CHB, ADMFLAG_VOTE, "Change health boost given to CT");
-    RegAdminCmd("sm_ratio", Command_Ratio, ADMFLAG_VOTE, "Change how many CTs per T");
+    RegAdminCmd("sm_reloadjugg", Command_ReloadJugg, ADMFLAG_GENERIC, "sm_reloadjugg - Reload Jugg Plugin");
+    RegAdminCmd("sm_jugg", Command_Jugg, ADMFLAG_VOTE, "sm_jugg - Start a Juggernaut round");
+    RegAdminCmd("sm_canceljugg", Command_CancelJugg, ADMFLAG_VOTE, "sm_canceljugg - Cancel Juggernaut");
+    RegAdminCmd("sm_juggernaut", Command_Jugg, ADMFLAG_VOTE, "sm_juggernaut - Start a Juggernaut round");
+    RegAdminCmd("sm_chb", Command_CHB, ADMFLAG_VOTE, "sm_chb <health> - Change health boost given to CT");
+    RegAdminCmd("sm_ratio", Command_Ratio, ADMFLAG_VOTE, "sm_ratio <ratio> - Change how many CTs per T");
 }
 
 public Action Command_Say(int client, int args)

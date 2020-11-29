@@ -49,7 +49,7 @@ PlayerData g_playerData[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
-    RegConsoleCmd("sm_speed", Command_Speed, "Allows for the binding of the speed increase skill.");
+    RegConsoleCmd("sm_speed", Command_Speed, "sm_speed - Allows for the binding of the speed increase skill.");
 
     g_cClientUsesBind = new Cookie("skill_speed_uses_bind", "Whether a client uses the speed skill bind.", CookieAccess_Public);
     g_cClientUsesBind.SetPrefabMenu(CookieMenu_OnOff_Int, "Skill - Adrenal Enhancements\nWould you like to use the \"sm_speed\" bind instead of double pressing +use.", CookieMenuHandler_ClientUsesBind);

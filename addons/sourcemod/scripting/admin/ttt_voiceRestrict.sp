@@ -35,7 +35,7 @@ public OnPluginStart()
 
 public void RegisterCmds()
 {
-    RegConsoleCmd("sm_voicerestrict", Command_VoiceRestrict, "Restricts how long none staff memebers can use voice chat for.");
+    RegConsoleCmd("sm_voicerestrict", Command_VoiceRestrict, "sm_voicerestrict [0|1] - Restricts how long none staff memebers can use voice chat for.");
 }
 
 public void OnClientSpeakingEx(int client)

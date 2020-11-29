@@ -43,7 +43,7 @@ public void OnPluginStart()
 
     AutoExecConfig(true, "store_credits", "clwo");
 
-    RegConsoleCmd("sm_cr", Command_Credits, "Displays the clients credits (cR).");
+    RegConsoleCmd("sm_cr", Command_Credits, "sm_cr - Displays the clients credits (cR).");
     //RegConsoleCmd("sm_givecr", Command_GiveCredits, "Give a set amount of credits to a client (cR).");
 
     Database.Connect(DbCallback_Connect, "store");

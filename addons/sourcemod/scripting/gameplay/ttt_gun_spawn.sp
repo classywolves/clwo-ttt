@@ -69,11 +69,11 @@ char g_cPath[PLATFORM_MAX_PATH];
 
 public void OnPluginStart()
 {
-    RegAdminCmd("sm_spawnguns", Command_SpawnGuns, ADMFLAG_CHEATS, "Spawn all guns!");
-    RegAdminCmd("sm_addloc", Command_AddLoc, ADMFLAG_CHEATS, "Add a position for a gun to spawn!");
-    RegAdminCmd("sm_loadlocs", Command_LoadLocs, ADMFLAG_CHEATS, "Load locations for guns to spawn!");
-    RegAdminCmd("sm_savelocs", Command_SaveLocs, ADMFLAG_CHEATS, "Save current gun locations to the server");
-    RegAdminCmd("sm_showlocs", Command_ShowLocs, ADMFLAG_CHEATS, "Show all locations on a map!");
+    RegAdminCmd("sm_spawnguns", Command_SpawnGuns, ADMFLAG_CHEATS, "sm_spawnguns - Spawn all guns!");
+    RegAdminCmd("sm_addloc", Command_AddLoc, ADMFLAG_CHEATS, "sm_addloc - Add a position for a gun to spawn!");
+    RegAdminCmd("sm_loadlocs", Command_LoadLocs, ADMFLAG_CHEATS, "sm_loadlocs - Load locations for guns to spawn!");
+    RegAdminCmd("sm_savelocs", Command_SaveLocs, ADMFLAG_CHEATS, "sm_savelocs - Save current gun locations to the server");
+    RegAdminCmd("sm_showlocs", Command_ShowLocs, ADMFLAG_CHEATS, "sm_showlocs - Show all locations on a map!");
 
     HookEvent("round_start", OnRoundStart, EventHookMode_PostNoCopy);
 

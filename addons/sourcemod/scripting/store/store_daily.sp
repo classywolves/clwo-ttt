@@ -31,7 +31,7 @@ bool g_bIsClaiming[MAXPLAYERS + 1] = { false, ... };
 
 public void OnPluginStart()
 {
-    RegConsoleCmd("sm_daily", Command_Daily, "Claims your daily reward.");
+    RegConsoleCmd("sm_daily", Command_Daily, "sm_daily - Claims your daily reward.");
 
     Database.Connect(DbCallback_Connect, "store");
 

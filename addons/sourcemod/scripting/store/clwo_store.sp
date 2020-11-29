@@ -110,9 +110,9 @@ public void OnPluginStart()
     g_smSkillIndexMap = new StringMap();
     g_smUpgradeIndexMap = new StringMap();
 
-    RegConsoleCmd("sm_store", Command_Store, "Displays the store menu.");
-    RegConsoleCmd("sm_skills", Command_Skills, "Displays the skills menu to the client.");
-    RegConsoleCmd("sm_upgrades", Command_Upgrades, "Displays the upgrades menu to the client.");
+    RegConsoleCmd("sm_store", Command_Store, "sm_store - Displays the store menu");
+    RegConsoleCmd("sm_skills", Command_Skills, "sm_skills - Displays the skills menu to the client");
+    RegConsoleCmd("sm_upgrades", Command_Upgrades, "sm_upgrades - Displays the upgrades menu to the client");
 
     Database.Connect(DbCallback_Connect, "store");
 
