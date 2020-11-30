@@ -28,7 +28,10 @@ char g_value[64];
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
     CreateNative("ExtCookies_GetCookieID", Native_GetCookieID);
+    CreateNative("ExtCookies_GetCookieBySteamID", Native_GetCookieBySteamID);
     CreateNative("ExtCookies_SetCookieBySteamID", Native_SetCookieBySteamID);
+
+    RegPluginLibrary("ext_cookies");
 }
 
 public void OnPluginStart()

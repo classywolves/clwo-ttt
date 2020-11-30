@@ -7,8 +7,9 @@
  * Called when an item is purchased in the menu. Return Plugin_Stop
  * to prevent the purchase and stop any credit deductions.
  *
- * @param cookie        The Client who purchased the item.
- * @param count         The amount bought.
+ * @param cookie        The Cookie Identifier.
+ * @param steamID       The Steam ID of the fetched cookie value.
+ * @param value         The value as a string.
  */
 typedef ExtCookies_GetCookieCallback = function void (int cookieID, const char[] steamID, const char[] value);
 
@@ -29,7 +30,7 @@ native int ExtCookies_GetCookieID(const char[] cookie);
  * @param callback          The function to call when the cookie has been fetched.
  *
  */
-//native void ExtCookies_GetCookieBySteamID(int cookieID, const char[] steamID, ExtCookies_GetCookieCallback callback);
+native void ExtCookies_GetCookieBySteamID(int cookieID, const char[] steamID, ExtCookies_GetCookieCallback callback);
 
 /*
  * Un registers an item from the store.
