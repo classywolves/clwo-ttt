@@ -24,7 +24,7 @@ public Plugin myinfo = {
 
 Database sourcebansDb;
 
-const int rankCount = 11;
+const int rankCount = 12;
 
 char rankNames[rankCount][32] =
 {   "Normal",
@@ -37,6 +37,7 @@ char rankNames[rankCount][32] =
     "Admin",
     "Senior Admin",
     "Developer",
+    "Board",
     "Senator"
 };
 char chatTags[rankCount][16] =
@@ -51,6 +52,7 @@ char chatTags[rankCount][16] =
     "A",
     "SA",
     "Δ",
+    "B",
     "S"
 };
 bool rankStaff[rankCount] =
@@ -58,6 +60,7 @@ bool rankStaff[rankCount] =
     false,
     false,
     false,
+    true,
     true,
     true,
     true,
