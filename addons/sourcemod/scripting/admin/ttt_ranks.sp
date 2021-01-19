@@ -27,7 +27,7 @@ Database sourcebansDb;
 const int rankCount = 12;
 
 char rankNames[rankCount][32] =
-{  
+{
     "Normal",
     "VIP",
     "Informer",
@@ -223,14 +223,8 @@ public void Db_GetClientRank(int client)
     char steamId[64];
     GetClientAuthId(client, AuthId_Steam2, steamId, 64);
 
-    //strip steam stuff
-    ReplaceString(steamId, sizeof(steamId), "STEAM_1:1:", "");
-    ReplaceString(steamId, sizeof(steamId), "STEAM_0:1:", "");
-    ReplaceString(steamId, sizeof(steamId), "STEAM_1:0:", "");
-    ReplaceString(steamId, sizeof(steamId), "STEAM_0:0:", "");
-
     char query[768];
-    sourcebansDb.Format(query, sizeof(query), "SELECT `sb_admins`.`srv_group` as `rank` FROM `sb_admins` WHERE `sb_admins`.`authid` LIKE '%s:%s' LIMIT 1;", "%%", steamId);
+    sourcebansDb.Format(query, sizeof(query), "SELECT `sb_admins`.`srv_group` as `rank` FROM `sb_admins` WHERE `sb_admins`.`authid` LIKE '%%:%s' LIMIT 1;", steamId[10]);
     //PrintToConsoleAll(query);
     sourcebansDb.Query(DbCallback_GetClientRank, query, GetClientSerial(client));
 }
