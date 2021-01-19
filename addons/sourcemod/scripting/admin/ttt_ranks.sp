@@ -27,7 +27,8 @@ Database sourcebansDb;
 const int rankCount = 12;
 
 char rankNames[rankCount][32] =
-{   "Normal",
+{  
+    "Normal",
     "VIP",
     "Informer",
     "Trial Moderator",
@@ -35,9 +36,9 @@ char rankNames[rankCount][32] =
     "Senior Moderator",
     "Guardian",
     "Admin",
+    "Board",
     "Senior Admin",
     "Developer",
-    "Board",
     "Senator"
 };
 char chatTags[rankCount][16] =
@@ -50,9 +51,9 @@ char chatTags[rankCount][16] =
     "S.MOD",
     "G",
     "A",
+    "B",
     "SA",
     "Δ",
-    "B",
     "S"
 };
 bool rankStaff[rankCount] =
@@ -222,29 +223,42 @@ public void Db_GetClientRank(int client)
     char steamId[64];
     GetClientAuthId(client, AuthId_Steam2, steamId, 64);
 
+    //strip steam stuff
+    ReplaceString(steamId, sizeof(steamId), "STEAM_1:1:", "");
+    ReplaceString(steamId, sizeof(steamId), "STEAM_0:1:", "");
+    ReplaceString(steamId, sizeof(steamId), "STEAM_1:0:", "");
+    ReplaceString(steamId, sizeof(steamId), "STEAM_0:0:", "");
+
     char query[768];
-    sourcebansDb.Format(query, sizeof(query), "SELECT `sb_admins`.`srv_group` as `rank` FROM `sb_admins` WHERE `sb_admins`.`authid` REGEXP '^STEAM_[0-9]:%s$' LIMIT 1;", steamId[8]);
-    sourcebansDb.Query(DbCallback_GetClientRank, query, client);
+    sourcebansDb.Format(query, sizeof(query), "SELECT `sb_admins`.`srv_group` as `rank` FROM `sb_admins` WHERE `sb_admins`.`authid` LIKE '%s:%s' LIMIT 1;", "%%", steamId);
+    //PrintToConsoleAll(query);
+    sourcebansDb.Query(DbCallback_GetClientRank, query, GetClientSerial(client));
 }
 
-public void DbCallback_GetClientRank(Database db, DBResultSet results, const char[] error, int client)
+public void DbCallback_GetClientRank(Database db, DBResultSet results, const char[] error, any data)
 {
     if (results == null)
     {
         LogError("GetClientRankCallback: %s", error);
         return;
     }
-
+    int client = GetClientFromSerial(view_as<int>(data));
+    if(!IsValidClient(client))
+        return;
     if (results.FetchRow())
     {
+        int fieldLocation;
+        if(!results.FieldNameToNum("rank",fieldLocation))
+            return;
+
         char rankName[64];
-        results.FetchString(0, rankName, 64);
+        results.FetchString(fieldLocation, rankName, sizeof(rankName));
+        //PrintToConsoleAll("%N  -> %s", client, rankName);
         if (rankName[0] == 0)
         {
             playerRanks[client] = 0;
         }
-
-        for (int rank = 1; rank < 11; rank++)
+        for (int rank = 1; rank < rankCount; rank++)
         {
             if (strcmp(rankName, rankNames[rank], true) == 0)
             {
@@ -253,6 +267,5 @@ public void DbCallback_GetClientRank(Database db, DBResultSet results, const cha
             }
         }
     }
-
     playerRanks[client] = 0;
 }
