@@ -34,7 +34,7 @@ int g_iPlayerLevel[MAXPLAYERS + 1] = { 0, ... };
 
 public void OnPluginStart()
 {
-    for (int i = 0; i < MaxClients; ++i)
+    for (int i = 0; i <= MaxClients; ++i)
     {
         OnClientPutInServer(i);
     }

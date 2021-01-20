@@ -28,7 +28,7 @@ bool g_iPlayerHas[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
-    for (int i = 0; i < MaxClients; ++i)
+    for (int i = 0; i <= MaxClients; ++i)
     {
         OnClientPutInServer(i);
     }
@@ -92,6 +92,6 @@ void SetClientKevlar(int client)
 {
     if (g_iPlayerHas[client])
     {
-        SetEntProp(client, Prop_Data, "m_ArmorValue", 10, 1);  
+        SetEntProp(client, Prop_Data, "m_ArmorValue", 10, 1);
     }
 }
