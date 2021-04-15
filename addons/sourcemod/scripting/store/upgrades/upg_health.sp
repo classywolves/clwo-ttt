@@ -34,7 +34,7 @@ int g_iPlayerLevel[MAXPLAYERS + 1] = { 0, ... };
 
 public void OnPluginStart()
 {
-    for (int i = 0; i <= MaxClients; ++i)
+    for (int i = 1; i <= MaxClients; ++i)
     {
         OnClientPutInServer(i);
     }
@@ -98,9 +98,9 @@ public void Event_PlayerSpawned(Event event, const char[] name, bool dontBroadca
 
 public void TTT_OnRoundStart()
 {
-    for (int i = 1; i < MaxClients; ++i)
+    for (int i = 1; i <= MaxClients; ++i)
     {
-        if (IsClientConnected(i) && IsPlayerAlive(i))
+        if (IsClientConnected(i) && IsClientInGame(i) && IsPlayerAlive(i))
         {
             SetClientHealth(i);
         }
