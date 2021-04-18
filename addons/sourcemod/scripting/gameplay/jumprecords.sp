@@ -19,6 +19,8 @@
  */
 
 #include <sourcemod>
+#include <colorlib>
+
 #undef REQUIRE_PLUGIN
 #include <jumpstats.inc>
 #define REQUIRE_PLUGIN
@@ -60,7 +62,7 @@ public void OnPluginStart()
 
     g_bJumpStatsLoaded = LibraryExists("jumpstats");
 
-    Database.Connect(DbCallback_Connect, "ttt");
+    Database.Connect(DbCallback_Connect, "jumprecords");
 }
 
 public void OnLibraryAdded(const char[] name)
@@ -139,10 +141,19 @@ public void JumpStats_OnJump(int client, JumpType type, float distance)
     }
 
     //PrintToConsole(client, "[DEBUG] hasClientBeatenRecord: %d", hasClientBeatenRecord(client, distance));
-    if (isReady() && (type == Jump_LJ) && hasClientBeatenRecord(client, distance))
+    if (isReady() && (type == Jump_LJ))
     {
-        g_fClientRecords[client] = distance;
-        dbInsertLongJump(client, GetTime(), distance);
+        if (hasClientBeatenRecord(client, distance))
+        {
+            g_fClientRecords[client] = distance;
+            dbInsertLongJump(client, GetTime(), distance);
+            CPrintToChat(client, "[JS] You have set a new Personal Best.");
+        }
+        else
+        {
+            float dx = g_fClientRecords[client] - distance;
+            CPrintToChat(client, "[JS] You were %fu off your Personal Best (%fu).", dx, g_fClientRecords[client]);
+        }
     }
 }
 
