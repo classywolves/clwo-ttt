@@ -12,6 +12,8 @@
 #include <clwo_store>
 #define REQUIRE_PLUGIN
 
+#include "skill_common.sp"
+
 #define VAMP_ID "vamp"
 #define VAMP_NAME "Vampirism"
 #define VAMP_DESCRIPTION "You regain health from damage you do to another player, when they are in close proximity to you."
@@ -45,11 +47,6 @@ public void OnPluginStart()
     LoopValidClients(i)
     {
         OnClientPutInServer(i);
-    }
-
-    if (Store_IsReady())
-    {
-        Store_OnRegister();
     }
 
     PrintToServer("[SKL] Loaded succcessfully");

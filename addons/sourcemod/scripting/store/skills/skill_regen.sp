@@ -12,6 +12,8 @@
 #include <clwo_store>
 #define REQUIRE_PLUGIN
 
+#include "skill_common.sp"
+
 #define RGN_ID "hrgn"
 #define RGN_NAME "Larraman's Organ"
 #define RGN_DESCRIPTION "Pumps healing cells towards any sustained injuries. These clot blood and form scar tissue allowing you to fight on."
@@ -28,8 +30,6 @@ public Plugin myinfo =
     version = "1.0.0",
     url = ""
 };
-
-bool g_bTTTLoaded = false;
 
 int g_iBands[] = { 35, 48, 61, 74, 87, 100 };
 
@@ -57,39 +57,12 @@ public void OnPluginStart()
 
     HookEvent("round_end", Event_RoundEnd, EventHookMode_PostNoCopy);
 
-    if (Store_IsReady())
-    {
-        Store_OnRegister();
-    }
-
-
     PrintToServer("[RGN] Loaded successfully");
 }
 
 public void OnPluginEnd()
 {
     Store_UnRegisterSkill(RGN_ID);
-}
-
-public void OnAllPluginLoaded()
-{
-    g_bTTTLoaded = LibraryExists("ttt");
-}
-
-public void OnLibraryAdded(const char[] name)
-{
-    if (strcmp(name, "ttt", true) == 0)
-    {
-        g_bTTTLoaded = true;
-    }
-}
-
-public void OnLibraryRemoved(const char[] name)
-{
-    if (strcmp(name, "ttt", true) == 0)
-    {
-        g_bTTTLoaded = false;
-    }
 }
 
 public void OnClientPutInServer(int client)
@@ -142,11 +115,6 @@ public void Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 
 public void Hook_OnTakeDamageAlive(int victim, int attacker, int inflictor, float damage, int damagetype)
 {
-    if (!g_bTTTLoaded && TTT_GetRoundStatus() != Round_Active)
-    {
-        return;
-    }
-
     int health = GetClientHealth(victim);
     if (health <= 0 || health >= 100)
     {
@@ -182,7 +150,7 @@ public void Hook_OnTakeDamageAlive(int victim, int attacker, int inflictor, floa
     {
         g_playerData[victim].band = band;
     }
-    else // dont bother healing 
+    else // dont bother healing
     {
         return;
     }

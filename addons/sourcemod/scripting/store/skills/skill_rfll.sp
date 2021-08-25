@@ -9,6 +9,8 @@
 #include <clwo_store>
 #define REQUIRE_PLUGIN
 
+#include "skill_common.sp"
+
 #define FF_ID "rfll"
 #define FF_NAME "Feather Falling"
 #define FF_DESCRIPTION "Reduces the amount of damage taken from falling."
@@ -38,10 +40,6 @@ PlayerData g_playerData[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
-    if (Store_IsReady())
-    {
-        Store_OnRegister();
-    }
 
     PrintToServer("[FLL] Loaded successfully");
 }

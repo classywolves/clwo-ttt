@@ -7,6 +7,8 @@
 #include <clwo_store>
 #define REQUIRE_PLUGIN
 
+#include "upg_common.sp"
+
 #define KEV_ID "kvlr"
 #define KEV_NAME "Kevlar (+10)"
 #define KEV_DESCRIPTION "You start the round with 10 kevlar."
@@ -22,8 +24,6 @@ public Plugin myinfo =
     url = ""
 };
 
-bool g_bStoreLoaded = false;
-
 bool g_iPlayerHas[MAXPLAYERS + 1];
 
 public void OnPluginStart()
@@ -31,11 +31,6 @@ public void OnPluginStart()
     for (int i = 1; i <= MaxClients; ++i)
     {
         OnClientPutInServer(i);
-    }
-
-    if (g_bStoreLoaded && Store_IsReady())
-    {
-        Store_OnRegister();
     }
 
     HookEvent("player_spawn", Event_PlayerSpawned, EventHookMode_Post);
@@ -92,6 +87,6 @@ void SetClientKevlar(int client)
 {
     if (g_iPlayerHas[client])
     {
-        SetEntProp(client, Prop_Data, "m_ArmorValue", 10, 1);
+        SetEntProp(client, Prop_Send, "m_ArmorValue", 10, 1);
     }
 }

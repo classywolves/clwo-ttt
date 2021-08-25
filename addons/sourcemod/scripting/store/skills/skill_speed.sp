@@ -11,6 +11,8 @@
 #define REQUIRE_PLUGIN
 #include <error_timeout>
 
+#include "skill_common.sp"
+
 #define SPD_ID "sped"
 #define SPD_NAME "Adrenal Enhancements"
 #define SPD_DESCRIPTION "Gives the player a surge of adrenaline to get them out of a tricky situation."
@@ -53,11 +55,6 @@ public void OnPluginStart()
 
     g_cClientUsesBind = new Cookie("skill_speed_uses_bind", "Whether a client uses the speed skill bind.", CookieAccess_Public);
     g_cClientUsesBind.SetPrefabMenu(CookieMenu_OnOff_Int, "Skill - Adrenal Enhancements\nWould you like to use the \"sm_speed\" bind instead of double pressing +use.", CookieMenuHandler_ClientUsesBind);
-
-    if (Store_IsReady())
-    {
-        Store_OnRegister();
-    }
 
     HookEvent("round_start", Event_RoundStart, EventHookMode_PostNoCopy);
     HookEvent("player_death", Event_PlayerDeath, EventHookMode_Post);
@@ -114,7 +111,7 @@ public Action OnPlayerRunCmd(int client, int &buttons, int &impulse, float veloc
     if (g_playerData[client].usesCommand ||
         g_playerData[client].level <= 0 ||
         g_playerData[client].isUsingSpeed ||
-        !IsPlayerAlive(client)) 
+        !IsPlayerAlive(client))
     {
         return Plugin_Continue;
     }
@@ -158,7 +155,7 @@ public void Event_RoundStart(Event event, char[] name, bool dontBroadcast)
     int time = GetTime();
     LoopClients(i) // There is probably a neater and faster way of resetting cooldowns at round start,
     {              // however, it is unknown to me. - Dog
-                   // Corrected this to use GetTime, this is an integer not a 
+                   // Corrected this to use GetTime, this is an integer not a
                    // float so this will have caused some weirdness.
                    // Also cached the result of GetTime :) - c0rp3n
         g_playerData[i].cooldownEnd = time;

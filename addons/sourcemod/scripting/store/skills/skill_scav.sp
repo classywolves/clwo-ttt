@@ -15,6 +15,8 @@
 #include <clwo_store>
 #define REQUIRE_PLUGIN
 
+#include "skill_common.sp"
+
 #define SCAV_ID "scav"
 #define SCAV_NAME "Scavenger"
 #define SCAV_DESCRIPTION "Allows the player to gain ammo after identifying a body."
@@ -44,11 +46,6 @@ public OnPluginStart()
     LoopValidClients(i)
     {
         OnClientPutInServer(i);
-    }
-
-    if (Store_IsReady())
-    {
-        Store_OnRegister();
     }
 
     PrintToServer("[SCV] Loaded successfully");
@@ -213,7 +210,7 @@ public int GetWeaponMagCapacity(char[] item)
             else
             {
                 return 30;
-            } 
+            }
         }
         case 0x61756700: // aug
         {

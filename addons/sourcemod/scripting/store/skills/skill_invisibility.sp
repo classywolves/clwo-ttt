@@ -15,6 +15,8 @@
 #include <clwo_store>
 #define REQUIRE_PLUGIN
 
+#include "skill_common.sp"
+
 #define INVS_ID "invs"
 #define INVS_NAME "Reactive Camoflage"
 #define INVS_DESCRIPTION "Grants the user invisibility for short periods of time when hit with an electric charge."
@@ -44,11 +46,6 @@ PlayerData g_playerData[MAXPLAYERS + 1];
 
 public void OnPluginStart()
 {
-    if (Store_IsReady())
-    {
-        Store_OnRegister();
-    }
-
     PrintToServer("[RCM] Loaded succcessfully");
 }
 

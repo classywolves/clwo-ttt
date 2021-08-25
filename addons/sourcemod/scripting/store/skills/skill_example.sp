@@ -7,6 +7,8 @@
 #include <clwo_store>
 #define REQUIRE_PLUGIN
 
+#include "skill_common.sp"
+
 #define EXAMPLE_ID "xmpl"
 #define EXAMPLE_NAME "Example"
 #define EXAMPLE_DESCRIPTION "Description would go here :)."
@@ -24,8 +26,6 @@ public Plugin myinfo =
     url = ""
 };
 
-bool g_bStoreLoaded = false;
-
 enum struct PlayerData
 {
     int level;
@@ -40,38 +40,12 @@ public void OnPluginStart()
         OnClientPutInServer(i);
     }
 
-    if (g_bStoreLoaded && Store_IsReady())
-    {
-        Store_OnRegister();
-    }
-
     PrintToServer("[SKL] Loaded succcessfully");
 }
 
 public void OnPluginEnd()
 {
     Store_UnRegisterSkill(EXAMPLE_ID);
-}
-
-public void OnAllPluginsLoaded()
-{
-    g_bStoreLoaded = Store_CheckLibraryExists();
-}
-
-public void OnLibraryAdded(const char[] name)
-{
-    if (Store_CheckLibraryName(name))
-    {
-        g_bStoreLoaded = true;
-    }
-}
-
-public void OnLibraryRemoved(const char[] name)
-{
-    if (Store_CheckLibraryName(name))
-    {
-        g_bStoreLoaded = false;
-    }
 }
 
 public void Store_OnRegister()

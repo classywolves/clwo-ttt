@@ -516,7 +516,7 @@ void Menu_SkillRefund(int client, int skill)
 
 public int MenuHandler_Store(Menu menu, MenuAction action, int client, int data)
 {
-    switch (action) 
+    switch (action)
     {
         case MenuAction_Select:
         {
@@ -821,7 +821,7 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
         g_smSkillIndexMap.SetValue(skill.id, g_aSkills.Length);
         g_aSkills.PushArray(skill);
     }
-    
+
 
     if (g_cSortItems.BoolValue)
     {
@@ -833,7 +833,7 @@ public int Native_RegisterSkill(Handle plugin, int numParams)
 
     if (g_bStoreReady)
     {
-        LateLoadSkill();
+        LateLoad();
         LogMessage("Late loaded skill %s (%s)", skill.name, skill.id);
     }
 
@@ -907,7 +907,7 @@ public int Native_RegisterUpgrade(Handle plugin, int numParams)
         g_smSkillIndexMap.SetValue(ud.id, g_aUpgrades.Length);
         g_aUpgrades.PushArray(ud);
     }
-    
+
 
     if (g_cSortItems.BoolValue)
     {
@@ -919,7 +919,7 @@ public int Native_RegisterUpgrade(Handle plugin, int numParams)
 
     if (g_bStoreReady)
     {
-        LateLoadUpgrade();
+        LateLoad();
         LogMessage("Late loaded upgrade %s (%s)", ud.name, ud.id);
     }
 
@@ -1145,7 +1145,7 @@ void UpdateSkillMap()
     }
 }
 
-void LateLoadSkill()
+void LateLoad()
 {
     LoopValidClients(i)
     {
@@ -1225,15 +1225,6 @@ bool GetClientUpgrade(int client, int upg)
 void SetClientUpgrade(int client, int upg, bool has)
 {
     g_bClientUpgrades[client][upg] = has;
-}
-
-void LateLoadUpgrade()
-{
-    LoopValidClients(i)
-    {
-        OnClientPutInServer(i);
-        OnClientPostAdminCheck(i);
-    }
 }
 
 bool Purchase_Upgrade(int client, int upg)

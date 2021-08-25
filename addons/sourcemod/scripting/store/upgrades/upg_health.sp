@@ -7,6 +7,8 @@
 #include <clwo_store>
 #define REQUIRE_PLUGIN
 
+#include "upg_common.sp"
+
 #define HEALTH_ID "hlth"
 #define HEALTH_NAME "Health"
 #define HEALTH_DESCRIPTION "You start the round with an extra 10 health. (Only I & T)"
@@ -28,8 +30,6 @@ public Plugin myinfo =
     url = ""
 };
 
-bool g_bStoreLoaded = false;
-
 int g_iPlayerLevel[MAXPLAYERS + 1] = { 0, ... };
 
 public void OnPluginStart()
@@ -37,11 +37,6 @@ public void OnPluginStart()
     for (int i = 1; i <= MaxClients; ++i)
     {
         OnClientPutInServer(i);
-    }
-
-    if (g_bStoreLoaded && Store_IsReady())
-    {
-        Store_OnRegister();
     }
 
     HookEvent("player_spawn", Event_PlayerSpawned, EventHookMode_Post);
