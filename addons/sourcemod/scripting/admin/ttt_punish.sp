@@ -4,8 +4,10 @@
 #include <sdktools>
 #include <sdkhooks>
 
+#include <colorlib>
 #include <ttt>
 #include <generics>
+#include <ttt_messages>
 #include <ttt_targeting>
 
 int g_clientPunishType[MAXPLAYERS + 1];
@@ -56,7 +58,7 @@ public void OnClientPostAdminCheck(int client)
 stock void LoadClientPunishments(int client)
 {
     char steamId[32];
-    if(!GetClientAuthId(i, AuthId_Steam2, steamId, 32))
+    if(!GetClientAuthId(client, AuthId_Steam2, steamId, 32))
     {
         LogError("(SQL_OnClientPostAdminCheck) Auth failed: #%d", client);
         return;
@@ -242,7 +244,7 @@ public int MenuHandler_Punish(Menu menu, MenuAction action, int param1, int para
 
 public void DisplayTargets(int client)
 {
-    Menu menu2 = new Menu(MenuHandler2);
+    Menu menu2 = new Menu(MenuHandler_Targets);
     
     menu2.SetTitle("Select a target!");
     
@@ -250,7 +252,7 @@ public void DisplayTargets(int client)
     LoopValidClients(i)
     {
         GetClientName(i, name, sizeof(name));
-        IntToString(userid, GetClientUserId(i), 4);
+        IntToString(GetClientUserId(i), userid, 4);
         menu2.AddItem(userid, name);
     }
         
@@ -274,7 +276,7 @@ public int MenuHandler_Targets(Menu menu, MenuAction action, int param1, int par
 
 public void DisplayReasons(int client)
 {
-    Menu menu = new Menu(MenuHandler3);
+    Menu menu = new Menu(MenuHandler_Reasons);
     char name[50];
     
     int target = GetClientOfUserId(g_clientTarget[client]);
@@ -386,16 +388,16 @@ public void PunishDem(int client, char reason[255])
         }
     }
     
-    GetClientAuthId(target, AuthId_SteamID2, steamId, sizeof(steamId));
+    GetClientAuthId(target, AuthId_Steam2, steamId, sizeof(steamId));
     GetClientName(target, name, sizeof(name));
     
-    GetClientAuthId(client, AuthId_SteamID2, staffSteamId, sizeof(staffSteamId));
+    GetClientAuthId(client, AuthId_Steam2, staffSteamId, sizeof(staffSteamId));
     GetClientName(client, staffName, sizeof(staffName));
     
     Format(query, 512, sql_insertPunishment, steamId, name, GetTime(), reason, g_clientPunishType[client], staffSteamId, staffName);
     SQL_TQuery(g_hDb, SQL_CheckCallback, query, DBPrio_Low);
 }
 
-public SQL_CheckCallback(Handle owner, Handle hndl, const char error[], any data)
+public void SQL_CheckCallback(Handle owner, Handle hndl, const char[] error, any data)
 {
 }

@@ -31,13 +31,13 @@ stock int TTT_Target(char[] target, int client, bool respond = true, bool alive 
     return result;
 }
 
-stock bool TTT_Targets(int[] targets, int admin, char[] target, bool respond = true, bool alive = false, bool immunity = false)
+stock bool TTT_Targets(int[] targets, int target_size, int admin, char[] target, bool respond = true, bool alive = false, bool immunity = false)
 {
     int filter = (alive ? COMMAND_FILTER_ALIVE : 0) | (immunity ? 0 : COMMAND_FILTER_NO_IMMUNITY);
     char targetName[MAX_NAME_LENGTH];
     bool translation;
 
-    int result = ProcessTargetString(target, admin, targets, sizeof(targets), filter, targetName, sizeof(targetName), translation);
+    int result = ProcessTargetString(target, admin, targets, target_size, filter, targetName, sizeof(targetName), translation);
 
     if (result == 1) {
         return true;

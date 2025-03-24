@@ -30,5 +30,5 @@ stock void TTT_SendPanelMsg(int client, char[] title, char[] message) {
 
 stock int HandlerDoNothing(Menu menu, MenuAction action, int param1, int param2) {
 	// Do nothing.  It's really exciting.
-	return;
+	return 0;
 }
