@@ -11,7 +11,7 @@ jobs:
         SM_VERSION: ["1.10", "1.11"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set environment variables
         run: |
@@ -25,10 +25,9 @@ jobs:
           version: ${{ matrix.SM_VERSION }}
 
       - name: Clone TTT
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
-          repository: 'classywolves/private-ttt-mirror'
-          token: ${{ secrets.ACCESS_TOKEN }}
+          repository: 'TroubleInTerroristTown/Public'
           ref: 'master'
           path: 'deps/ttt'
 

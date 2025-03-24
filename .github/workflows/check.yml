@@ -9,14 +9,14 @@ jobs:
       fail-fast: false
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Set environment variables
         run: |
           echo "SOURCEMOD_PATH=$GITHUB_WORKSPACE/addons/sourcemod" >> $GITHUB_ENV
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
@@ -24,7 +24,7 @@ jobs:
         run: python3 -m pip install --upgrade pip setuptools wheel
 
       - name: Clone
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: 'c0rp3n/colorlib-check'
           ref: 'master'
